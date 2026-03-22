@@ -1,0 +1,93 @@
+subject,body,sender,label
+Invoice #4521 attached,Please find attached invoice for INR 4500 for services rendered in March.,billing@vendor.com,EXPENSE
+Your order has been confirmed,Your Amazon order #123-456 for ₹1499 has been confirmed. Payment received via UPI.,order-update@amazon.in,EXPENSE
+Payment receipt for subscription,Thank you for your payment of ₹999/month for Netflix. Your subscription is renewed.,no-reply@netflix.com,EXPENSE
+Transaction alert: INR 2000 debited,Dear Customer your account has been debited INR 2000 for Swiggy order #987.,alerts@bank.com,EXPENSE
+Booking confirmed: Flight PNR AB1234,Your flight booking is confirmed. Total amount charged: ₹8500. PNR: AB1234.,bookings@makemytrip.com,EXPENSE
+Receipt for Zomato order,Order delivered! Total paid: ₹350 via Paytm Wallet.,noreply@zomato.com,EXPENSE
+Monthly EMI deducted,Your EMI of Rs. 5000 for loan account has been auto-debited successfully.,emi@hdfc.com,EXPENSE
+Recharge successful,Your mobile recharge of ₹599 for 9876543210 is successful.,recharge@jio.com,EXPENSE
+UPI payment confirmed,You have paid ₹1200 to merchant via UPI. Ref: 123456789.,upi@paytm.com,EXPENSE
+Order shipped: delivery by tomorrow,Your Flipkart order worth ₹3499 has been shipped. Expected delivery tomorrow.,ship@flipkart.com,EXPENSE
+Electricity bill paid,Your electricity bill payment of Rs 1840 for account 123456 is confirmed.,bills@bsesdelhi.com,EXPENSE
+Car insurance renewed,Your car insurance policy has been renewed. Premium paid: ₹12000.,renewal@icicilombard.com,EXPENSE
+Credit card statement,Your HDFC credit card bill of ₹15432 is due on 10th. Minimum due: ₹775.,statement@hdfc.com,EXPENSE
+Cab ride receipt,Your Uber ride receipt. Fare: ₹245. Payment method: Credit Card ending 1234.,receipt@uber.com,EXPENSE
+Hotel booking confirmation,Booking confirmed at Hotel Grand. Total: ₹4800 for 2 nights. Check-in: March 25.,hotels@oyo.com,EXPENSE
+Gym membership renewed,Your FitZone gym membership has been renewed for 3 months. Amount charged: ₹2700.,billing@fitzone.com,EXPENSE
+Grocery order delivered,BigBasket order delivered. Amount paid: ₹1250 via debit card.,orders@bigbasket.com,EXPENSE
+Medical bill receipt,Apollo Pharmacy order #5678. Total amount: ₹890. Payment received.,pharmacy@apollo.com,EXPENSE
+Internet bill payment confirmation,BSNL broadband bill of ₹999 for February has been paid successfully.,billing@bsnl.com,EXPENSE
+Mutual fund purchase,Purchase of HDFC Equity Fund units confirmed. Amount: ₹5000. NAV date: 22 Mar.,noreply@hdfc.com,EXPENSE
+Movie tickets booked,BookMyShow booking confirmed. 2 tickets for Rs 600 each. Total: Rs 1200.,tickets@bookmyshow.com,EXPENSE
+Amazon Pay recharge done,Amazon Pay wallet recharged with ₹500 from your bank account.,amazonpay@amazon.in,EXPENSE
+Swiggy Instamart order,Your grocery order from Swiggy Instamart. Total: ₹540. Paid via UPI.,noreply@swiggy.com,EXPENSE
+Tolls and parking charges,FASTag account debited ₹75 for NH-8 toll plaza.,fastag@nhai.com,EXPENSE
+Water bill paid,Delhi Jal Board water bill of ₹380 paid for consumer 9876543.,bills@djb.gov.in,EXPENSE
+Annual subscription renewed,Your Spotify Premium annual plan renewed. Charged: ₹1189.,noreply@spotify.com,EXPENSE
+Tax payment receipt,Income tax advance payment of ₹25000 confirmed. Challan: 1234567.,noreply@incometax.gov.in,EXPENSE
+Petrol pump receipt,HPCL fuel purchase: 15 litres. Total: ₹1620. Payment via credit card.,receipt@hpcl.com,EXPENSE
+School fee receipt,Monthly fee of ₹4500 for April received. Student: Rohan Sharma.,fees@school.edu,EXPENSE
+Freelance invoice paid,Payment of USD 500 received for project #2024-03.,payment@upwork.com,EXPENSE
+Team lunch with the whole gang!,Hey everyone join us for a team lunch this Friday at the office cafeteria. No cost involved — sponsored by HR!,hr@company.com,NOT_EXPENSE
+Weekend sale — up to 70% off!,Flash sale this weekend only! Shop now for amazing deals. No purchase necessary.,deals@shop.com,NOT_EXPENSE
+Meeting agenda for Q1 review,Please find attached the agenda for our Q1 business review meeting scheduled for Monday.,pa@company.com,NOT_EXPENSE
+Happy Birthday wishes from the team,Wishing you a very Happy Birthday! Hope you have a wonderful day.,hr@company.com,NOT_EXPENSE
+Newsletter: Top stories this week,Read the top technology stories of the week. Subscribe to stay updated.,newsletter@techblog.com,NOT_EXPENSE
+Invitation: Company annual day,You are invited to the Annual Day celebration on March 30th. Entry free.,events@company.com,NOT_EXPENSE
+Job application received,We have received your job application for the Software Engineer position.,careers@techcorp.com,NOT_EXPENSE
+Daily news digest,Here are today's top headlines from your favourite news sources.,digest@newsapp.com,NOT_EXPENSE
+Social media notification,Rahul mentioned you in a comment on LinkedIn. Click to view.,notification@linkedin.com,NOT_EXPENSE
+New message from John,John Smith sent you a message on WhatsApp Web: "Hey are you free tonight?",noreply@whatsapp.com,NOT_EXPENSE
+Meeting rescheduled to 3 PM,The product sync meeting has been moved from 2 PM to 3 PM today.,calendar@company.com,NOT_EXPENSE
+Your friend liked your photo,Priya liked your photo. See who else reacted.,notification@instagram.com,NOT_EXPENSE
+Webinar reminder: AI trends 2025,Don't forget — your free webinar starts in 1 hour. Join link inside.,events@techconf.com,NOT_EXPENSE
+Your password was changed,Your account password was successfully changed. If this wasn't you contact support.,security@gmail.com,NOT_EXPENSE
+Out-of-office reply,Thank you for your email. I am out of the office until March 28 with limited access.,auto-reply@company.com,NOT_EXPENSE
+Project kickoff tomorrow,Excited to kick off Project Phoenix tomorrow! See you all at 10 AM in the conference room.,pm@company.com,NOT_EXPENSE
+Confirm your email address,Please click the link to confirm your email address for your new account.,noreply@app.com,NOT_EXPENSE
+Survey invitation: 5 minute feedback,We value your opinion! Please take 5 minutes to complete this survey.,survey@company.com,NOT_EXPENSE
+Sports team results,Your cricket team won the match by 15 runs! Great game everyone.,league@sports.com,NOT_EXPENSE
+Holiday party planning,Vote for your preferred venue for the holiday party. Options attached.,social@company.com,NOT_EXPENSE
+Vague request for approval,Hi could you please review and approve the attached document when you get a chance?,colleague@company.com,NOT_EXPENSE
+Cloud storage almost full,Your Google Drive is 90% full. Upgrade your storage plan to get more space.,drive-noreply@google.com,NOT_EXPENSE
+Your CV has been shortlisted,We are pleased to inform you that your CV has been shortlisted for the next round.,hr@techcorp.com,NOT_EXPENSE
+App update available,A new version of our app is available. Update now for the latest features and bug fixes.,updates@app.com,NOT_EXPENSE
+Delivery delay notification,We regret to inform you that your order is delayed due to logistics. New ETA: March 28.,support@shop.com,NOT_EXPENSE
+New comment on your post,Someone commented on your blog post: "Great article! Very helpful.",notifications@wordpress.com,NOT_EXPENSE
+System maintenance scheduled,Scheduled maintenance on March 25 from 2 AM to 5 AM. Services may be unavailable.,admin@company.com,NOT_EXPENSE
+Your report is ready,The monthly analytics report you requested has been generated and is ready to view.,reports@analytics.com,NOT_EXPENSE
+Salary credited for March,Your salary for March has been credited to your bank account ending 4567.,hr@company.com,EXPENSE
+GST invoice from vendor,GST Invoice No: INV-2024-056. Amount payable: ₹18500 + GST ₹3330.,accounts@vendor.co.in,EXPENSE
+Office supplies order confirmation,Your order for stationery items from Amazon Business has been confirmed. Total: ₹2340.,business@amazon.in,EXPENSE
+International wire transfer,Wire transfer of USD 1200 sent to account ending 8901. Reference: TXN20240322.,wire@bank.com,EXPENSE
+Platform fee charged,Marketplace platform fee of ₹450 charged to your seller account for March.,fees@marketplace.com,EXPENSE
+Cashback received,Congratulations! ₹150 cashback credited to your PhonePe wallet for your recent purchase.,cashback@phonepe.com,EXPENSE
+Late payment fee added,A late payment fee of ₹100 has been added to your credit card account.,cards@bank.com,EXPENSE
+Fuel bill from company card,Corporate card transaction: Fuel purchase ₹2200 at HP petrol pump on 22 Mar.,corporate@bank.com,EXPENSE
+AWS bill for March,Your AWS bill for March is ready. Total charges: $45.67. Due date: April 15.,billing@aws.amazon.com,EXPENSE
+Domain renewal notice,Your domain example.com has been renewed for 1 year. Amount charged: ₹799.,billing@godaddy.com,EXPENSE
+Co-working space invoice,Invoice for Awfis co-working space. March desk booking: ₹6000. GST included.,billing@awfis.com,EXPENSE
+Courier charges paid,Blue Dart courier charges of ₹350 debited for shipment tracking 123456.,noreply@bluedart.com,EXPENSE
+Dental checkup bill,Your dental appointment bill: ₹1500. Dr. Sharma Dental Clinic. Receipt attached.,billing@clinic.com,EXPENSE
+SaaS subscription invoice,Invoice for Zoho CRM subscription. Plan: Professional. Amount: ₹2999/month.,billing@zoho.com,EXPENSE
+Food delivery order paid,Your Dunzo order has been delivered. Total: ₹280 paid via card.,noreply@dunzo.com,EXPENSE
+E-learning course purchased,You have enrolled in the Python Masterclass. Amount paid: ₹1499.,noreply@udemy.com,EXPENSE
+Ola ride payment confirmed,Your Ola ride fare of ₹190 has been paid via Ola Money.,noreply@ola.com,EXPENSE
+Conference registration paid,Payment of ₹5000 received for PyConIndia 2024 registration.,registration@pyconindia.org,EXPENSE
+Printer ink ordered,Staples order confirmed. HP Ink Cartridge 2-pack: ₹890 charged to your card.,orders@staples.com,EXPENSE
+Newspaper digital subscription,Your Hindu e-paper annual subscription of ₹999 has been activated.,subscription@thehindu.com,EXPENSE
+EMI reminder for home loan,Your home loan EMI of ₹22000 will be auto-debited on 5th April from your account.,homeloan@sbi.com,EXPENSE
+Project budget approval,The project budget of ₹50000 has been approved. Please proceed with procurement.,manager@company.com,NOT_EXPENSE
+Team outing planning,Voting for the next team outing. Options: bowling alley vs laser tag. Please vote!,social@company.com,NOT_EXPENSE
+Code review request,Please review PR #142 before end of day. Changes affect the payment module.,dev@company.com,NOT_EXPENSE
+Leave application approved,Your leave application for March 25-26 has been approved by your manager.,hr@company.com,NOT_EXPENSE
+Training session tomorrow,Reminder: Mandatory compliance training session tomorrow at 11 AM in Room 201.,training@company.com,NOT_EXPENSE
+Client meeting notes,Attached are the notes from today's client meeting. Please review and add comments.,pm@company.com,NOT_EXPENSE
+Quarterly performance review,It's time for your quarterly performance review. Please complete the self-assessment form.,hr@company.com,NOT_EXPENSE
+New GitHub issue assigned,Issue #789: Button alignment bug has been assigned to you in the frontend repo.,github@github.com,NOT_EXPENSE
+Slack notification digest,You have 5 unread messages in #general and 2 mentions in #dev.,notifications@slack.com,NOT_EXPENSE
+Free trial expires soon,Your 30-day free trial of Adobe Creative Cloud ends in 3 days. Subscribe to continue.,noreply@adobe.com,NOT_EXPENSE
+Offer letter from recruiter,We are delighted to offer you the position of Senior Developer. Offer details attached.,hr@recruiter.com,NOT_EXPENSE
+Sales pipeline update,Q1 sales pipeline update: 12 deals closed worth ₹45L total revenue.,crm@company.com,NOT_EXPENSE
+Sprint planning meeting,Sprint 24 planning session is scheduled for Monday 9 AM. Please come prepared.,pm@company.com,NOT_EXPENSE

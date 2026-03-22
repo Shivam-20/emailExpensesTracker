@@ -1,0 +1,47 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ── Virtual Environment ──────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── IDE / Editor ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ── OAuth / Secrets (NEVER commit these) ─────────────────
+credentials.json
+token.json
+client_secret*.json
+
+# ── App Data / Database ──────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+config.json
+
+# ── OS Files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────
+*.log
+
+# ── Misc ─────────────────────────────────────────────────
+.env
+.env.*
