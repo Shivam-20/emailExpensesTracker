@@ -32,6 +32,22 @@ fi
 echo ""
 
 if $USE_DISTILBERT; then
+    # Check training data size before DistilBERT fine-tuning
+    TRAINING_CSV="$PROJECT_DIR/data/training_emails.csv"
+    if [ -f "$TRAINING_CSV" ]; then
+        ROW_COUNT=$(tail -n +2 "$TRAINING_CSV" | wc -l)
+        if [ "$ROW_COUNT" -lt 300 ]; then
+            echo "⚠️  Warning: training_emails.csv has only $ROW_COUNT rows."
+            echo "   DistilBERT needs at least 300 labelled examples for reliable fine-tuning."
+            echo "   Proceeding may produce a model that classifies everything as one label."
+            read -r -p "   Continue anyway? [y/N] " answer
+            if [ "${answer,,}" != "y" ]; then
+                echo "Aborted."
+                exit 0
+            fi
+        fi
+    fi
+
     if [ "$MODE" = "retrain" ]; then
         echo "🔄  Retraining DistilBERT (merging feedback.csv)..."
         python3 -c "

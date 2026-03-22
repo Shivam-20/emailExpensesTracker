@@ -26,7 +26,7 @@ RULE_ZERO_THRESHOLD = 0    # score == 0 → NOT_EXPENSE
 
 # ── Stage 2: ML model thresholds ─────────────────────────────────────────────
 ML_HIGH_THRESHOLD = 0.85   # probability >= 0.85 → accept ML result
-ML_LOW_THRESHOLD  = 0.55   # probability <  0.55 → escalate to LLM
+ML_LOW_THRESHOLD  = 0.65   # probability <  0.65 → escalate to LLM (was 0.55)
 
 # ── Stage 3: LLM confidence bands ────────────────────────────────────────────
 LLM_ACCEPT_BANDS = ["high", "medium"]   # accept LLM result
@@ -77,4 +77,4 @@ DISTILBERT_MAX_LENGTH     = 384
 DISTILBERT_BATCH_SIZE     = 8
 DISTILBERT_EPOCHS         = 3
 DISTILBERT_HIGH_THRESHOLD = 0.85
-DISTILBERT_LOW_THRESHOLD  = 0.55
+DISTILBERT_LOW_THRESHOLD  = 0.65

@@ -22,7 +22,7 @@ def band_from_score(score: float) -> str:
     """
     if score >= 0.85:
         return "high"
-    if score >= 0.55:
+    if score >= 0.65:
         return "medium"
     return "low"
 

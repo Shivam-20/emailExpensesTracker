@@ -18,10 +18,11 @@ from PyQt6.QtWidgets import (
     QStatusBar, QTabWidget, QVBoxLayout, QWidget,
 )
 
-from tabs.expenses_tab import ExpensesTab
-from tabs.charts_tab   import ChartsTab
-from tabs.trends_tab   import TrendsTab
-from tabs.settings_tab import SettingsTab
+from tabs.expenses_tab      import ExpensesTab
+from tabs.charts_tab        import ChartsTab
+from tabs.trends_tab        import TrendsTab
+from tabs.review_queue_tab  import ReviewQueueTab
+from tabs.settings_tab      import SettingsTab
 from workers.gmail_worker import GmailWorker, AuthOnlyWorker
 from core.db import Database
 from core.gmail_auth import is_authenticated, CREDENTIALS_PATH, revoke_credentials
@@ -159,16 +160,19 @@ class MainWindow(QMainWindow):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
         self._tabs = QTabWidget()
-        self._expenses_tab = ExpensesTab(db=self._db)
-        self._charts_tab   = ChartsTab()
-        self._trends_tab   = TrendsTab()
-        self._settings_tab = SettingsTab()
+        self._expenses_tab    = ExpensesTab(db=self._db)
+        self._charts_tab      = ChartsTab()
+        self._trends_tab      = TrendsTab()
+        self._review_tab      = ReviewQueueTab()
+        self._settings_tab    = SettingsTab()
         self._tabs.addTab(self._expenses_tab, "📋 Expenses")
         self._tabs.addTab(self._charts_tab,   "📊 Charts")
         self._tabs.addTab(self._trends_tab,   "📈 Trends")
+        self._tabs.addTab(self._review_tab,   "🔍 Review Queue")
         self._tabs.addTab(self._settings_tab, "⚙️ Settings")
         self._expenses_tab.field_changed.connect(self._on_field_changed)
         self._expenses_tab.exclude_requested.connect(self._on_exclude_requested)
+        self._review_tab.correction_saved.connect(self._on_review_correction)
         self._settings_tab.reauth_requested.connect(self._on_reauth)
         self._settings_tab.clear_cache_requested.connect(self._on_clear_cache)
         self._settings_tab.data_dir_changed.connect(self._on_data_dir_changed)
@@ -189,7 +193,9 @@ class MainWindow(QMainWindow):
     def _post_init(self) -> None:
         self._settings_tab.set_db(self._db, self.data_dir, self._config)
         self._trends_tab.set_db(self._db, self.data_dir)
+        self._review_tab.set_db(self._db, self.data_dir)
         self._update_stage3_label()
+        self._update_review_badge()
         if not CREDENTIALS_PATH.exists():
             self._account_pill.setText("⚠ credentials.json missing")
             return
@@ -271,6 +277,8 @@ class MainWindow(QMainWindow):
         self._expenses_tab.load_rows(rows)
         self._charts_tab.update_charts(rows, year, month)
         self._settings_tab.refresh()
+        self._review_tab.refresh()
+        self._update_review_badge()
         self._fetch_btn.setEnabled(True)
         self._refresh_btn.setEnabled(True)
         self._progress.setVisible(False)
@@ -355,6 +363,18 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Restart Required",
             f"Data directory will change to:\n{new_path}\n\nRestart the app to apply.")
         _save_bootstrap_path(new_path)
+
+    def _on_review_correction(self, msg_id: str, new_label: str) -> None:
+        self._update_review_badge()
+
+    def _update_review_badge(self) -> None:
+        """Update the Review Queue tab label with a count badge."""
+        count = self._review_tab.get_review_count()
+        review_idx = self._tabs.indexOf(self._review_tab)
+        if count > 0:
+            self._tabs.setTabText(review_idx, f"🔍 Review Queue ({count})")
+        else:
+            self._tabs.setTabText(review_idx, "🔍 Review Queue")
 
     def _on_backend_changed(self, backend: str) -> None:
         self._update_stage3_label()

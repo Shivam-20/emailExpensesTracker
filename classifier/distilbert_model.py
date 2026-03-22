@@ -153,7 +153,10 @@ class _EmailDataset:
         }
 
 
-def train(csv_path: Path, output_dir: Path) -> None:
+MIN_TRAINING_ROWS = 300
+
+
+def train(csv_path: Path, output_dir: Path, force: bool = False) -> None:
     """Fine-tune DistilBERT on csv_path and save to output_dir."""
     if not _HAS_TRANSFORMERS:
         raise ImportError("transformers and torch are required for DistilBERT training.")
@@ -165,6 +168,23 @@ def train(csv_path: Path, output_dir: Path) -> None:
     )
 
     df = _load_training_df(csv_path)
+
+    if len(df) < MIN_TRAINING_ROWS and not force:
+        logger.warning(
+            "training data has only %d rows (minimum recommended: %d). "
+            "DistilBERT may produce unreliable results.",
+            len(df), MIN_TRAINING_ROWS,
+        )
+        # In CLI mode, prompt for confirmation
+        import sys
+        if sys.stdin.isatty():
+            answer = input(
+                f"Warning: only {len(df)} rows (need {MIN_TRAINING_ROWS}+). "
+                "Continue anyway? [y/N] "
+            )
+            if answer.strip().lower() != "y":
+                logger.info("Training aborted by user.")
+                return
     labels_list = sorted(df["label"].unique().tolist())
     label2id    = {l: i for i, l in enumerate(labels_list)}
     id2label    = {i: l for l, i in label2id.items()}
@@ -203,6 +223,10 @@ def train(csv_path: Path, output_dir: Path) -> None:
     global _model, _tokenizer, _label_map
     _model = _tokenizer = None
     _label_map = {}
+
+    # Invalidate prediction cache so stale results aren't served
+    from .cache import reset_model_hash
+    reset_model_hash()
 
 
 def retrain(base_csv: Path, feedback_csv: Path, output_dir: Path) -> None:

@@ -80,7 +80,8 @@ class TestDistilbertClassify:
         pytest.importorskip("torch")
         from classifier import distilbert_model as dm
 
-        model, tokenizer = _make_mock_model_and_tokenizer("EXPENSE", 0.45)
+        # prob=0.51 produces nearly-equal logits → softmax max ≈ 0.525 → "low" band
+        model, tokenizer = _make_mock_model_and_tokenizer("EXPENSE", 0.51)
         monkeypatch.setattr(dm, "_model",     model)
         monkeypatch.setattr(dm, "_tokenizer", tokenizer)
         monkeypatch.setattr(dm, "_label_map", {0: "EXPENSE", 1: "NOT_EXPENSE"})
