@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import (
     QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QMainWindow,
     QMessageBox, QProgressBar, QPushButton, QSizePolicy,
@@ -26,7 +27,10 @@ from tabs.settings_tab      import SettingsTab
 from workers.gmail_worker import GmailWorker, AuthOnlyWorker
 from core.db import Database
 from core.gmail_auth import is_authenticated, CREDENTIALS_PATH, revoke_credentials
-from styles import ACCENT, BG, BORDER, SIDEBAR_BG, SURFACE, SURFACE3, TEXT, TEXT_DIM, SUCCESS, WARNING, MAIN_STYLE
+from styles import (
+    ACCENT, BG, BORDER, SIDEBAR_BG, SURFACE, TEXT, TEXT_DIM, SUCCESS, WARNING, ERROR, MAIN_STYLE,
+    SPACING_SM, SPACING_MD, SPACING_LG, RADIUS_SM, RADIUS_MD,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,15 +68,16 @@ class MainWindow(QMainWindow):
     def _build_sidebar(self) -> QWidget:
         sb = QWidget()
         sb.setObjectName("sidebar")
-        sb.setFixedWidth(230)
+        sb.setFixedWidth(280)
         lay = QVBoxLayout(sb)
-        lay.setContentsMargins(14, 14, 14, 14)
-        lay.setSpacing(8)
+        lay.setContentsMargins(12, 16, 12, 16)
+        lay.setSpacing(0)
 
         title = QLabel("💰 Expense Tracker")
         title.setObjectName("appTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
+        lay.addSpacing(8)
 
         self._account_pill = QLabel("Not connected")
         self._account_pill.setObjectName("accountPill")
@@ -86,70 +91,64 @@ class MainWindow(QMainWindow):
         lay.addWidget(self._connect_btn)
 
         lay.addWidget(_sep())
+        lay.addSpacing(8)
 
-        lay.addWidget(QLabel("Year"))
+        year_month_label = QLabel("Date Selection")
+        year_month_label.setObjectName("sectionLabel")
+        lay.addWidget(year_month_label)
+        lay.addSpacing(4)
+
         self._year_combo = QComboBox()
         for y in range(_NOW_YEAR - 3, _NOW_YEAR + 4):
             self._year_combo.addItem(str(y), y)
         self._year_combo.setCurrentText(str(_NOW_YEAR))
         lay.addWidget(self._year_combo)
 
-        lay.addWidget(QLabel("Month"))
         self._month_combo = QComboBox()
         for i, name in enumerate(calendar.month_name[1:], start=1):
             self._month_combo.addItem(name, i)
         self._month_combo.setCurrentIndex(_NOW_MONTH - 1)
         lay.addWidget(self._month_combo)
 
-        lay.addWidget(QLabel("Gmail Label"))
         self._label_combo = QComboBox()
         self._label_combo.addItem("All Mail", None)
         lay.addWidget(self._label_combo)
 
+        lay.addSpacing(12)
+
+        actions_label = QLabel("Actions")
+        actions_label.setObjectName("sectionLabel")
+        lay.addWidget(actions_label)
         lay.addSpacing(4)
 
         self._fetch_btn = QPushButton("🔍 Fetch Expenses")
         self._fetch_btn.setObjectName("primaryBtn")
+        self._fetch_btn.setToolTip("Fetch expenses from Gmail")
         self._fetch_btn.clicked.connect(lambda: self._on_fetch(force=False))
         lay.addWidget(self._fetch_btn)
 
         self._refresh_btn = QPushButton("🔄 Refresh Cache")
+        self._refresh_btn.setObjectName("ghostBtn")
+        self._refresh_btn.setToolTip("Force refresh from server")
         self._refresh_btn.clicked.connect(lambda: self._on_fetch(force=True))
         lay.addWidget(self._refresh_btn)
 
-        lay.addWidget(_sep())
+        lay.addSpacing(12)
 
-        grid_w = QWidget()
-        grid_l = QGridLayout(grid_w)
-        grid_l.setContentsMargins(0, 0, 0, 0)
-        grid_l.setSpacing(6)
-        self._mini_total    = _MiniCard("💰 Total",       "—")
-        self._mini_count    = _MiniCard("📦 Txns",        "—")
-        self._mini_top_cat  = _MiniCard("🏆 Top",         "—")
-        self._mini_high_day = _MiniCard("📅 Peak Day",    "—")
-        grid_l.addWidget(self._mini_total,    0, 0)
-        grid_l.addWidget(self._mini_count,    0, 1)
-        grid_l.addWidget(self._mini_top_cat,  1, 0)
-        grid_l.addWidget(self._mini_high_day, 1, 1)
-        lay.addWidget(grid_w)
+        summary_label = QLabel("Summary")
+        summary_label.setObjectName("sectionLabel")
+        lay.addWidget(summary_label)
+        lay.addSpacing(4)
 
-        lay.addWidget(_sep())
+        self._summary_card = _SummaryCard()
+        lay.addWidget(self._summary_card)
 
-        self._last_fetch_lbl = QLabel("Not fetched yet")
-        self._last_fetch_lbl.setObjectName("statusLabel")
-        self._last_fetch_lbl.setWordWrap(True)
-        lay.addWidget(self._last_fetch_lbl)
+        lay.addSpacing(12)
 
         self._stage3_lbl = QLabel()
         self._stage3_lbl.setObjectName("statusLabel")
-        self._stage3_lbl.setWordWrap(True)
         self._stage3_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self._stage3_lbl)
-
-        self._sidebar_progress = QProgressBar()
-        self._sidebar_progress.setRange(0, 0)
-        self._sidebar_progress.setVisible(False)
-        lay.addWidget(self._sidebar_progress)
 
         lay.addStretch()
         return sb
@@ -196,6 +195,7 @@ class MainWindow(QMainWindow):
         self._review_tab.set_db(self._db, self.data_dir)
         self._update_stage3_label()
         self._update_review_badge()
+        self._setup_tab_shortcuts()
         if not CREDENTIALS_PATH.exists():
             self._account_pill.setText("⚠ credentials.json missing")
             return
@@ -221,7 +221,9 @@ class MainWindow(QMainWindow):
 
     def _on_authenticated(self, email: str) -> None:
         self._account_pill.setText(f"● {email}")
-        self._account_pill.setStyleSheet(f"color: {SUCCESS}; font-weight: bold;")
+        self._account_pill.setProperty("connected", True)
+        self._account_pill.style().unpolish(self._account_pill)
+        self._account_pill.style().polish(self._account_pill)
         self._connect_btn.setVisible(False)
         self._sb.showMessage(f"Connected as {email}")
 
@@ -248,7 +250,6 @@ class MainWindow(QMainWindow):
         self._progress.setRange(0, 100)
         self._progress.setValue(0)
         self._progress.setVisible(True)
-        self._sidebar_progress.setVisible(True)
         self._expenses_tab.clear()
         self._charts_tab.clear()
         self._worker = GmailWorker(
@@ -282,44 +283,28 @@ class MainWindow(QMainWindow):
         self._fetch_btn.setEnabled(True)
         self._refresh_btn.setEnabled(True)
         self._progress.setVisible(False)
-        self._sidebar_progress.setVisible(False)
-        self._last_fetch_lbl.setText(
-            f"Last fetched:\n{calendar.month_name[month]} {year}\n\u00b7 {len(rows)} rows"
-        )
-        self._update_mini_cards(rows)
+        self._update_summary_card(rows)
         if not rows:
             QMessageBox.information(self, "No Expenses Found",
                 f"No expense emails found for {calendar.month_name[month]} {year}.")
 
-    def _update_mini_cards(self, rows: list) -> None:
+    def _update_summary_card(self, rows: list) -> None:
         active = [r for r in rows if r.get("status") != "excluded"]
         if not active:
-            for c in (self._mini_total, self._mini_count, self._mini_top_cat, self._mini_high_day):
-                c.set_value("—")
+            self._summary_card.update("—", "—", "—")
             return
         total = sum(r.get("amount_edited") or r.get("amount") or 0 for r in active)
         cat_totals: dict[str, float] = defaultdict(float)
-        day_totals: dict[str, float] = defaultdict(float)
         for r in active:
             cat = r.get("category_edited") or r.get("category", "Other")
             cat_totals[cat] += r.get("amount_edited") or r.get("amount") or 0
-            day_totals[r.get("email_date", "—")] += r.get("amount_edited") or r.get("amount") or 0
         top_cat = max(cat_totals, key=lambda c: cat_totals[c]) if cat_totals else "—"
-        exp_day = max(day_totals, key=lambda d: day_totals[d]) if day_totals else "—"
-        try:
-            exp_day = datetime.strptime(exp_day, "%Y-%m-%d").strftime("%-d %b")
-        except Exception:
-            pass
-        self._mini_total.set_value(f"₹{total:,.0f}")
-        self._mini_count.set_value(str(len(active)))
-        self._mini_top_cat.set_value(top_cat)
-        self._mini_high_day.set_value(exp_day)
+        self._summary_card.update(f"₹{total:,.0f}", f"{len(active)} txns", top_cat)
 
     def _on_worker_error(self, msg: str) -> None:
         self._fetch_btn.setEnabled(True)
         self._refresh_btn.setEnabled(True)
         self._progress.setVisible(False)
-        self._sidebar_progress.setVisible(False)
         self._sb.showMessage("❌ Error")
         QMessageBox.critical(self, "Error", msg)
 
@@ -371,8 +356,19 @@ class MainWindow(QMainWindow):
         """Update the Review Queue tab label with a count badge."""
         count = self._review_tab.get_review_count()
         review_idx = self._tabs.indexOf(self._review_tab)
+        
         if count > 0:
-            self._tabs.setTabText(review_idx, f"🔍 Review Queue ({count})")
+            if count > 10:
+                badge_color = ERROR
+            elif count > 5:
+                badge_color = WARNING
+            else:
+                badge_color = ACCENT
+                
+            badge = f" 🔍 <span style='background-color: {badge_color}; "
+            badge += f"color: {BG}; padding: 2px 8px; border-radius: 12px; "
+            badge += f"font-size: 11px; font-weight: 600;'>{count}</span>"
+            self._tabs.setTabText(review_idx, f"Review Queue{badge}")
         else:
             self._tabs.setTabText(review_idx, "🔍 Review Queue")
 
@@ -406,6 +402,18 @@ class MainWindow(QMainWindow):
         except Exception:
             return False
 
+    def _setup_tab_shortcuts(self) -> None:
+        """Setup keyboard shortcuts for tab navigation."""
+        shortcuts = [
+            (QKeySequence("Alt+1"), 0),
+            (QKeySequence("Alt+2"), 1),
+            (QKeySequence("Alt+3"), 2),
+            (QKeySequence("Alt+4"), 3),
+            (QKeySequence("Alt+5"), 4),
+        ]
+        for key_seq, index in shortcuts:
+            shortcut = self.create_shortcut(key_seq, self, lambda _checked, i=index: self._tabs.setCurrentIndex(i))
+
     def closeEvent(self, event) -> None:
         if self._worker and self._worker.isRunning():
             self._worker.abort()
@@ -414,21 +422,34 @@ class MainWindow(QMainWindow):
         event.accept()
 
 
-class _MiniCard(QFrame):
-    def __init__(self, title: str, value: str, parent=None) -> None:
+class _SummaryCard(QFrame):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("summaryCard")
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(6, 5, 6, 5)
-        lay.setSpacing(1)
-        t = QLabel(title); t.setObjectName("cardLabel")
-        t.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._v = QLabel(value); self._v.setObjectName("cardValue")
-        self._v.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._v.setWordWrap(True)
-        lay.addWidget(t); lay.addWidget(self._v)
-    def set_value(self, v: str) -> None:
-        self._v.setText(v)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        lay.setSpacing(SPACING_LG)
+        
+        self._total_lbl = QLabel("—")
+        self._total_lbl.setObjectName("summaryValue")
+        self._total_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        self._count_lbl = QLabel("—")
+        self._count_lbl.setObjectName("summaryValue")
+        self._count_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self._cat_lbl = QLabel("—")
+        self._cat_lbl.setObjectName("summaryValue")
+        self._cat_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        
+        lay.addWidget(self._total_lbl, stretch=1)
+        lay.addWidget(self._count_lbl, stretch=1)
+        lay.addWidget(self._cat_lbl, stretch=1)
+    
+    def update(self, total: str, count: str, top_cat: str) -> None:
+        self._total_lbl.setText(f"💰 {total}")
+        self._count_lbl.setText(f"📦 {count}")
+        self._cat_lbl.setText(f"🏆 {top_cat}")
 
 
 def _sep() -> QFrame:

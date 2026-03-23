@@ -19,9 +19,9 @@ from PyQt6.QtWidgets import (
 
 from config.category_map import ALL_CATEGORIES
 from styles import (
-    CATEGORY_COLORS, CONFIDENCE_COLORS,
-    TEXT, TEXT_DIM, SURFACE, SURFACE2, SURFACE3,
-    ACCENT, ACCENT_DK, WARNING, ERROR, AMBER, BORDER,
+    CATEGORY_COLORS, CONFIDENCE_COLORS, CONFIDENCE_BADGES,
+    TEXT, TEXT_DIM, SURFACE, SURFACE2, SURFACE3, SURFACE_HOVER,
+    ACCENT, ACCENT_DK, WARNING, ERROR, SUCCESS, AMBER, BORDER,
 )
 
 logger = logging.getLogger(__name__)
@@ -278,18 +278,40 @@ class ExpensesTab(QWidget):
 
             sym = _currency_sym(row.get("currency", "INR"))
 
+            is_edited_amt = row.get("amount_edited") is not None and row.get("amount_edited") != row.get("amount")
+            is_edited_cat = row.get("category_edited") is not None and row.get("category_edited") != row.get("category")
+
+            status_text = _status_label(status, is_dup)
+            if status == "review":
+                status_badge = f"🔍 {status_text}"
+                status_badge_color = WARNING
+            elif status == "excluded":
+                status_badge = f"🚫 {status_text}"
+                status_badge_color = TEXT_DIM
+            else:
+                status_badge = f"✓ {status_text}"
+                status_badge_color = SUCCESS
+
             items = [
                 _item("",               CI["✓"],          center=True),
                 _item(row.get("email_date", ""), CI["Date"],     center=True),
                 _item(_trunc(row.get("sender",""),28),  CI["Sender"]),
                 _item(_trunc(row.get("subject",""),45), CI["Subject"]),
-                _item(f"{sym}{amount:,.2f}", CI["Amount"],    right=True),
+                _item(f"{sym}{amount:,.2f}", CI["Amount"],    right=True, bold=is_edited_amt),
                 _item(row.get("currency","INR"),     CI["Currency"],  center=True),
                 _item(_trunc(row.get("payment_method","Unknown"),22), CI["Payment"]),
-                _item(cat,              CI["Category"],  center=True),
+                _item(_create_category_chip(cat), CI["Category"]),
                 _item(", ".join(tags_list), CI["Tags"]),
-                _item(_conf_label(conf), CI["Confidence"], center=True),
-                _item(_status_label(status, is_dup), CI["Status"], center=True),
+                _item(_create_badge(
+                    _conf_label(conf),
+                    CONFIDENCE_BADGES.get(conf, CONFIDENCE_BADGES["NONE"])[0],
+                    CONFIDENCE_BADGES.get(conf, CONFIDENCE_BADGES["NONE"])[1]
+                ), CI["Confidence"]),
+                _item(_create_badge(
+                    status_badge,
+                    "#1e3a26" if status == "active" else "#3a2628" if status == "excluded" else "#3a3528",
+                    status_badge_color
+                ), CI["Status"]),
             ]
 
             for col, item in enumerate(items):
@@ -580,7 +602,7 @@ class ExpensesTab(QWidget):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _item(text: str, col: int, center: bool = False, right: bool = False) -> QTableWidgetItem:
+def _item(text: str, col: int, center: bool = False, right: bool = False, bold: bool = False) -> QTableWidgetItem:
     it = QTableWidgetItem(text)
     if center:
         it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -588,6 +610,8 @@ def _item(text: str, col: int, center: bool = False, right: bool = False) -> QTa
         it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
     else:
         it.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+    if bold:
+        f = it.font(); f.setBold(True); it.setFont(f)
     return it
 
 
@@ -600,13 +624,44 @@ def _trunc(text: str, n: int) -> str:
 
 
 def _conf_label(conf: str) -> str:
-    return {"HIGH": "🟢 High", "MEDIUM": "🟡 Med", "LOW": "🔴 Low", "NONE": "—"}.get(conf, conf)
+    return {"HIGH": "High", "MEDIUM": "Med", "LOW": "Low", "NONE": "—"}.get(conf, conf)
 
 
 def _status_label(status: str, is_dup: bool) -> str:
     if is_dup:
-        return "[DUP]"
-    return {"active": "Active", "excluded": "Excl.", "duplicate": "[DUP]"}.get(status, status)
+        return "Duplicate"
+    return {"active": "Active", "excluded": "Excluded", "review": "Review", "duplicate": "Duplicate"}.get(status, status)
+
+
+def _create_badge(text: str, bg_color: str, fg_color: str) -> str:
+    """Create HTML badge styling."""
+    return f"""
+    <div style='
+        background-color: {bg_color};
+        color: {fg_color};
+        padding: 3px 10px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 11px;
+    '>{text}</div>
+    """
+
+
+def _create_category_chip(category: str) -> str:
+    """Create HTML for category with color indicator."""
+    color = CATEGORY_COLORS.get(category, CATEGORY_COLORS["Other"])
+    return f"""
+    <div style='display: flex; align-items: center; gap: 6px;'>
+        <span style='
+            width: 8px;
+            height: 8px;
+            background-color: {color};
+            border-radius: 50%;
+        '></span>
+        <span style='font-weight: 500;'>{category}</span>
+    </div>
+    """
 
 
 # ── Sub-dialogs ───────────────────────────────────────────────────────────────
