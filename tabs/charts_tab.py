@@ -12,6 +12,7 @@ import calendar
 import logging
 from collections import defaultdict
 from datetime import datetime
+from typing import Optional
 
 import matplotlib
 matplotlib.use("QtAgg")
@@ -19,9 +20,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QFrame, QHBoxLayout, QLabel, QSizePolicy,
+    QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy,
     QVBoxLayout, QGridLayout, QWidget,
 )
 
@@ -39,22 +40,30 @@ plt.style.use("dark_background")
 
 
 class ChartsTab(QWidget):
+    # Emitted when user clicks a category in pie chart → drill down to expenses tab
+    category_drill = pyqtSignal(str)
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._rows: list[dict] = []
         self._year  = datetime.now().year
         self._month = datetime.now().month
+        self._prev_total: Optional[float] = None
+        self._pie_labels: list[str] = []   # for pick-event drill-down
         self._setup_ui()
 
-    def update_charts(self, rows: list[dict], year: int = 0, month: int = 0) -> None:
+    def update_charts(self, rows: list[dict], year: int = 0, month: int = 0,
+                      prev_total: Optional[float] = None) -> None:
         self._rows  = [r for r in rows if r.get("status") != "excluded"]
         if year:  self._year  = year
         if month: self._month = month
+        self._prev_total = prev_total
         self._render_all()
         self._update_cards()
 
     def clear(self) -> None:
         self._rows = []
+        self._prev_total = None
         self._render_all()
         self._update_cards()
 
@@ -65,8 +74,21 @@ class ChartsTab(QWidget):
         outer.setContentsMargins(10, 10, 10, 10)
         outer.setSpacing(10)
 
+        # Toolbar
+        toolbar = QWidget()
+        tb_lay  = QHBoxLayout(toolbar)
+        tb_lay.setContentsMargins(0, 0, 0, 0)
+        tb_lay.addStretch()
+        save_btn = QPushButton("💾 Save Charts")
+        save_btn.setObjectName("ghostBtn")
+        save_btn.setToolTip("Save all charts as a PNG image")
+        save_btn.clicked.connect(self._save_charts)
+        tb_lay.addWidget(save_btn)
+        outer.addWidget(toolbar)
+
         # 2×2 chart grid
         grid = QWidget()
+        self._chart_grid = grid
         grid_layout = QGridLayout(grid)
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_layout.setSpacing(8)
@@ -90,8 +112,9 @@ class ChartsTab(QWidget):
         grid_layout.setRowStretch(0, 1)
         grid_layout.setRowStretch(1, 1)
 
-        # Connect heatmap hover
+        # Connect heatmap hover + pie click for drill-down
         self._heat_canvas.mpl_connect("motion_notify_event", self._on_heat_hover)
+        self._pie_canvas.mpl_connect("pick_event", self._on_pie_pick)
 
         outer.addWidget(grid, stretch=1)
 
@@ -140,11 +163,15 @@ class ChartsTab(QWidget):
         values = [cat_totals[l] for l in labels]
         colors = [CATEGORY_COLORS.get(l, "#6c7086") for l in labels]
 
+        self._pie_labels = labels   # store for pick-event drill-down
+
         wedges, _, autotexts = ax.pie(
             values, colors=colors, autopct="%1.1f%%",
             startangle=140, pctdistance=0.80,
             wedgeprops={"linewidth": 1.2, "edgecolor": _BG},
         )
+        for w in wedges:
+            w.set_picker(True)
         for at in autotexts:
             at.set_color(_BG); at.set_fontsize(8); at.set_fontweight("bold")
 
@@ -328,6 +355,29 @@ class ChartsTab(QWidget):
         self._heat_sym        = sym
         self._heat_canvas.draw()
 
+    def _on_pie_pick(self, event) -> None:
+        """Drill down to expenses tab when a pie wedge is clicked."""
+        if not hasattr(event, "artist") or not self._pie_labels:
+            return
+        try:
+            # Find which wedge index was picked
+            ax = self._pie_ax
+            wedges = [p for p in ax.patches]
+            idx = wedges.index(event.artist)
+            if 0 <= idx < len(self._pie_labels):
+                self.category_drill.emit(self._pie_labels[idx])
+        except (ValueError, AttributeError):
+            pass
+
+    def _save_charts(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Charts", "expense_charts.png",
+            "PNG Image (*.png);;All Files (*)"
+        )
+        if path:
+            pixmap = self._chart_grid.grab()
+            pixmap.save(path)
+
     def _on_heat_hover(self, event) -> None:
         if not hasattr(self, "_heat_day_totals") or event.inaxes != self._heat_ax:
             return
@@ -364,7 +414,13 @@ class ChartsTab(QWidget):
         big_amt = biggest.get("amount_edited") or biggest.get("amount") or 0
         big_who = _trunc(biggest.get("sender", "?"), 15)
 
-        self._card_total.set_value(f"{sym}{total:,.2f}")
+        delta_str = ""
+        if self._prev_total and self._prev_total > 0:
+            delta_pct = (total - self._prev_total) / self._prev_total * 100
+            arrow = "↑" if delta_pct >= 0 else "↓"
+            delta_str = f"\n{arrow}{abs(delta_pct):.1f}% vs prev"
+
+        self._card_total.set_value(f"{sym}{total:,.2f}{delta_str}")
         self._card_count.set_value(str(count))
         self._card_avg_day.set_value(f"{sym}{avg_day:,.2f}")
         self._card_biggest.set_value(f"{sym}{big_amt:,.0f}\n({big_who})")

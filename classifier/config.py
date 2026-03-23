@@ -69,6 +69,39 @@ def save_stage3_backend(backend: str) -> None:
 
 STAGE3_BACKEND = _load_stage3_backend()
 
+
+def load_thresholds() -> dict:
+    """Load user-overridden thresholds from classifier_settings.json."""
+    defaults = {
+        "RULE_HIGH_THRESHOLD": RULE_HIGH_THRESHOLD,
+        "ML_HIGH_THRESHOLD":   ML_HIGH_THRESHOLD,
+        "ML_LOW_THRESHOLD":    ML_LOW_THRESHOLD,
+    }
+    try:
+        if _SETTINGS_FILE.exists():
+            saved = json.loads(_SETTINGS_FILE.read_text()).get("thresholds", {})
+            defaults.update({k: v for k, v in saved.items() if k in defaults})
+    except Exception:
+        pass
+    return defaults
+
+
+def save_thresholds(rule_high: int, ml_high: float, ml_low: float) -> None:
+    """Persist threshold overrides to data/classifier_settings.json."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    existing: dict = {}
+    try:
+        if _SETTINGS_FILE.exists():
+            existing = json.loads(_SETTINGS_FILE.read_text())
+    except Exception:
+        pass
+    existing["thresholds"] = {
+        "RULE_HIGH_THRESHOLD": rule_high,
+        "ML_HIGH_THRESHOLD":   ml_high,
+        "ML_LOW_THRESHOLD":    ml_low,
+    }
+    _SETTINGS_FILE.write_text(json.dumps(existing, indent=2))
+
 # ── DistilBERT settings ────────────────────────────────────────────────────────
 DISTILBERT_BASE_MODEL     = "distilbert-base-uncased"
 DISTILBERT_MODEL_DIR      = MODELS_DIR / "distilbert"

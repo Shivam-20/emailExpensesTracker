@@ -64,6 +64,12 @@ class TrendsTab(QWidget):
         load_btn.setObjectName("primaryBtn")
         load_btn.clicked.connect(self._load_trend)
         ctrl_layout.addWidget(load_btn)
+
+        export_btn = QPushButton("📥 Export CSV")
+        export_btn.setObjectName("ghostBtn")
+        export_btn.clicked.connect(self._export_csv)
+        ctrl_layout.addWidget(export_btn)
+
         ctrl_layout.addStretch()
 
         self._status_lbl = QLabel("")
@@ -82,7 +88,8 @@ class TrendsTab(QWidget):
         # Comparison table
         layout.addWidget(QLabel("Month Comparison"))
         self._table = QTableWidget()
-        self._table.setMaximumHeight(180)
+        self._table.setMinimumHeight(100)
+        self._table.setMaximumHeight(260)
         self._table.setAlternatingRowColors(True)
         self._table.verticalHeader().setVisible(False)
         layout.addWidget(self._table)
@@ -194,6 +201,34 @@ class TrendsTab(QWidget):
         )
         self._canv.draw()
 
+    def _export_csv(self) -> None:
+        if not self._trend_data:
+            self._status_lbl.setText("No trend data to export — load trend first.")
+            return
+        from PyQt6.QtWidgets import QFileDialog
+        import csv as _csv
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Trend CSV", "trend_comparison.csv",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        if not path:
+            return
+        months = sorted(self._trend_data.keys())
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as fh:
+                writer = _csv.writer(fh)
+                writer.writerow(["month", "total", "count", "avg_transaction"])
+                for m in months:
+                    rows = self._trend_data[m]
+                    active = [r for r in rows if r.get("status") != "excluded"]
+                    total = sum(r.get("amount_edited") or r.get("amount") or 0 for r in active)
+                    count = len(active)
+                    avg   = total / count if count else 0
+                    writer.writerow([m, f"{total:.2f}", count, f"{avg:.2f}"])
+            self._status_lbl.setText(f"Exported to {path}")
+        except OSError as exc:
+            self._status_lbl.setText(f"Export failed: {exc}")
+
     # ── Comparison table ──────────────────────────────────────────────────────
 
     def _render_table(
@@ -201,7 +236,15 @@ class TrendsTab(QWidget):
         months: list[str],
         month_data: dict,
     ) -> None:
-        top_cats = ["Shopping", "Food", "Transport", "Subscriptions"]
+        # Dynamically compute top-4 categories across all loaded months
+        from collections import defaultdict as _dd
+        all_cat_totals: dict[str, float] = _dd(float)
+        for rows in month_data.values():
+            for r in rows:
+                cat = r.get("category_edited") or r.get("category", "Other")
+                all_cat_totals[cat] += r.get("amount_edited") or r.get("amount") or 0
+        top_cats = sorted(all_cat_totals, key=lambda c: all_cat_totals[c], reverse=True)[:4]
+
         col_names = ["Month", "Total"] + top_cats + ["Others", "vs Prev"]
         self._table.setColumnCount(len(col_names))
         self._table.setHorizontalHeaderLabels(col_names)
