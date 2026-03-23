@@ -7,8 +7,8 @@ import json
 import logging
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QDate, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QAction
+from PyQt6.QtCore import Qt, QDate, QEvent, pyqtSignal
+from PyQt6.QtGui import QColor, QFont, QAction, QWheelEvent
 from PyQt6.QtWidgets import (
     QAbstractItemView, QCheckBox, QDateEdit, QDialog, QDialogButtonBox,
     QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
@@ -53,6 +53,14 @@ class ExpensesTab(QWidget):
     def set_db(self, db) -> None:
         self._db = db
 
+    def eventFilter(self, obj, event) -> bool:
+        """Redirect mouse-wheel over the chips scroll area to scroll horizontally."""
+        if obj is self._chips_scroll and event.type() == QEvent.Type.Wheel:
+            sb = self._chips_scroll.horizontalScrollBar()
+            sb.setValue(sb.value() - event.angleDelta().y())
+            return True
+        return super().eventFilter(obj, event)
+
     # ── Public API ────────────────────────────────────────────────────────────
 
     def load_rows(self, rows: list[dict]) -> None:
@@ -74,8 +82,8 @@ class ExpensesTab(QWidget):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(6)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(5)
 
         # ── Toolbar ───────────────────────────────────────────────────────
         toolbar = QWidget()
@@ -83,20 +91,22 @@ class ExpensesTab(QWidget):
         tb_layout.setContentsMargins(0, 0, 0, 0)
         tb_layout.setSpacing(4)
 
-        # Search bar
+        # Search bar (prominent)
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Search sender, subject, category, tag…")
+        self._search.setPlaceholderText("Search sender, subject, category, tag…")
         self._search.setClearButtonEnabled(True)
+        self._search.setMinimumHeight(32)
         self._search.textChanged.connect(self._apply_filters)
         tb_layout.addWidget(self._search)
 
-        # Category chips row
+        # Category chips — horizontally scrollable, mousewheel enabled
         chips_scroll = QScrollArea()
         chips_scroll.setFrameShape(QFrame.Shape.NoFrame)
         chips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         chips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        chips_scroll.setFixedHeight(36)
+        chips_scroll.setFixedHeight(32)
         chips_scroll.setWidgetResizable(True)
+        chips_scroll.installEventFilter(self)   # mousewheel → horizontal scroll
 
         chips_widget = QWidget()
         chips_layout = QHBoxLayout(chips_widget)
@@ -121,78 +131,93 @@ class ExpensesTab(QWidget):
 
         chips_layout.addStretch()
         chips_scroll.setWidget(chips_widget)
+        self._chips_scroll = chips_scroll
         tb_layout.addWidget(chips_scroll)
 
-        # Amount range filter
-        amount_row = QWidget()
-        amount_layout = QHBoxLayout(amount_row)
-        amount_layout.setContentsMargins(0, 0, 0, 0)
-        amount_layout.setSpacing(6)
+        # Combined filter row: amount range + date range + column toggle
+        filter_row = QWidget()
+        filter_layout = QHBoxLayout(filter_row)
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.setSpacing(5)
 
-        amount_layout.addWidget(QLabel("Min ₹"))
+        # Amount range
+        min_lbl = QLabel("₹ Min")
+        min_lbl.setObjectName("statusLabel")
+        filter_layout.addWidget(min_lbl)
         self._min_spin = QSpinBox()
         self._min_spin.setRange(0, 9_999_999)
         self._min_spin.setValue(0)
-        self._min_spin.setFixedWidth(90)
-        amount_layout.addWidget(self._min_spin)
+        self._min_spin.setFixedWidth(80)
+        self._min_spin.setToolTip("Minimum amount filter")
+        filter_layout.addWidget(self._min_spin)
 
-        amount_layout.addWidget(QLabel("Max ₹"))
+        max_lbl = QLabel("Max")
+        max_lbl.setObjectName("statusLabel")
+        filter_layout.addWidget(max_lbl)
         self._max_spin = QSpinBox()
         self._max_spin.setRange(0, 9_999_999)
         self._max_spin.setValue(0)
         self._max_spin.setSpecialValueText("∞")
-        self._max_spin.setFixedWidth(90)
-        amount_layout.addWidget(self._max_spin)
+        self._max_spin.setFixedWidth(80)
+        self._max_spin.setToolTip("Maximum amount filter (0 = no limit)")
+        filter_layout.addWidget(self._max_spin)
 
-        apply_btn = QPushButton("Apply")
-        apply_btn.setFixedWidth(60)
+        apply_btn = QPushButton("▶")
+        apply_btn.setFixedWidth(28)
+        apply_btn.setToolTip("Apply amount filter")
         apply_btn.clicked.connect(self._apply_filters)
-        amount_layout.addWidget(apply_btn)
-        amount_layout.addStretch()
-        tb_layout.addWidget(amount_row)
+        filter_layout.addWidget(apply_btn)
 
-        # Date range filter + column visibility
-        date_row = QWidget()
-        date_layout = QHBoxLayout(date_row)
-        date_layout.setContentsMargins(0, 0, 0, 0)
-        date_layout.setSpacing(6)
+        # Separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.VLine)
+        sep.setStyleSheet(f"color: #45475a;")
+        filter_layout.addWidget(sep)
 
-        date_layout.addWidget(QLabel("From"))
+        # Date range
+        from_lbl = QLabel("From")
+        from_lbl.setObjectName("statusLabel")
+        filter_layout.addWidget(from_lbl)
         self._date_from = QDateEdit()
         self._date_from.setCalendarPopup(True)
-        self._date_from.setDisplayFormat("yyyy-MM-dd")
+        self._date_from.setDisplayFormat("MMM d yy")
         self._date_from.setSpecialValueText("Any")
         self._date_from.setMinimumDate(QDate(2000, 1, 1))
         self._date_from.setDate(self._date_from.minimumDate())
+        self._date_from.setFixedWidth(90)
+        self._date_from.setToolTip("Filter: from date (inclusive)")
         self._date_from.dateChanged.connect(self._apply_filters)
-        date_layout.addWidget(self._date_from)
+        filter_layout.addWidget(self._date_from)
 
-        date_layout.addWidget(QLabel("To"))
+        to_lbl = QLabel("To")
+        to_lbl.setObjectName("statusLabel")
+        filter_layout.addWidget(to_lbl)
         self._date_to = QDateEdit()
         self._date_to.setCalendarPopup(True)
-        self._date_to.setDisplayFormat("yyyy-MM-dd")
+        self._date_to.setDisplayFormat("MMM d yy")
         self._date_to.setSpecialValueText("Any")
         self._date_to.setMinimumDate(QDate(2000, 1, 1))
         self._date_to.setDate(self._date_to.minimumDate())
+        self._date_to.setFixedWidth(90)
+        self._date_to.setToolTip("Filter: to date (inclusive)")
         self._date_to.dateChanged.connect(self._apply_filters)
-        date_layout.addWidget(self._date_to)
+        filter_layout.addWidget(self._date_to)
 
-        clear_date_btn = QPushButton("✕ Clear")
-        clear_date_btn.setObjectName("ghostBtn")
-        clear_date_btn.setFixedWidth(58)
+        clear_date_btn = QPushButton("✕")
+        clear_date_btn.setFixedWidth(26)
+        clear_date_btn.setToolTip("Clear date filters")
         clear_date_btn.clicked.connect(self._clear_date_filters)
-        date_layout.addWidget(clear_date_btn)
+        filter_layout.addWidget(clear_date_btn)
 
-        date_layout.addSpacing(12)
+        filter_layout.addStretch()
 
         self._col_btn = QPushButton("Columns ▼")
         self._col_btn.setObjectName("ghostBtn")
+        self._col_btn.setToolTip("Show/hide table columns")
         self._col_btn.clicked.connect(self._show_column_menu)
-        date_layout.addWidget(self._col_btn)
+        filter_layout.addWidget(self._col_btn)
 
-        date_layout.addStretch()
-        tb_layout.addWidget(date_row)
-
+        tb_layout.addWidget(filter_row)
         layout.addWidget(toolbar)
 
         # ── Table ─────────────────────────────────────────────────────────
@@ -204,6 +229,8 @@ class ExpensesTab(QWidget):
         self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._table.setSortingEnabled(True)
         self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setDefaultSectionSize(30)
+        self._table.setShowGrid(False)
         self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._table.customContextMenuRequested.connect(self._show_context_menu)
         self._table.cellDoubleClicked.connect(self._on_cell_double_clicked)

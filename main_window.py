@@ -15,7 +15,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QMainWindow,
-    QMessageBox, QProgressBar, QPushButton, QSizePolicy,
+    QMessageBox, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
     QStatusBar, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -75,37 +75,52 @@ class MainWindow(QMainWindow):
         root.addWidget(self._build_main_area(), stretch=1)
 
     def _build_sidebar(self) -> QWidget:
-        sb = QWidget()
-        sb.setObjectName("sidebar")
-        sb.setFixedWidth(280)
-        lay = QVBoxLayout(sb)
-        lay.setContentsMargins(12, 16, 12, 16)
+        # Outer container with sidebar styling + fixed width
+        outer = QWidget()
+        outer.setObjectName("sidebar")
+        outer.setFixedWidth(270)
+        outer_lay = QVBoxLayout(outer)
+        outer_lay.setContentsMargins(0, 0, 0, 0)
+        outer_lay.setSpacing(0)
+
+        # Scrollable inner content
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setObjectName("sidebarScroll")
+
+        content = QWidget()
+        lay = QVBoxLayout(content)
+        lay.setContentsMargins(12, 14, 12, 14)
         lay.setSpacing(0)
 
+        # ── Title ─────────────────────────────────────────────────────────
         title = QLabel("💰 Expense Tracker")
         title.setObjectName("appTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
-        lay.addSpacing(8)
+        lay.addSpacing(6)
 
+        # ── Account pill ──────────────────────────────────────────────────
         self._account_pill = QLabel("Not connected")
         self._account_pill.setObjectName("accountPill")
         self._account_pill.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._account_pill.setWordWrap(True)
         lay.addWidget(self._account_pill)
+        lay.addSpacing(4)
 
         self._connect_btn = QPushButton("🔑 Connect Gmail")
         self._connect_btn.setObjectName("ghostBtn")
         self._connect_btn.clicked.connect(self._on_connect)
         lay.addWidget(self._connect_btn)
 
+        lay.addSpacing(10)
         lay.addWidget(_sep())
-        lay.addSpacing(8)
+        lay.addSpacing(10)
 
-        # ── Date / Fetch Mode ─────────────────────────────────────────────
-        date_label = QLabel("Fetch Mode")
-        date_label.setObjectName("sectionLabel")
-        lay.addWidget(date_label)
+        # ── Fetch Mode ────────────────────────────────────────────────────
+        lay.addWidget(_section_label("FETCH MODE"))
         lay.addSpacing(4)
 
         self._fetch_mode = QComboBox()
@@ -115,11 +130,17 @@ class MainWindow(QMainWindow):
             "Full Year",
             "All Available",
         ])
+        self._fetch_mode.setToolTip(
+            "Single Month: one month\n"
+            "Month Range: custom date range\n"
+            "Full Year: all 12 months of a year\n"
+            "All Available: reload all cached months"
+        )
         self._fetch_mode.currentIndexChanged.connect(self._on_fetch_mode_changed)
         lay.addWidget(self._fetch_mode)
         lay.addSpacing(4)
 
-        # ── Single month row ──────────────────────────────────────────────
+        # ── Single month pickers ──────────────────────────────────────────
         self._single_row = QWidget()
         single_lay = QHBoxLayout(self._single_row)
         single_lay.setContentsMargins(0, 0, 0, 0)
@@ -135,21 +156,21 @@ class MainWindow(QMainWindow):
             self._month_combo.addItem(name, i)
         self._month_combo.setCurrentIndex(_NOW_MONTH - 1)
 
-        single_lay.addWidget(self._year_combo)
-        single_lay.addWidget(self._month_combo)
+        single_lay.addWidget(self._year_combo, 2)
+        single_lay.addWidget(self._month_combo, 3)
         lay.addWidget(self._single_row)
 
-        # ── Month range row ───────────────────────────────────────────────
+        # ── Month range pickers ───────────────────────────────────────────
         self._range_row = QWidget()
-        range_lay = QVBoxLayout(self._range_row)
+        range_lay = QGridLayout(self._range_row)
         range_lay.setContentsMargins(0, 0, 0, 0)
-        range_lay.setSpacing(2)
+        range_lay.setSpacing(3)
+        range_lay.setColumnStretch(1, 2)
+        range_lay.setColumnStretch(2, 3)
 
-        from_row = QWidget()
-        from_lay = QHBoxLayout(from_row)
-        from_lay.setContentsMargins(0, 0, 0, 0)
-        from_lay.setSpacing(4)
-        from_lay.addWidget(QLabel("From:"))
+        from_lbl = QLabel("From")
+        from_lbl.setObjectName("statusLabel")
+        from_lbl.setFixedWidth(34)
         self._from_year = QComboBox()
         for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
             self._from_year.addItem(str(y), y)
@@ -158,15 +179,13 @@ class MainWindow(QMainWindow):
         for i, name in enumerate(calendar.month_abbr[1:], start=1):
             self._from_month.addItem(name, i)
         self._from_month.setCurrentIndex(0)
-        from_lay.addWidget(self._from_year)
-        from_lay.addWidget(self._from_month)
-        range_lay.addWidget(from_row)
+        range_lay.addWidget(from_lbl,          0, 0)
+        range_lay.addWidget(self._from_year,   0, 1)
+        range_lay.addWidget(self._from_month,  0, 2)
 
-        to_row = QWidget()
-        to_lay = QHBoxLayout(to_row)
-        to_lay.setContentsMargins(0, 0, 0, 0)
-        to_lay.setSpacing(4)
-        to_lay.addWidget(QLabel("To:  "))
+        to_lbl = QLabel("To")
+        to_lbl.setObjectName("statusLabel")
+        to_lbl.setFixedWidth(34)
         self._to_year = QComboBox()
         for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
             self._to_year.addItem(str(y), y)
@@ -175,14 +194,14 @@ class MainWindow(QMainWindow):
         for i, name in enumerate(calendar.month_abbr[1:], start=1):
             self._to_month.addItem(name, i)
         self._to_month.setCurrentIndex(_NOW_MONTH - 1)
-        to_lay.addWidget(self._to_year)
-        to_lay.addWidget(self._to_month)
-        range_lay.addWidget(to_row)
+        range_lay.addWidget(to_lbl,           1, 0)
+        range_lay.addWidget(self._to_year,    1, 1)
+        range_lay.addWidget(self._to_month,   1, 2)
 
         self._range_row.setVisible(False)
         lay.addWidget(self._range_row)
 
-        # ── Full year row ─────────────────────────────────────────────────
+        # ── Full year picker ──────────────────────────────────────────────
         self._year_only_row = QWidget()
         year_only_lay = QHBoxLayout(self._year_only_row)
         year_only_lay.setContentsMargins(0, 0, 0, 0)
@@ -194,73 +213,82 @@ class MainWindow(QMainWindow):
         self._year_only_row.setVisible(False)
         lay.addWidget(self._year_only_row)
 
+        lay.addSpacing(4)
+
         # ── Gmail label filter ────────────────────────────────────────────
         self._label_combo = QComboBox()
-        self._label_combo.addItem("All Mail", None)
+        self._label_combo.addItem("📂 All Mail", None)
+        self._label_combo.setToolTip("Filter by Gmail label")
         lay.addWidget(self._label_combo)
 
-        # Last fetched
+        # ── Last fetched ──────────────────────────────────────────────────
         self._last_fetched_lbl = QLabel("Last fetched: —")
         self._last_fetched_lbl.setObjectName("statusLabel")
         self._last_fetched_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._last_fetched_lbl.setStyleSheet(f"color: {TEXT_DIM}; font-size: 11px;")
         lay.addWidget(self._last_fetched_lbl)
 
         lay.addSpacing(10)
+        lay.addWidget(_sep())
+        lay.addSpacing(10)
 
         # ── Actions ───────────────────────────────────────────────────────
-        actions_label = QLabel("Actions")
-        actions_label.setObjectName("sectionLabel")
-        lay.addWidget(actions_label)
+        lay.addWidget(_section_label("ACTIONS"))
         lay.addSpacing(4)
 
         self._fetch_btn = QPushButton("🔍 Fetch Expenses")
         self._fetch_btn.setObjectName("primaryBtn")
-        self._fetch_btn.setToolTip("Fetch expenses (Alt+F)")
+        self._fetch_btn.setToolTip("Fetch expenses from Gmail  (Alt+F)")
         self._fetch_btn.clicked.connect(lambda: self._on_fetch(force=False))
         lay.addWidget(self._fetch_btn)
+        lay.addSpacing(4)
 
-        self._refresh_btn = QPushButton("🔄 Refresh Cache")
+        self._refresh_btn = QPushButton("🔄 Force Refresh")
         self._refresh_btn.setObjectName("ghostBtn")
-        self._refresh_btn.setToolTip("Force re-fetch from Gmail (bypasses cache)")
+        self._refresh_btn.setToolTip("Bypass cache and re-fetch from Gmail")
         self._refresh_btn.clicked.connect(lambda: self._on_fetch(force=True))
         lay.addWidget(self._refresh_btn)
 
-        lay.addSpacing(12)
+        lay.addSpacing(10)
+        lay.addWidget(_sep())
+        lay.addSpacing(10)
 
         # ── Summary ───────────────────────────────────────────────────────
-        summary_label = QLabel("Summary")
-        summary_label.setObjectName("sectionLabel")
-        lay.addWidget(summary_label)
+        lay.addWidget(_section_label("SUMMARY"))
         lay.addSpacing(4)
 
         self._summary_card = _SummaryCard()
         lay.addWidget(self._summary_card)
 
-        lay.addSpacing(12)
+        lay.addSpacing(10)
 
-        # Stage 3 indicator
+        # ── Stage 3 + hint ────────────────────────────────────────────────
         self._stage3_lbl = QLabel()
         self._stage3_lbl.setObjectName("statusLabel")
         self._stage3_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self._stage3_lbl)
 
-        # Keyboard shortcut hint
-        hint = QLabel("Alt+1–5: switch tabs  •  Alt+F: fetch")
-        hint.setObjectName("statusLabel")
+        hint = QLabel("Alt+1–5 tabs  •  Alt+F fetch")
+        hint.setObjectName("fetchHint")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        hint.setWordWrap(True)
-        hint.setStyleSheet(f"color: {TEXT_DIM}; font-size: 10px;")
         lay.addWidget(hint)
 
         lay.addStretch()
-        return sb
+        scroll.setWidget(content)
+        outer_lay.addWidget(scroll)
+        return outer
 
     def _on_fetch_mode_changed(self, _idx: int) -> None:
         mode = self._fetch_mode.currentText()
         self._single_row.setVisible(mode == "Single Month")
         self._range_row.setVisible(mode == "Month Range")
         self._year_only_row.setVisible(mode == "Full Year")
+        labels = {
+            "Single Month":  "🔍 Fetch Expenses",
+            "Month Range":   "🔍 Fetch Date Range",
+            "Full Year":     "🔍 Fetch Full Year",
+            "All Available": "🔍 Load All Cached",
+        }
+        self._fetch_btn.setText(labels.get(mode, "🔍 Fetch Expenses"))
 
     def _build_main_area(self) -> QWidget:
         area = QWidget()
@@ -586,7 +614,7 @@ class MainWindow(QMainWindow):
             arrow = "↑" if delta_pct >= 0 else "↓"
             delta_str = f"{arrow}{abs(delta_pct):.1f}% vs prev"
 
-        self._summary_card.update(f"₹{total:,.0f}", f"{len(active)} txns", top_cat, delta_str)
+        self._summary_card.update(f"₹{total:,.0f}", f"{len(active)} txns", top_cat[:14], delta_str)
 
     # ── Worker errors ─────────────────────────────────────────────────────────
 
@@ -745,41 +773,48 @@ class _SummaryCard(QFrame):
         super().__init__(parent)
         self.setObjectName("summaryCard")
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
-        lay.setSpacing(4)
+        lay.setContentsMargins(10, 8, 10, 8)
+        lay.setSpacing(3)
 
-        top_row = QWidget()
-        top_lay = QHBoxLayout(top_row)
-        top_lay.setContentsMargins(0, 0, 0, 0)
-        top_lay.setSpacing(SPACING_LG)
-
+        # Total — large prominent value
         self._total_lbl = QLabel("—")
-        self._total_lbl.setObjectName("summaryValue")
+        self._total_lbl.setObjectName("cardValue")
+        self._total_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(self._total_lbl)
+
+        # Count + Top Category side by side
+        mid_row = QWidget()
+        mid_lay = QHBoxLayout(mid_row)
+        mid_lay.setContentsMargins(0, 0, 0, 0)
+        mid_lay.setSpacing(4)
+
         self._count_lbl = QLabel("—")
-        self._count_lbl.setObjectName("summaryValue")
-        self._cat_lbl   = QLabel("—")
-        self._cat_lbl.setObjectName("summaryValue")
+        self._count_lbl.setObjectName("statusLabel")
+        self._count_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self._cat_lbl = QLabel("—")
+        self._cat_lbl.setObjectName("statusLabel")
+        self._cat_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._cat_lbl.setWordWrap(False)
 
-        top_lay.addWidget(self._total_lbl, stretch=1)
-        top_lay.addWidget(self._count_lbl, stretch=1)
-        top_lay.addWidget(self._cat_lbl,   stretch=1)
-        lay.addWidget(top_row)
+        mid_lay.addWidget(self._count_lbl, stretch=1)
+        mid_lay.addWidget(self._cat_lbl,   stretch=1)
+        lay.addWidget(mid_row)
 
+        # MoM delta
         self._delta_lbl = QLabel("")
         self._delta_lbl.setObjectName("statusLabel")
         self._delta_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._delta_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_DIM};")
         self._delta_lbl.setVisible(False)
         lay.addWidget(self._delta_lbl)
 
     def update(self, total: str, count: str, top_cat: str, delta: str = "") -> None:
-        self._total_lbl.setText(f"💰 {total}")
+        self._total_lbl.setText(total)
         self._count_lbl.setText(f"📦 {count}")
         self._cat_lbl.setText(f"🏆 {top_cat}")
         if delta:
             color = WARNING if delta.startswith("↑") else SUCCESS
             self._delta_lbl.setText(delta)
-            self._delta_lbl.setStyleSheet(f"font-size: 11px; color: {color};")
+            self._delta_lbl.setStyleSheet(f"font-size: 11px; font-weight:600; color: {color};")
             self._delta_lbl.setVisible(True)
         else:
             self._delta_lbl.setVisible(False)
@@ -792,6 +827,12 @@ def _sep() -> QFrame:
     line.setFrameShape(QFrame.Shape.HLine)
     line.setObjectName("separator")
     return line
+
+
+def _section_label(text: str) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setObjectName("sectionLabel")
+    return lbl
 
 
 def _load_config(data_dir: Path) -> dict:
