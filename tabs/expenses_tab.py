@@ -7,10 +7,10 @@ import json
 import logging
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, QDate, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QAction
 from PyQt6.QtWidgets import (
-    QAbstractItemView, QCheckBox, QDialog, QDialogButtonBox,
+    QAbstractItemView, QCheckBox, QDateEdit, QDialog, QDialogButtonBox,
     QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
     QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
     QSpinBox, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
@@ -151,6 +151,48 @@ class ExpensesTab(QWidget):
         amount_layout.addStretch()
         tb_layout.addWidget(amount_row)
 
+        # Date range filter + column visibility
+        date_row = QWidget()
+        date_layout = QHBoxLayout(date_row)
+        date_layout.setContentsMargins(0, 0, 0, 0)
+        date_layout.setSpacing(6)
+
+        date_layout.addWidget(QLabel("From"))
+        self._date_from = QDateEdit()
+        self._date_from.setCalendarPopup(True)
+        self._date_from.setDisplayFormat("yyyy-MM-dd")
+        self._date_from.setSpecialValueText("Any")
+        self._date_from.setMinimumDate(QDate(2000, 1, 1))
+        self._date_from.setDate(self._date_from.minimumDate())
+        self._date_from.dateChanged.connect(self._apply_filters)
+        date_layout.addWidget(self._date_from)
+
+        date_layout.addWidget(QLabel("To"))
+        self._date_to = QDateEdit()
+        self._date_to.setCalendarPopup(True)
+        self._date_to.setDisplayFormat("yyyy-MM-dd")
+        self._date_to.setSpecialValueText("Any")
+        self._date_to.setMinimumDate(QDate(2000, 1, 1))
+        self._date_to.setDate(self._date_to.minimumDate())
+        self._date_to.dateChanged.connect(self._apply_filters)
+        date_layout.addWidget(self._date_to)
+
+        clear_date_btn = QPushButton("✕ Clear")
+        clear_date_btn.setObjectName("ghostBtn")
+        clear_date_btn.setFixedWidth(58)
+        clear_date_btn.clicked.connect(self._clear_date_filters)
+        date_layout.addWidget(clear_date_btn)
+
+        date_layout.addSpacing(12)
+
+        self._col_btn = QPushButton("Columns ▼")
+        self._col_btn.setObjectName("ghostBtn")
+        self._col_btn.clicked.connect(self._show_column_menu)
+        date_layout.addWidget(self._col_btn)
+
+        date_layout.addStretch()
+        tb_layout.addWidget(date_row)
+
         layout.addWidget(toolbar)
 
         # ── Table ─────────────────────────────────────────────────────────
@@ -198,6 +240,7 @@ class ExpensesTab(QWidget):
         for text, slot in [
             ("Exclude Selected",  self._bulk_exclude),
             ("Change Category",   self._bulk_change_category),
+            ("🔍 Mark for Review", self._bulk_mark_review),
             ("Export Selected",   self._bulk_export),
         ]:
             btn = QPushButton(text)
@@ -224,6 +267,12 @@ class ExpensesTab(QWidget):
         min_amt  = self._min_spin.value()
         max_amt  = self._max_spin.value()
 
+        min_date_qdate = self._date_from.minimumDate()
+        from_qdate     = self._date_from.date()
+        to_qdate       = self._date_to.date()
+        use_from = from_qdate > min_date_qdate
+        use_to   = to_qdate   > min_date_qdate
+
         filtered = []
         for row in self._all_rows:
             # Category chip filter
@@ -238,6 +287,14 @@ class ExpensesTab(QWidget):
                 continue
             if max_amt > 0 and amt > max_amt:
                 continue
+
+            # Date range
+            if use_from or use_to:
+                date_str = (row.get("email_date") or "")[:10]
+                if use_from and date_str < from_qdate.toString("yyyy-MM-dd"):
+                    continue
+                if use_to and date_str > to_qdate.toString("yyyy-MM-dd"):
+                    continue
 
             # Text search
             if query:
@@ -255,6 +312,32 @@ class ExpensesTab(QWidget):
 
         self._visible_rows = filtered
         self._populate_table(filtered)
+
+    def _clear_date_filters(self) -> None:
+        min_d = self._date_from.minimumDate()
+        self._date_from.setDate(min_d)
+        self._date_to.setDate(min_d)
+        self._apply_filters()
+
+    def _show_column_menu(self) -> None:
+        from PyQt6.QtCore import QPoint
+        menu = QMenu(self)
+        for col_name in COLUMNS:
+            if col_name == "✓":
+                continue
+            act = menu.addAction(col_name)
+            act.setCheckable(True)
+            act.setChecked(not self._table.isColumnHidden(CI[col_name]))
+            act.toggled.connect(
+                lambda checked, c=CI[col_name]: self._table.setColumnHidden(c, not checked)
+            )
+        menu.exec(self._col_btn.mapToGlobal(QPoint(0, self._col_btn.height())))
+
+    def filter_by_category(self, category: str) -> None:
+        """Called externally (e.g., chart drill-down) to filter to one category."""
+        self._active_categories = {category}
+        self._update_all_chip_state()
+        self._apply_filters()
 
     def _populate_table(self, rows: list[dict]) -> None:
         self._table.setSortingEnabled(False)
@@ -335,9 +418,18 @@ class ExpensesTab(QWidget):
             bold = QFont(); bold.setBold(True)
             cat_item.setFont(bold)
 
-            # Confidence badge color
+            # Confidence badge color + tooltip
             c_item = self._table.item(r, CI["Confidence"])
             c_item.setForeground(QColor(CONFIDENCE_COLORS.get(conf, TEXT_DIM)))
+            source = row.get("classification_source", "")
+            source_label = {
+                "rules":        "Stage 1: Rule engine (keyword scoring)",
+                "ml":           "Stage 2: TF-IDF + Naive Bayes",
+                "distilbert":   "Stage 3: DistilBERT",
+                "phi4-mini":    "Stage 3: phi4-mini via Ollama",
+                "human_review": "Manually reviewed",
+            }.get(source, source or "Unknown")
+            c_item.setToolTip(f"Confidence: {conf}\nClassified by: {source_label}")
 
             if is_excl:
                 for col in range(len(COLUMNS)):
@@ -463,6 +555,14 @@ class ExpensesTab(QWidget):
                     row["category_edited"] = cat
                     self.field_changed.emit(row["id"], "category_edited", cat)
             self._apply_filters()
+
+    def _bulk_mark_review(self) -> None:
+        ids = set(self._get_checked_msg_ids())
+        for row in self._all_rows:
+            if row.get("id") in ids:
+                row["status"] = "review"
+                self.field_changed.emit(row["id"], "status", "review")
+        self._apply_filters()
 
     def _bulk_export(self) -> None:
         from core.csv_exporter import export_to_csv
