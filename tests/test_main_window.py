@@ -38,3 +38,43 @@ def test_apply_review_correction_updates_current_rows() -> None:
     assert window._current_rows[0]["status"] == "active"
     assert window._current_rows[0]["needs_review"] == 0
     assert window._current_rows[0]["category_edited"] == "Travel"
+
+
+def test_build_fetch_result_payload_uses_warning_severity() -> None:
+    window = MainWindow.__new__(MainWindow)
+    window._fetch_stats = {
+        "candidate_count": 500,
+        "processed_count": 480,
+        "parsed_count": 120,
+        "no_amount_count": 15,
+        "ignored_count": 8,
+        "parse_failures": 3,
+        "new_rows": 100,
+        "truncated": True,
+    }
+
+    title, details, severity = window._build_fetch_result_payload(42)
+
+    assert title == "Loaded 42 expense(s)"
+    assert severity == "warning"
+    assert any("500 candidate cap" in line for line in details)
+
+
+def test_build_fetch_result_payload_success_without_warnings() -> None:
+    window = MainWindow.__new__(MainWindow)
+    window._fetch_stats = {
+        "candidate_count": 20,
+        "processed_count": 20,
+        "parsed_count": 8,
+        "no_amount_count": 0,
+        "ignored_count": 0,
+        "parse_failures": 0,
+        "new_rows": 8,
+        "truncated": False,
+    }
+
+    title, details, severity = window._build_fetch_result_payload(8)
+
+    assert title == "Loaded 8 expense(s)"
+    assert severity == "success"
+    assert any("without fetch warnings" in line for line in details)

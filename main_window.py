@@ -149,6 +149,44 @@ class MainWindow:
             warnings.append(f"Processed {candidate_count} Gmail candidate email(s) without fetch warnings.")
         return warnings
 
+    def _build_fetch_result_payload(self, row_count: int) -> tuple[str, list[str], str]:
+        warning_lines = self._build_fetch_warning_lines()
+        has_warnings = bool(self._fetch_stats["truncated"] or int(self._fetch_stats["parse_failures"]))
+
+        if row_count == 0:
+            title = "No expenses found"
+            details = warning_lines[:3] if warning_lines else ["No expense emails matched the selected fetch scope."]
+            severity = "warning" if has_warnings else "info"
+            return title, details, severity
+
+        title = f"Loaded {row_count} expense(s)"
+        details = warning_lines[:3]
+        severity = "warning" if has_warnings else "success"
+        return title, details, severity
+
+    def _update_fetch_result_panel(self, title: str, details: list[str], severity: str = "info") -> None:
+        colors = {
+            "success": (SUCCESS, SUCCESS_BG),
+            "warning": (WARNING, SURFACE),
+            "error": (ERROR, SURFACE),
+            "info": (TEXT, SURFACE),
+        }
+        text_color, bg_color = colors.get(severity, (TEXT, SURFACE))
+
+        self._fetch_result_title.configure(text=title, text_color=text_color)
+        self._fetch_result_frame.configure(border_color=text_color if severity != "info" else BORDER, fg_color=bg_color)
+
+        padded = details[:3] + [""] * max(0, 3 - len(details))
+        for label, text in zip(self._fetch_result_details, padded):
+            label.configure(text=text)
+
+    def _reset_fetch_result_panel(self) -> None:
+        self._update_fetch_result_panel(
+            "No recent fetch",
+            ["Run a fetch to see result details here.", "", ""],
+            "info",
+        )
+
     def _resolve_chart_period(self) -> tuple[int, int, Optional[float]]:
         chart_year, chart_month = datetime.now().year, datetime.now().month
         prev_total: Optional[float] = None
@@ -375,6 +413,41 @@ class MainWindow:
             text_color=TEXT_DIM, font=ctk.CTkFont(family="Inter", size=FONT_SIZE_SM),
         )
         self._last_fetched_lbl.pack(pady=(2, 0))
+
+        self._fetch_result_frame = ctk.CTkFrame(
+            inner,
+            fg_color=SURFACE,
+            corner_radius=10,
+            border_color=BORDER,
+            border_width=1,
+        )
+        self._fetch_result_frame.pack(fill="x", padx=14, pady=(8, 4))
+
+        self._fetch_result_title = ctk.CTkLabel(
+            self._fetch_result_frame,
+            text="",
+            anchor="w",
+            justify="left",
+            font=ctk.CTkFont(family="Inter", size=12, weight="bold"),
+            text_color=TEXT,
+        )
+        self._fetch_result_title.pack(fill="x", padx=10, pady=(8, 4))
+
+        self._fetch_result_details: list[ctk.CTkLabel] = []
+        for _ in range(3):
+            detail = ctk.CTkLabel(
+                self._fetch_result_frame,
+                text="",
+                anchor="w",
+                justify="left",
+                wraplength=220,
+                font=ctk.CTkFont(family="Inter", size=10),
+                text_color=TEXT_DIM,
+            )
+            detail.pack(fill="x", padx=10, pady=(0, 4))
+            self._fetch_result_details.append(detail)
+
+        self._reset_fetch_result_panel()
 
         _sep(inner)
         _section_label(inner, "ACTIONS")
@@ -637,6 +710,12 @@ class MainWindow:
         self._refresh_btn.configure(state="disabled")
         self._show_progress(True)
         self._progress.set(0)
+        fetch_scope = self._fetch_mode_var.get()
+        self._update_fetch_result_panel(
+            "Fetching in progress",
+            [f"Scope: {fetch_scope}", f"Queued month(s): {len(months)}", "Parsing and syncing Gmail messages…"],
+            "info",
+        )
         self._expenses_tab.clear()
         self._charts_tab.clear()
 
@@ -694,10 +773,8 @@ class MainWindow:
             text_color=WARNING if self._fetch_stats["truncated"] or int(self._fetch_stats["parse_failures"]) else SUCCESS,
         )
         self._show_status(self._build_fetch_status_message(len(rows)) if rows else "No expenses found.")
-
-        warning_lines = self._build_fetch_warning_lines()
-        if warning_lines and (self._fetch_stats["truncated"] or int(self._fetch_stats["parse_failures"])):
-            self._msgbox_warning("Fetch Completed With Warnings", "\n".join(warning_lines))
+        panel_title, panel_details, panel_severity = self._build_fetch_result_payload(len(rows))
+        self._update_fetch_result_panel(panel_title, panel_details, panel_severity)
 
         if not rows:
             n = self._fetch_total
@@ -714,6 +791,11 @@ class MainWindow:
         self._refresh_btn.configure(state="normal")
         self._show_progress(False)
         self._show_status("Fetch cancelled.")
+        self._update_fetch_result_panel(
+            "Fetch cancelled",
+            ["The current sync was stopped before completion.", "", ""],
+            "warning",
+        )
 
     def _compute_prev_month_total(self, year: int, month: int) -> Optional[float]:
         prev_m = month - 1 if month > 1 else 12
@@ -822,6 +904,7 @@ class MainWindow:
         self._refresh_btn.configure(state="normal")
         self._show_progress(False)
         self._show_status("❌ Error")
+        self._update_fetch_result_panel("Fetch failed", [msg, "", ""], "error")
         self._msgbox_error("Error", msg)
 
     # ── Tab signal equivalents ────────────────────────────────────────────────
