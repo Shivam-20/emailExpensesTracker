@@ -1,5 +1,5 @@
 """
-tabs/settings_tab.py — Budgets, Ignore List, Custom Rules, Data Management.
+tabs/settings_tab.py — Budgets, Ignore List, Custom Rules, Data Management, Model Training.
 """
 
 import json
@@ -11,8 +11,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
     QFrame, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QMessageBox, QProgressBar, QPushButton,
-    QRadioButton, QScrollArea, QTableWidget, QTableWidgetItem,
+    QLineEdit, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
+    QRadioButton, QScrollArea, QSlider, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget,
 )
 
@@ -26,18 +26,21 @@ logger = logging.getLogger(__name__)
 
 
 class SettingsTab(QWidget):
-    """Tab 4 — Settings: Budgets, Ignore List, Custom Rules, Data Management."""
+    """Tab 4 — Settings: Budgets, Ignore List, Custom Rules, Data Management, Model Training."""
 
     data_dir_changed      = pyqtSignal(Path)
     reauth_requested      = pyqtSignal()
     clear_cache_requested = pyqtSignal(str)   # month string or "" for all
     backend_changed       = pyqtSignal(str)   # "distilbert" | "phi4-mini"
+    training_started      = pyqtSignal()
+    training_finished     = pyqtSignal(bool, str)  # (success, message)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self._db        = None
+        self._db           = None
         self._data_dir: Optional[Path] = None
         self._config:   dict = {}
+        self._training_worker = None
         self._setup_ui()
 
     def set_db(self, db, data_dir: Path, config: dict) -> None:
@@ -62,6 +65,7 @@ class SettingsTab(QWidget):
         layout.addWidget(self._build_ignore_section())
         layout.addWidget(self._build_rules_section())
         layout.addWidget(self._build_ai_backend_section())
+        layout.addWidget(self._build_training_section())
         layout.addWidget(self._build_data_section())
         layout.addStretch()
 
@@ -324,6 +328,299 @@ class SettingsTab(QWidget):
 
         self.backend_changed.emit(backend)
 
+    # ── Model Training section ────────────────────────────────────────────────
+
+    def _build_training_section(self) -> QGroupBox:
+        box = QGroupBox("🧠 Model Training")
+        layout = QVBoxLayout(box)
+        layout.setSpacing(10)
+
+        # ── Status panel ──────────────────────────────────────────────────────
+        status_row = QWidget()
+        status_layout = QHBoxLayout(status_row)
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(16)
+
+        self._nb_status_lbl = QLabel("TF-IDF+NB: checking…")
+        self._nb_status_lbl.setObjectName("statusLabel")
+        self._db_status_lbl = QLabel("DistilBERT: checking…")
+        self._db_status_lbl.setObjectName("statusLabel")
+
+        refresh_status_btn = QPushButton("🔄 Refresh")
+        refresh_status_btn.setObjectName("ghostBtn")
+        refresh_status_btn.clicked.connect(self._refresh_model_status)
+
+        status_layout.addWidget(self._nb_status_lbl)
+        status_layout.addWidget(self._db_status_lbl)
+        status_layout.addStretch()
+        status_layout.addWidget(refresh_status_btn)
+        layout.addWidget(status_row)
+
+        # ── Training controls ─────────────────────────────────────────────────
+        ctrl_row = QWidget()
+        ctrl_layout = QHBoxLayout(ctrl_row)
+        ctrl_layout.setContentsMargins(0, 0, 0, 0)
+        ctrl_layout.setSpacing(8)
+
+        ctrl_layout.addWidget(QLabel("Model:"))
+        self._model_combo = QComboBox()
+        self._model_combo.addItems([
+            "TF-IDF + Naive Bayes",
+            "DistilBERT",
+            "Both Models",
+        ])
+        ctrl_layout.addWidget(self._model_combo)
+
+        ctrl_layout.addWidget(QLabel("Mode:"))
+        self._mode_combo = QComboBox()
+        self._mode_combo.addItems(["Fresh Training", "Retrain (merge feedback)"])
+        ctrl_layout.addWidget(self._mode_combo)
+
+        self._train_btn = QPushButton("▶ Start Training")
+        self._train_btn.setStyleSheet(f"background-color: {ACCENT}; color: white; font-weight: 600;")
+        self._train_btn.clicked.connect(self._on_start_training)
+        ctrl_layout.addWidget(self._train_btn)
+
+        self._abort_btn = QPushButton("■ Abort")
+        self._abort_btn.setObjectName("ghostBtn")
+        self._abort_btn.setVisible(False)
+        self._abort_btn.clicked.connect(self._on_abort_training)
+        ctrl_layout.addWidget(self._abort_btn)
+        ctrl_layout.addStretch()
+        layout.addWidget(ctrl_row)
+
+        # ── Progress bar ──────────────────────────────────────────────────────
+        self._train_progress = QProgressBar()
+        self._train_progress.setRange(0, 100)
+        self._train_progress.setValue(0)
+        self._train_progress.setTextVisible(True)
+        self._train_progress.setVisible(False)
+        layout.addWidget(self._train_progress)
+
+        # ── Log output ────────────────────────────────────────────────────────
+        self._train_log = QPlainTextEdit()
+        self._train_log.setReadOnly(True)
+        self._train_log.setMaximumHeight(120)
+        self._train_log.setPlaceholderText("Training output will appear here…")
+        self._train_log.setVisible(False)
+        layout.addWidget(self._train_log)
+
+        # ── Threshold sliders ─────────────────────────────────────────────────
+        thresh_box = QGroupBox("Classifier Thresholds")
+        thresh_layout = QVBoxLayout(thresh_box)
+        thresh_layout.setSpacing(6)
+
+        # Rule High Threshold (integer 1–10)
+        self._rule_slider, rule_row = self._make_int_slider(
+            "Stage 1 Rule Score ≥", 1, 10, default=6,
+            tooltip="Emails scoring this or higher are immediately classified as EXPENSE."
+        )
+        thresh_layout.addWidget(rule_row)
+
+        # ML High Threshold (float 0.50–0.99, stored as int 50–99)
+        self._ml_high_slider, ml_high_row = self._make_pct_slider(
+            "Stage 2 ML High ≥", 55, 99, default=85,
+            tooltip="ML probability this or higher → accept result without Stage 3."
+        )
+        thresh_layout.addWidget(ml_high_row)
+
+        # ML Low Threshold (float 0.40–0.80, stored as int 40–80)
+        self._ml_low_slider, ml_low_row = self._make_pct_slider(
+            "Stage 2 ML Low <", 40, 80, default=65,
+            tooltip="ML probability below this → escalate to Stage 3 LLM."
+        )
+        thresh_layout.addWidget(ml_low_row)
+
+        save_thresh_btn = QPushButton("💾 Save Thresholds")
+        save_thresh_btn.clicked.connect(self._save_thresholds)
+        thresh_layout.addWidget(save_thresh_btn)
+
+        layout.addWidget(thresh_box)
+        return box
+
+    def _make_int_slider(
+        self, label: str, min_val: int, max_val: int, default: int, tooltip: str = ""
+    ):
+        row = QWidget()
+        hl = QHBoxLayout(row)
+        hl.setContentsMargins(0, 0, 0, 0)
+        hl.setSpacing(8)
+
+        lbl = QLabel(label)
+        lbl.setFixedWidth(180)
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(min_val, max_val)
+        slider.setValue(default)
+        slider.setTickInterval(1)
+        if tooltip:
+            slider.setToolTip(tooltip)
+
+        val_lbl = QLabel(str(default))
+        val_lbl.setFixedWidth(30)
+        val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        slider.valueChanged.connect(lambda v: val_lbl.setText(str(v)))
+
+        hl.addWidget(lbl)
+        hl.addWidget(slider, stretch=1)
+        hl.addWidget(val_lbl)
+        return slider, row
+
+    def _make_pct_slider(
+        self, label: str, min_val: int, max_val: int, default: int, tooltip: str = ""
+    ):
+        row = QWidget()
+        hl = QHBoxLayout(row)
+        hl.setContentsMargins(0, 0, 0, 0)
+        hl.setSpacing(8)
+
+        lbl = QLabel(label)
+        lbl.setFixedWidth(180)
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(min_val, max_val)
+        slider.setValue(default)
+        slider.setTickInterval(5)
+        if tooltip:
+            slider.setToolTip(tooltip)
+
+        val_lbl = QLabel(f"{default / 100:.2f}")
+        val_lbl.setFixedWidth(40)
+        val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        slider.valueChanged.connect(lambda v: val_lbl.setText(f"{v / 100:.2f}"))
+
+        hl.addWidget(lbl)
+        hl.addWidget(slider, stretch=1)
+        hl.addWidget(val_lbl)
+        return slider, row
+
+    def _refresh_model_status(self) -> None:
+        try:
+            from classifier.config import MODEL_PATH, VECTORIZER_PATH, DISTILBERT_MODEL_DIR
+            import os, time
+
+            # TF-IDF + NB
+            if MODEL_PATH.exists() and VECTORIZER_PATH.exists():
+                mtime = max(MODEL_PATH.stat().st_mtime, VECTORIZER_PATH.stat().st_mtime)
+                from datetime import datetime
+                date_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                self._nb_status_lbl.setText(f"TF-IDF+NB: ✅ Trained {date_str}")
+                self._nb_status_lbl.setStyleSheet(f"color: {SUCCESS};")
+            else:
+                self._nb_status_lbl.setText("TF-IDF+NB: ❌ Not trained")
+                self._nb_status_lbl.setStyleSheet(f"color: {ERROR};")
+
+            # DistilBERT
+            db_config = DISTILBERT_MODEL_DIR / "config.json"
+            if db_config.exists():
+                mtime = db_config.stat().st_mtime
+                from datetime import datetime
+                date_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                self._db_status_lbl.setText(f"DistilBERT: ✅ Trained {date_str}")
+                self._db_status_lbl.setStyleSheet(f"color: {SUCCESS};")
+            else:
+                self._db_status_lbl.setText("DistilBERT: ❌ Not trained")
+                self._db_status_lbl.setStyleSheet(f"color: {WARNING};")
+        except Exception as exc:
+            logger.error("Could not refresh model status: %s", exc)
+
+    def _load_thresholds(self) -> None:
+        try:
+            from classifier.config import load_thresholds
+            t = load_thresholds()
+            self._rule_slider.setValue(int(t.get("RULE_HIGH_THRESHOLD", 6)))
+            self._ml_high_slider.setValue(int(round(t.get("ML_HIGH_THRESHOLD", 0.85) * 100)))
+            self._ml_low_slider.setValue(int(round(t.get("ML_LOW_THRESHOLD", 0.65) * 100)))
+        except Exception as exc:
+            logger.warning("Could not load thresholds: %s", exc)
+
+    def _save_thresholds(self) -> None:
+        try:
+            from classifier.config import save_thresholds
+            rule_high = self._rule_slider.value()
+            ml_high   = self._ml_high_slider.value() / 100.0
+            ml_low    = self._ml_low_slider.value()  / 100.0
+            if ml_low >= ml_high:
+                QMessageBox.warning(
+                    self, "Invalid Thresholds",
+                    "ML Low threshold must be less than ML High threshold."
+                )
+                return
+            save_thresholds(rule_high, ml_high, ml_low)
+            QMessageBox.information(self, "Saved", "Thresholds saved. Restart the app to apply.")
+        except Exception as exc:
+            logger.error("Could not save thresholds: %s", exc)
+            QMessageBox.critical(self, "Error", f"Failed to save thresholds:\n{exc}")
+
+    def _on_start_training(self) -> None:
+        if not self._data_dir:
+            QMessageBox.warning(self, "Not Ready", "Data directory is not set yet.")
+            return
+
+        model_map = {
+            "TF-IDF + Naive Bayes": "nb_tfidf",
+            "DistilBERT":           "distilbert",
+            "Both Models":          "both",
+        }
+        model = model_map[self._model_combo.currentText()]
+        mode  = "retrain" if "Retrain" in self._mode_combo.currentText() else "train"
+
+        # Warn for DistilBERT — may take a long time
+        if model in ("distilbert", "both"):
+            ans = QMessageBox.question(
+                self,
+                "DistilBERT Training",
+                "Fine-tuning DistilBERT can take 10–60 minutes on CPU.\n"
+                "Continue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if ans != QMessageBox.StandardButton.Yes:
+                return
+
+        from workers.training_worker import TrainingWorker
+        project_dir = self._data_dir.parent if (self._data_dir / "scripts").exists() is False else self._data_dir
+        # Locate project root (contains scripts/)
+        candidate = self._data_dir
+        for _ in range(4):
+            if (candidate / "scripts" / "train_classifier.sh").exists():
+                project_dir = candidate
+                break
+            candidate = candidate.parent
+
+        self._training_worker = TrainingWorker(project_dir, model, mode, parent=self)
+        self._training_worker.log_line.connect(self._append_train_log)
+        self._training_worker.progress.connect(self._train_progress.setValue)
+        self._training_worker.finished.connect(self._on_training_finished)
+
+        self._train_log.clear()
+        self._train_log.setVisible(True)
+        self._train_progress.setValue(0)
+        self._train_progress.setVisible(True)
+        self._train_btn.setEnabled(False)
+        self._abort_btn.setVisible(True)
+
+        self._training_worker.start()
+        self.training_started.emit()
+
+    def _on_abort_training(self) -> None:
+        if self._training_worker and self._training_worker.isRunning():
+            self._training_worker.abort()
+
+    def _append_train_log(self, line: str) -> None:
+        self._train_log.appendPlainText(line)
+        self._train_log.verticalScrollBar().setValue(
+            self._train_log.verticalScrollBar().maximum()
+        )
+
+    def _on_training_finished(self, success: bool, message: str) -> None:
+        self._train_btn.setEnabled(True)
+        self._abort_btn.setVisible(False)
+        if success:
+            self._train_progress.setValue(100)
+            self._append_train_log(f"✅ {message}")
+            self._refresh_model_status()
+        else:
+            self._append_train_log(f"❌ {message}")
+        self.training_finished.emit(success, message)
+
     # ── Data management section ───────────────────────────────────────────────
 
     def _build_data_section(self) -> QGroupBox:
@@ -378,6 +675,8 @@ class SettingsTab(QWidget):
         self._load_ignore_list()
         self._load_rules()
         self._load_ai_backend()
+        self._refresh_model_status()
+        self._load_thresholds()
 
     def refresh(self) -> None:
         """Called after a new fetch to refresh budget actuals."""

@@ -37,8 +37,9 @@ class ExpensesTab(QWidget):
     """Tab 1 — Expense table with all v2 features."""
 
     # Emitted when user edits a row field (for DB persistence)
-    field_changed = pyqtSignal(str, str, object)   # (msg_id, field, value)
-    exclude_requested = pyqtSignal(str, str)        # (msg_id, sender_email)
+    field_changed     = pyqtSignal(str, str, object)   # (msg_id, field, value)
+    exclude_requested = pyqtSignal(str, str)            # (msg_id, sender_email)
+    review_requested  = pyqtSignal(str)                 # (msg_id,) → mark for review
 
     def __init__(self, db=None, parent=None) -> None:
         super().__init__(parent)
@@ -560,6 +561,16 @@ class ExpensesTab(QWidget):
             )
 
         menu.addSeparator()
+        if status != "review":
+            menu.addAction("🔍  Mark for Review").triggered.connect(
+                lambda: self._ctx_mark_review(exp, True)
+            )
+        else:
+            menu.addAction("✅  Remove from Review").triggered.connect(
+                lambda: self._ctx_mark_review(exp, False)
+            )
+
+        menu.addSeparator()
         menu.addAction("📋  View full email").triggered.connect(
             lambda: _ExpenseDetailDialog(exp, self).exec()
         )
@@ -593,6 +604,14 @@ class ExpensesTab(QWidget):
         new_status = "duplicate" if is_dup else "active"
         exp["status"] = new_status
         self.field_changed.emit(exp["id"], "status", new_status)
+        self._apply_filters()
+
+    def _ctx_mark_review(self, exp: dict, mark: bool) -> None:
+        new_status = "review" if mark else "active"
+        exp["status"] = new_status
+        self.field_changed.emit(exp["id"], "status", new_status)
+        if mark:
+            self.review_requested.emit(exp["id"])
         self._apply_filters()
 
     def _ctx_export_row(self, exp: dict) -> None:

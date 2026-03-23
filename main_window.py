@@ -171,11 +171,13 @@ class MainWindow(QMainWindow):
         self._tabs.addTab(self._settings_tab, "⚙️ Settings")
         self._expenses_tab.field_changed.connect(self._on_field_changed)
         self._expenses_tab.exclude_requested.connect(self._on_exclude_requested)
+        self._expenses_tab.review_requested.connect(self._on_review_requested)
         self._review_tab.correction_saved.connect(self._on_review_correction)
         self._settings_tab.reauth_requested.connect(self._on_reauth)
         self._settings_tab.clear_cache_requested.connect(self._on_clear_cache)
         self._settings_tab.data_dir_changed.connect(self._on_data_dir_changed)
         self._settings_tab.backend_changed.connect(self._on_backend_changed)
+        self._settings_tab.training_finished.connect(self._on_training_finished)
         lay.addWidget(self._tabs)
         return area
 
@@ -351,6 +353,26 @@ class MainWindow(QMainWindow):
 
     def _on_review_correction(self, msg_id: str, new_label: str) -> None:
         self._update_review_badge()
+
+    def _on_review_requested(self, msg_id: str) -> None:
+        """Mark an expense as needing review and update the Review Queue badge."""
+        if self._db:
+            try:
+                self._db.conn.execute(
+                    "UPDATE expenses SET needs_review = 1 WHERE id = ?", (msg_id,)
+                )
+                self._db.conn.commit()
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).error("Could not mark for review: %s", exc)
+        self._review_tab.refresh()
+        self._update_review_badge()
+
+    def _on_training_finished(self, success: bool, message: str) -> None:
+        if success:
+            self._sb.showMessage("✅ Model training completed.", 5000)
+        else:
+            self._sb.showMessage(f"❌ Training failed: {message}", 8000)
 
     def _update_review_badge(self) -> None:
         """Update the Review Queue tab label with a count badge."""
