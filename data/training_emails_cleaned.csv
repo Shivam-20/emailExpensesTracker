@@ -1,0 +1,152 @@
+subject,body,sender,label
+Your order has been confirmed,Your Amazon order #123-456 for ₹1499 has been confirmed. Payment received via UPI.,order-update@amazon.in,EXPENSE
+Payment receipt for subscription,Thank you for your payment of ₹999/month for Netflix. Your subscription is renewed.,no-reply@netflix.com,EXPENSE
+Transaction alert: INR 2000 debited,Dear Customer your account has been debited INR 2000 for Swiggy order #987.,alerts@bank.com,EXPENSE
+Receipt for Zomato order,Order delivered! Total paid: ₹350 via Paytm Wallet.,noreply@zomato.com,EXPENSE
+Monthly EMI deducted,Your EMI of Rs. 5000 for loan account has been auto-debited successfully.,emi@hdfc.com,EXPENSE
+Recharge successful,Your mobile recharge of ₹599 for 9876543210 is successful.,recharge@jio.com,EXPENSE
+UPI payment confirmed,You have paid ₹1200 to merchant via UPI. Ref: 123456789.,upi@paytm.com,EXPENSE
+Order shipped: delivery by tomorrow,Your Flipkart order worth ₹3499 has been shipped. Expected delivery tomorrow.,ship@flipkart.com,EXPENSE
+Electricity bill paid,Your electricity bill payment of Rs 1840 for account 123456 is confirmed.,bills@bsesdelhi.com,EXPENSE
+Credit card statement,Your HDFC credit card bill of ₹15432 is due on 10th. Minimum due: ₹775.,statement@hdfc.com,EXPENSE
+Cab ride receipt,Your Uber ride receipt. Fare: ₹245. Payment method: Credit Card ending 1234.,receipt@uber.com,EXPENSE
+Grocery order delivered,BigBasket order delivered. Amount paid: ₹1250 via debit card.,orders@bigbasket.com,EXPENSE
+Medical bill receipt,Apollo Pharmacy order #5678. Total amount: ₹890. Payment received.,pharmacy@apollo.com,EXPENSE
+Amazon Pay recharge done,Amazon Pay wallet recharged with ₹500 from your bank account.,amazonpay@amazon.in,EXPENSE
+Swiggy Instamart order,Your grocery order from Swiggy Instamart. Total: ₹540. Paid via UPI.,noreply@swiggy.com,EXPENSE
+Water bill paid,Delhi Jal Board water bill of ₹380 paid for consumer 9876543.,bills@djb.gov.in,EXPENSE
+Tax payment receipt,Income tax advance payment of ₹25000 confirmed. Challan: 1234567.,noreply@incometax.gov.in,EXPENSE
+Petrol pump receipt,HPCL fuel purchase: 15 litres. Total: ₹1620. Payment via credit card.,receipt@hpcl.com,EXPENSE
+School fee receipt,Monthly fee of ₹4500 for April received. Student: Rohan Sharma.,fees@school.edu,EXPENSE
+Freelance invoice paid,Payment of USD 500 received for project #2024-03.,payment@upwork.com,EXPENSE
+Salary credited for March,Your salary for March has been credited to your bank account ending 4567.,hr@company.com,NOT_EXPENSE
+GST invoice from vendor,GST Invoice No: INV-2024-056. Amount payable: ₹18500 + GST ₹3330.,accounts@vendor.co.in,EXPENSE
+Office supplies order confirmation,Your order for stationery items from Amazon Business has been confirmed. Total: ₹2340.,business@amazon.in,EXPENSE
+Platform fee charged,Marketplace platform fee of ₹450 charged to your seller account for March.,fees@marketplace.com,EXPENSE
+Cashback received,Congratulations! ₹150 cashback credited to your PhonePe wallet for your recent purchase.,cashback@phonepe.com,EXPENSE
+Late payment fee added,A late payment fee of ₹100 has been added to your credit card account.,cards@bank.com,EXPENSE
+Fuel bill from company card,Corporate card transaction: Fuel purchase ₹2200 at HP petrol pump on 22 Mar.,corporate@bank.com,EXPENSE
+AWS bill for March,Your AWS bill for March is ready. Total charges: $45.67. Due date: April 15.,billing@aws.amazon.com,EXPENSE
+Domain renewal notice,Your domain example.com has been renewed for 1 year. Amount charged: ₹799.,billing@godaddy.com,EXPENSE
+Courier charges paid,Blue Dart courier charges of ₹350 debited for shipment tracking 123456.,noreply@bluedart.com,EXPENSE
+Dental checkup bill,Your dental appointment bill: ₹1500. Dr. Sharma Dental Clinic. Receipt attached.,billing@clinic.com,EXPENSE
+SaaS subscription invoice,Invoice for Zoho CRM subscription. Plan: Professional. Amount: ₹2999/month.,billing@zoho.com,EXPENSE
+Food delivery order paid,Your Dunzo order has been delivered. Total: ₹280 paid via card.,noreply@dunzo.com,EXPENSE
+E-learning course purchased,You have enrolled in the Python Masterclass. Amount paid: ₹1499.,noreply@udemy.com,EXPENSE
+Ola ride payment confirmed,Your Ola ride fare of ₹190 has been paid via Ola Money.,noreply@ola.com,EXPENSE
+Conference registration paid,Payment of ₹5000 received for PyConIndia 2024 registration.,registration@pyconindia.org,EXPENSE
+Printer ink ordered,Staples order confirmed. HP Ink Cartridge 2-pack: ₹890 charged to your card.,orders@staples.com,EXPENSE
+Newspaper digital subscription,Your Hindu e-paper annual subscription of ₹999 has been activated.,subscription@thehindu.com,EXPENSE
+EMI reminder for home loan,Your home loan EMI of ₹22000 will be auto-debited on 5th April from your account.,homeloan@sbi.com,EXPENSE
+Your credit card bill is due on Mar 20,Your credit card bill of ₹4339.85 is due. Pay now to maintain your credit score. Total outstanding: ₹4339.85.,protect@cred.club,NOT_EXPENSE
+Credit card bill due tomorrow!,Your Kotak credit card bill of ₹1445 is due tomorrow. Pay now to avoid late fees.,no-reply@kotak.com,NOT_EXPENSE
+Credit card bill due in 5 days!,Your Kotak811 credit card bill of ₹350 is due in 5 days. Minimum amount due: ₹35.,no-reply@kotak.com,NOT_EXPENSE
+Transaction alert for your ICICI Bank Credit Card,Your ICICI Bank Credit Card ending XX49 has been used for a transaction of INR 51.00 at UPI merchant.,credit_cards@icicibank.com,EXPENSE
+Transaction alert for your ICICI Bank Credit Card,Your ICICI Bank Credit Card ending XX49 has been used for INR 700.00 at an online merchant. If not done by you call 1800-XXX.,credit_cards@icicibank.com,EXPENSE
+Card transaction - successful,Your Kotak Bank Credit Card ••1949 was charged ₹210.00 at merchant. Available credit limit: ₹48500.,alerts@kotak.com,EXPENSE
+New credit card bill generated!,Your Kotak811 credit card bill for the period Feb 18 - Mar 17 has been generated. Total amount due: ₹1679.00.,no-reply@kotak.com,NOT_EXPENSE
+Transaction Successful,Your Kotak bank account has been debited for ₹10000.00. Transaction ID: TXN2026032219.,no-reply@kotak.com,EXPENSE
+Payment of INR 10.00 successful,Your UPI payment of INR 10.00 to merchant was successful. UPI Ref: 123456789.,no-reply@kotak.com,EXPENSE
+Payment received on your ICICI Bank Credit Card,We have received a payment of ₹4339.85 on your ICICI Bank Credit Card ending XX49. Thank you.,credit_cards@icicibank.com,EXPENSE
+Planned automatic Credit Card payment,Your automatic credit card payment of $5.84 has been processed for your Contabo VPS subscription.,no-reply@contabo.com,EXPENSE
+Card online transaction- Successful,Transaction of INR 553.32 successful on your Kotak debit card at online merchant. Ref: 456789.,alerts@kotak.com,EXPENSE
+Transaction Success Alert MOTO/SI,Transaction of INR 199.00 via MOTO/SI on your Kotak card was successful. Merchant: Amazon.,alerts@kotak.com,EXPENSE
+Payment successful for your Kotak neo account,Payment of ₹5000 has been successfully received for your Kotak neo trading account.,noreply@nmail.kotaksecurities.com,EXPENSE
+Your Zerodha account statement,Your Zerodha trading account was debited ₹2500 for equity purchase. Contract note attached.,noreply@zerodha.com,EXPENSE
+SIP installment debited,Your SIP installment of ₹3000 for Axis Bluechip Fund has been debited from your account.,sip@axismf.com,EXPENSE
+PhonePe UPI payment,You paid ₹450 to Dominos Pizza via PhonePe UPI. Ref: UPI20260322.,noreply@phonepe.com,EXPENSE
+Google Play purchase,You made a purchase of ₹129.00 on Google Play. Order ID: GPA.1234-5678.,payments-noreply@google.com,EXPENSE
+Apple subscription renewed,Your iCloud+ 50GB plan has been renewed. Amount charged: ₹75.00 to your card.,no_reply@email.apple.com,EXPENSE
+JioMart order delivered,Your JioMart grocery order has been delivered. Total: ₹870. Payment via JioPay.,orders@jiomart.com,EXPENSE
+Razorpay payment receipt,Payment of ₹1500 to TechCorp via Razorpay was successful. Invoice attached.,noreply@razorpay.com,EXPENSE
+ACT Fibernet bill paid,Your ACT Fibernet internet bill of ₹1199 for March has been paid. Next due: April 15.,billing@actcorp.in,EXPENSE
+Tata Play DTH recharge,Your Tata Play DTH recharge of ₹400 is successful. Pack: Hindi Smart HD.,recharge@tataplay.com,EXPENSE
+Myntra order confirmed,Your Myntra order for 2 items has been confirmed. Total: ₹1899. Paid via Kotak Credit Card.,orders@myntra.com,EXPENSE
+Paytm postpaid bill,Your Paytm Postpaid bill of ₹2340 for March is due on April 5. Pay now.,billing@paytm.com,EXPENSE
+Nykaa order shipped,Your Nykaa order #NK789 worth ₹1350 has been shipped. COD amount: ₹1350.,orders@nykaa.com,EXPENSE
+SBI credit card transaction,INR 3200.00 spent on your SBI credit card at Croma Electronics. Avl limit: ₹46800.,alerts@sbi.co.in,EXPENSE
+HDFC debit alert,Your HDFC savings account has been debited by ₹15000 via NEFT. Avl bal: ₹25400.,alerts@hdfcbank.com,EXPENSE
+Airtel bill payment,Your Airtel postpaid bill of ₹749 has been paid via autopay from your bank account.,billing@airtel.in,EXPENSE
+Meesho order confirmed,Your Meesho order for 3 items is confirmed. Total: ₹650. Prepaid via UPI.,orders@meesho.com,EXPENSE
+Dunzo daily delivery,Your Dunzo Daily order has been delivered. Total: ₹180. Charged to wallet.,noreply@dunzo.com,EXPENSE
+YES Bank transaction alert,INR 890.00 debited from your YES Bank account for POS purchase at DMart.,alerts@yesbank.in,EXPENSE
+Groww mutual fund SIP,Your Groww SIP of ₹2000 in Parag Parikh Flexi Cap Fund has been processed.,noreply@groww.in,EXPENSE
+Licious order delivered,Your Licious order has been delivered. Total: ₹520. Paid via PhonePe.,orders@licious.in,EXPENSE
+CRED cashback earned,₹89 CRED cashback earned on your credit card bill payment of ₹4339.85.,rewards@cred.club,EXPENSE
+FirstCry order confirmed,Your FirstCry order #FC456 for baby products has been confirmed. Total: ₹1299.,orders@firstcry.com,EXPENSE
+Practo consultation payment,Payment of ₹500 for your online consultation with Dr. Mehta confirmed.,noreply@practo.com,EXPENSE
+1mg pharmacy order,Your 1mg order for medicines has been placed. Total: ₹445. COD selected.,orders@1mg.com,EXPENSE
+BSNL landline bill,Your BSNL landline bill of ₹650 for March is ready. Due date: April 10.,billing@bsnl.co.in,EXPENSE
+Axis Bank auto-debit,Auto-debit of ₹3500 processed from your Axis Bank account for loan EMI.,alerts@axisbank.com,EXPENSE
+FreshToHome order,Your FreshToHome seafood order worth ₹780 has been shipped. Delivery by tomorrow.,orders@freshtohome.com,EXPENSE
+Google One storage plan,Your Google One 100GB plan renewed. ₹130/month charged to your GPay account.,payments-noreply@google.com,EXPENSE
+Chai Point order,Your Chai Point order has been delivered. Total: ₹180. Paid via Paytm.,orders@chaipoint.com,EXPENSE
+Kotak securities brokerage,Brokerage charge of ₹20 debited for your equity trade. Contract note: CN-2026-456.,noreply@kotaksecurities.com,EXPENSE
+Flipkart Pay Later bill,Your Flipkart Pay Later bill of ₹2100 for February is due. Pay by March 15.,billing@flipkart.com,EXPENSE
+Vi postpaid bill,Your Vi postpaid bill of ₹599 has been generated. Pay before March 25.,billing@myvi.in,EXPENSE
+Spencer's Retail order,Your Spencer's grocery order worth ₹1430 has been delivered. Paid via credit card.,orders@spencers.in,EXPENSE
+ICICI Prudential SIP,Your ICICI Prudential Balanced Advantage Fund SIP of ₹5000 has been processed successfully.,sip@icicipru.com,EXPENSE
+Bajaj Finserv EMI,Your Bajaj Finserv No-Cost EMI of ₹2500 has been auto-debited from your account.,emi@bajajfinserv.in,EXPENSE
+Ticket Received - Payment Related,Hi! We have received your request regarding payment. Our team is looking into this. Ticket ID: MDB-7892.,hello@medibuddy.in,NOT_EXPENSE
+Ticket Resolved - Payment Related,Your ticket MDB-7892 has been resolved. If you still face issues please write back to us.,hello@medibuddy.in,NOT_EXPENSE
+Re: Payment Related,Thank you for writing to us. We have processed your query. Please check the status in the app.,hello@medibuddy.in,NOT_EXPENSE
+Credit Transaction Alert,Dear Customer an amount of Rs 25000 has been credited to your SBM Bank account via NEFT. Avl Bal: Rs 45000.,alerts@sbmbank.co.in,NOT_EXPENSE
+Weekend sale — up to 70% off!,Flash sale this weekend only! Shop now for amazing deals. No purchase necessary.,deals@shop.com,NOT_EXPENSE
+Meeting rescheduled to 3 PM,The product sync meeting has been moved from 2 PM to 3 PM today.,calendar@company.com,NOT_EXPENSE
+Out-of-office reply,Thank you for your email. I am out of the office until March 28 with limited access.,auto-reply@company.com,NOT_EXPENSE
+Confirm your email address,Please click the link to confirm your email address for your new account.,noreply@app.com,NOT_EXPENSE
+Sports team results,Your cricket team won the match by 15 runs! Great game everyone.,league@sports.com,NOT_EXPENSE
+App update available,A new version of our app is available. Update now for the latest features and bug fixes.,updates@app.com,NOT_EXPENSE
+Your report is ready,The monthly analytics report you requested has been generated and is ready to view.,reports@analytics.com,NOT_EXPENSE
+Project budget approval,The project budget of ₹50000 has been approved. Please proceed with procurement.,manager@company.com,NOT_EXPENSE
+New GitHub issue assigned,Issue #789: Button alignment bug has been assigned to you in the frontend repo.,github@github.com,NOT_EXPENSE
+Free trial expires soon,Your 30-day free trial of Adobe Creative Cloud ends in 3 days. Subscribe to continue.,noreply@adobe.com,NOT_EXPENSE
+Sales pipeline update,Q1 sales pipeline update: 12 deals closed worth ₹45L total revenue.,crm@company.com,NOT_EXPENSE
+Your CRED score has improved,Congratulations! Your CRED score has gone up by 15 points. You are now at 821.,updates@cred.club,NOT_EXPENSE
+Account statement is ready,Your ICICI Bank monthly account statement for February is ready. Download from netbanking.,statements@icicibank.com,NOT_EXPENSE
+Your FD has matured,Your Fixed Deposit of ₹100000 has matured. Total maturity value: ₹108500. Please choose renewal or withdrawal.,fd@sbi.co.in,NOT_EXPENSE
+Interest credited to your account,Interest of ₹1250 has been credited to your savings account for the quarter ending March.,interest@hdfcbank.com,NOT_EXPENSE
+CRED coins earned,You earned 5000 CRED coins for your recent bill payment. Redeem them in the CRED store.,rewards@cred.club,NOT_EXPENSE
+E-mandate registration successful,Your e-mandate for SIP auto-debit has been registered successfully. No payment deducted yet.,noreply@bsestarmf.in,NOT_EXPENSE
+Feedback on your recent order,How was your Zomato delivery experience? Rate your order and earn Zomato credits.,feedback@zomato.com,NOT_EXPENSE
+Flight schedule changed,Your IndiGo flight 6E-1234 on March 28 has been rescheduled from 10:00 to 11:30 AM.,schedule@goindigo.in,NOT_EXPENSE
+Income credited to wallet,₹500 cashback has been credited to your Amazon Pay balance. No purchase was made.,notifications@amazon.in,NOT_EXPENSE
+Bus pass renewal reminder,Your BMTC monthly bus pass expires on March 31. Renew online to avoid inconvenience.,renewal@bmtc.gov.in,NOT_EXPENSE
+Kotak trade confirmation,Trade executed: Bought 10 shares of Reliance at ₹2450. Total value: ₹24500. Brokerage: ₹20.,trades@kotaksecurities.com,EXPENSE
+Upstox brokerage deducted,Brokerage of ₹40 has been deducted from your Upstox account for intraday trades on March 22.,noreply@upstox.com,EXPENSE
+Amazon Fresh order,Your Amazon Fresh grocery order has been delivered. Total: ₹650. Paid via Amazon Pay balance.,fresh@amazon.in,EXPENSE
+Paytm mall order confirmed,Your Paytm Mall order for Boat earbuds has been confirmed. Total: ₹999. Paid via Paytm wallet.,orders@paytmmall.com,EXPENSE
+Gas pipeline bill,Your Mahanagar Gas bill of ₹850 for March has been generated. Due date: April 10.,billing@mahanagargas.com,EXPENSE
+Postage charges for courier,India Post speed post charges of ₹120 debited for consignment EE123456789IN.,noreply@indiapost.gov.in,EXPENSE
+Magazine subscription charged,Your India Today annual digital subscription of ₹999 has been renewed and charged.,subscriptions@indiatoday.in,EXPENSE
+Eye checkup bill,Payment of ₹800 received for your eye examination at Lenskart Vision Care.,billing@lenskart.com,EXPENSE
+Pet vaccination charges,Payment of ₹1500 for your pet's annual vaccination at Cessna Lifeline Vet Clinic.,billing@vetclinic.com,EXPENSE
+Toll charges debited,Your Paytm FASTag was charged ₹145 at Kherki Daula toll plaza on NH-48.,fastag@paytm.com,EXPENSE
+Music subscription renewed,Your JioSaavn Pro subscription of ₹399/year has been renewed. Enjoy ad-free music!,billing@jiosaavn.com,EXPENSE
+Decathlon sports order,Your Decathlon order for running shoes has been confirmed. Total: ₹3499. Paid via UPI.,orders@decathlon.in,EXPENSE
+PharmEasy medicine order,Your PharmEasy order for monthly medicines has been placed. Total: ₹680. Paid via wallet.,orders@pharmeasy.in,EXPENSE
+Ather charging payment,Ather Grid charging session complete. ₹45 charged to your Ather account.,charging@ather.com,EXPENSE
+EV charging station payment,Your Tata Power EZ Charge bill: ₹120 for 8kWh. Paid via Paytm.,billing@tatapowerez.com,EXPENSE
+Home loan EMI processed,Your HDFC home loan EMI of ₹28000 has been deducted for March. Outstanding: ₹18.5L.,homeloan@hdfc.com,EXPENSE
+Rent agreement stamp duty,Stamp duty of ₹500 paid for rental agreement registration via NoBroker.,charges@nobroker.in,EXPENSE
+Courier insurance charge,Delhivery shipping insurance of ₹50 charged for your Meesho order.,charges@delhivery.com,EXPENSE
+Amazon Subscribe and Save,Your Subscribe and Save order has been placed. 5 items totaling ₹1890. Next delivery April 15.,subscribe@amazon.in,EXPENSE
+Swiggy Genie delivery,Your Swiggy Genie package delivery completed. Charges: ₹69. Paid via Swiggy wallet.,noreply@swiggy.com,EXPENSE
+Boat warranty extension,Extended warranty purchased for Boat Airdopes. Amount: ₹299 charged to card.,orders@boat-lifestyle.com,EXPENSE
+LensDen contact lens order,Your LensDen contact lens order has been confirmed. Total: ₹1200. Shipped in 2 days.,orders@lensden.com,EXPENSE
+Noise smartwatch order,Your Noise ColorFit Pro 5 order confirmed. Amount: ₹3499. Paid via PhonePe.,orders@gonoise.com,EXPENSE
+Byju's subscription renewal,Your Byju's learning subscription has been renewed. Monthly charge: ₹1999.,billing@byjus.com,EXPENSE
+IndiaMART payment for leads,Your IndiaMART lead purchase pack payment of ₹5000 has been processed.,billing@indiamart.com,EXPENSE
+WazirX crypto purchase,You bought 0.005 BTC for ₹25000 on WazirX. Transaction fee: ₹50.,noreply@wazirx.com,EXPENSE
+Angel One brokerage,Brokerage of ₹20 charged for your F&O trade on Angel One. Contract note attached.,trades@angelone.in,EXPENSE
+ICICI Bank locker rental,Annual locker rental charge of ₹3500 debited from your ICICI Bank account.,charges@icicibank.com,EXPENSE
+Passport fee payment,Passport application fee of ₹1500 has been paid online. Application ID: PA-2026-789.,receipts@passportindia.gov.in,EXPENSE
+Apollo 247 teleconsultation,Payment of ₹299 for teleconsultation with Dr. Patel on Apollo 247 confirmed.,billing@apollo247.com,EXPENSE
+Udaan wholesale order,Your Udaan wholesale order for office supplies shipped. Total: ₹8900. Net 30 payment.,orders@udaan.com,EXPENSE
+Country Delight milk subscription,Your Country Delight monthly milk bill: ₹1200. Auto-deducted from wallet.,billing@countrydelight.in,EXPENSE
+IRCTC food order on train,Your IRCTC e-catering order confirmed. Delivery at Kanpur station. Total: ₹350.,ecatering@irctc.co.in,EXPENSE
+TDS deducted on FD interest,TDS of ₹1500 has been deducted on your Fixed Deposit interest for Q4 FY26.,tds@sbi.co.in,EXPENSE
+Property tax payment,Municipal corporation property tax payment of ₹8500 for FY 2026-27 confirmed.,receipts@mcgm.gov.in,EXPENSE
+Unacademy subscription,Your Unacademy Plus subscription renewed. ₹1166/month charged.,billing@unacademy.com,EXPENSE
+IT department notice,Please submit your tax saving investment proofs by March 31 to avail deductions.,finance@company.com,NOT_EXPENSE
+Pet adoption event,Adopt a furry friend! Pet adoption drive at Cubbon Park this Saturday 10 AM - 4 PM.,events@paws.org,NOT_EXPENSE
