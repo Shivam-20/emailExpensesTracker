@@ -240,6 +240,39 @@ class TestGmailWorkerRun:
 
         assert len(finished_rows) == 1
 
+    def test_stats_track_parse_failures_and_truncation(self, monkeypatch):
+        """Worker records parse failures and whether Gmail results were capped."""
+        from workers import gmail_worker as worker_module
+
+        monkeypatch.setattr(worker_module, "MAX_MESSAGES", 1)
+
+        mock_db = MagicMock()
+        mock_db.has_month.return_value = False
+        mock_db.get_ignore_list.return_value = []
+        mock_db.upsert_expenses.return_value = 0
+        mock_db.get_month_expenses.return_value = []
+
+        mock_service = MagicMock()
+        mock_service.users().messages().list().execute.return_value = {
+            "messages": [{"id": "m1"}],
+            "nextPageToken": "next-page",
+        }
+        mock_service.users().messages().get().execute.return_value = {"id": "m1"}
+
+        worker = _make_worker()
+
+        patches = self._patch_auth()
+        with patches["creds"], patches["email"], patches["labels"]:
+            with patch("core.gmail_auth.get_gmail_service", return_value=mock_service):
+                with patch("core.db.Database", return_value=mock_db):
+                    with patch("core.expense_parser.parse_gmail_message", side_effect=RuntimeError("bad parse")):
+                        with patch("core.deduplicator.find_duplicates", side_effect=lambda rows: rows):
+                            worker._run()
+
+        assert worker.stats["truncated"] is True
+        assert worker.stats["parse_failures"] == 1
+        assert worker.stats["processed_count"] == 1
+
 
 # ---------------------------------------------------------------------------
 # AuthOnlyWorker tests

@@ -158,3 +158,15 @@ def test_phi4mini_stage3_result_appears_in_full_pipeline(monkeypatch) -> None:
         result = classify(_email("Vague", "content"))
     assert result.stage_used == "phi4-mini"
     assert result.label == "NOT_EXPENSE"
+
+
+def test_stage3_failure_returns_review() -> None:
+    """If Stage 3 raises, router should return REVIEW instead of crashing."""
+    mock_ml = {"label": "EXPENSE", "probability": 0.45}
+    with patch("classifier.router.score_email", return_value=3), \
+         patch("classifier.ml_model.predict", return_value=mock_ml), \
+         patch("classifier.router.get_stage3_result", side_effect=RuntimeError("backend hung")), \
+         patch("classifier.config._load_stage3_backend", return_value="distilbert"):
+        result = classify(_email("Vague", "content"))
+    assert result.label == "REVIEW"
+    assert result.needs_review is True

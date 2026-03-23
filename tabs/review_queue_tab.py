@@ -428,7 +428,7 @@ class ReviewQueueTab:
             row["status"] = "excluded"
 
         if self.on_corrected:
-            self.on_corrected(row["id"], new_status)
+            self.on_corrected(row["id"], new_status, cat if lbl == "EXPENSE" else None)
 
         self._hide_action_panel()
         

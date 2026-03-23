@@ -36,6 +36,10 @@ class TrendsTab:
         self._db       = db
         self._data_dir = data_dir
 
+    def refresh(self) -> None:
+        if self._db:
+            self._load_trend()
+
     # ── UI ────────────────────────────────────────────────────────────────────
 
     def _setup_ui(self) -> None:

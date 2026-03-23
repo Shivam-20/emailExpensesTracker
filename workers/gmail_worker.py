@@ -22,6 +22,19 @@ logger = logging.getLogger(__name__)
 MAX_MESSAGES = 500
 
 
+def _empty_stats() -> dict[str, int | bool]:
+    return {
+        "candidate_count": 0,
+        "processed_count": 0,
+        "parsed_count": 0,
+        "no_amount_count": 0,
+        "ignored_count": 0,
+        "parse_failures": 0,
+        "new_rows": 0,
+        "truncated": False,
+    }
+
+
 class GmailWorker(threading.Thread):
     """
     Background thread: authenticate → check cache → fetch Gmail → parse →
@@ -53,6 +66,7 @@ class GmailWorker(threading.Thread):
         self.custom_rules    = custom_rules or []
         self._abort          = False
         self._ui             = ui_ref
+        self.stats           = _empty_stats()
 
         self._on_progress      = on_progress      or (lambda *_: None)
         self._on_status        = on_status        or (lambda *_: None)
@@ -133,6 +147,7 @@ class GmailWorker(threading.Thread):
 
         msg_ids: list[str] = []
         page_token: Optional[str] = None
+        truncated = False
 
         while True:
             if self._abort:
@@ -150,10 +165,16 @@ class GmailWorker(threading.Thread):
             msg_ids.extend(m["id"] for m in msgs)
 
             page_token = result.get("nextPageToken")
-            if not page_token or len(msg_ids) >= MAX_MESSAGES:
+            if len(msg_ids) >= MAX_MESSAGES:
+                msg_ids = msg_ids[:MAX_MESSAGES]
+                truncated = bool(page_token) or len(msgs) > 0
+                break
+            if not page_token:
                 break
 
         total = len(msg_ids)
+        self.stats["candidate_count"] = total
+        self.stats["truncated"] = truncated
         self._dispatch(self._on_status,
                        f"📬 Found {total} candidate email(s) — parsing…")
 
@@ -171,7 +192,7 @@ class GmailWorker(threading.Thread):
 
         parsed: list[dict] = []
 
-        for idx, msg_id in enumerate(msg_ids[:MAX_MESSAGES]):
+        for idx, msg_id in enumerate(msg_ids):
             if self._abort:
                 db.close()
                 return
@@ -183,24 +204,30 @@ class GmailWorker(threading.Thread):
 
                 row = parse_gmail_message(msg, self.custom_rules)
                 if row is None:
+                    self.stats["no_amount_count"] += 1
                     self._dispatch(self._on_progress, idx + 1, total)
                     continue
 
                 sender_l  = row["sender"].lower() + " " + row["sender_email"].lower()
                 subject_l = row["subject"].lower()
                 if any(ig in sender_l  for ig in ignore_senders):
+                    self.stats["ignored_count"] += 1
                     self._dispatch(self._on_progress, idx + 1, total)
                     continue
                 if any(ig in subject_l for ig in ignore_subjects):
+                    self.stats["ignored_count"] += 1
                     self._dispatch(self._on_progress, idx + 1, total)
                     continue
 
                 row["month"] = month_str
                 parsed.append(row)
+                self.stats["parsed_count"] = len(parsed)
 
             except Exception as exc:
+                self.stats["parse_failures"] += 1
                 logger.warning("Failed to parse message %s: %s", msg_id, exc)
 
+            self.stats["processed_count"] = idx + 1
             self._dispatch(self._on_progress, idx + 1, total)
             self._dispatch(self._on_status,
                            f"📧 {idx + 1}/{total} — {len(parsed)} expense(s) found…")
@@ -212,6 +239,7 @@ class GmailWorker(threading.Thread):
         # ── Persist ───────────────────────────────────────────────────────
         self._dispatch(self._on_status, "💾 Saving to cache…")
         inserted = db.upsert_expenses(parsed)
+        self.stats["new_rows"] = inserted
         rows     = db.get_month_expenses(month_str)
         db.close()
 

@@ -66,6 +66,7 @@ class MainWindow:
         self._fetch_queue: list[tuple[int, int]] = []
         self._fetch_accumulated: list[dict] = []
         self._fetch_total: int = 0
+        self._fetch_stats: dict[str, int | bool] = self._empty_fetch_stats()
         self._fetch_force: bool = False
         self._fetch_label_id: Optional[str] = None
 
@@ -89,6 +90,102 @@ class MainWindow:
         except Exception as exc:
             logger.debug("Could not load config.json: %s", exc)
         return {}
+
+    @staticmethod
+    def _empty_fetch_stats() -> dict[str, int | bool]:
+        return {
+            "candidate_count": 0,
+            "processed_count": 0,
+            "parsed_count": 0,
+            "no_amount_count": 0,
+            "ignored_count": 0,
+            "parse_failures": 0,
+            "new_rows": 0,
+            "truncated": False,
+        }
+
+    def _merge_fetch_stats(self, stats: Optional[dict]) -> None:
+        if not stats:
+            return
+        for key in (
+            "candidate_count", "processed_count", "parsed_count",
+            "no_amount_count", "ignored_count", "parse_failures", "new_rows",
+        ):
+            self._fetch_stats[key] = int(self._fetch_stats[key]) + int(stats.get(key, 0))
+        self._fetch_stats["truncated"] = bool(self._fetch_stats["truncated"] or stats.get("truncated"))
+
+    def _build_fetch_status_message(self, row_count: int) -> str:
+        issues: list[str] = []
+        parse_failures = int(self._fetch_stats["parse_failures"])
+        if parse_failures:
+            issues.append(f"{parse_failures} parse failure(s)")
+        if self._fetch_stats["truncated"]:
+            issues.append("Gmail search capped at 500 candidates")
+
+        prefix = "⚠" if issues else "✅"
+        message = f"{prefix} Loaded {row_count} expense(s)"
+        if issues:
+            message += " • " + " • ".join(issues)
+        return message
+
+    def _build_fetch_warning_lines(self) -> list[str]:
+        warnings: list[str] = []
+        parse_failures = int(self._fetch_stats["parse_failures"])
+        candidate_count = int(self._fetch_stats["candidate_count"])
+        ignored_count = int(self._fetch_stats["ignored_count"])
+        no_amount_count = int(self._fetch_stats["no_amount_count"])
+
+        if self._fetch_stats["truncated"]:
+            warnings.append(
+                "Gmail search hit the 500 candidate cap. Narrow the label/date range if results look incomplete."
+            )
+        if parse_failures:
+            warnings.append(f"{parse_failures} email(s) failed during parsing and were skipped.")
+        if no_amount_count:
+            warnings.append(f"{no_amount_count} candidate email(s) were ignored because no amount was detected.")
+        if ignored_count:
+            warnings.append(f"{ignored_count} candidate email(s) were skipped by the ignore list.")
+        if candidate_count and not warnings:
+            warnings.append(f"Processed {candidate_count} Gmail candidate email(s) without fetch warnings.")
+        return warnings
+
+    def _resolve_chart_period(self) -> tuple[int, int, Optional[float]]:
+        chart_year, chart_month = datetime.now().year, datetime.now().month
+        prev_total: Optional[float] = None
+
+        if self._fetch_total == 1 and self._fetch_mode_var.get() == "Single Month":
+            chart_year = int(self._year_combo.get())
+            chart_month = _MONTHS_LONG.index(self._month_combo.get()) + 1
+            prev_total = self._compute_prev_month_total(chart_year, chart_month)
+
+        return chart_year, chart_month, prev_total
+
+    def _refresh_derived_views(self, preserve_expense_filters: bool = True) -> None:
+        chart_year, chart_month, prev_total = self._resolve_chart_period()
+        self._expenses_tab.set_db(self._db)
+        self._expenses_tab.refresh_rows(self._current_rows, preserve_filters=preserve_expense_filters)
+        self._charts_tab.update_charts(self._current_rows, chart_year, chart_month, prev_total)
+        self._settings_tab.refresh()
+        self._review_tab.refresh()
+        self._trends_tab.refresh()
+        self._update_review_badge()
+        self._update_summary_card(self._current_rows, prev_total)
+
+    def _apply_review_correction_to_current_rows(
+        self,
+        msg_id: str,
+        new_status: str,
+        new_category: Optional[str] = None,
+    ) -> bool:
+        for row in self._current_rows:
+            if row.get("id") != msg_id:
+                continue
+            row["status"] = new_status
+            row["needs_review"] = 0
+            if new_category:
+                row["category_edited"] = new_category
+            return True
+        return False
 
     # ── UI Construction ───────────────────────────────────────────────────────
 
@@ -527,6 +624,7 @@ class MainWindow:
         self._fetch_queue       = list(months)
         self._fetch_accumulated = []
         self._fetch_total       = len(months)
+        self._fetch_stats       = self._empty_fetch_stats()
         self._fetch_force       = force
         # Map current label selection
         curr_label = self._label_var.get()
@@ -576,6 +674,7 @@ class MainWindow:
         self._progress.set(min(base_pct + month_pct, 1.0))
 
     def _on_month_fetch_finished(self, rows: list) -> None:
+        self._merge_fetch_stats(getattr(self._worker, "stats", None))
         self._fetch_accumulated.extend(rows)
         done = self._fetch_total - len(self._fetch_queue)
         self._progress.set(done / self._fetch_total)
@@ -585,31 +684,20 @@ class MainWindow:
         rows = self._fetch_accumulated
         self._current_rows = rows
 
-        now = datetime.now()
-        chart_year, chart_month = now.year, now.month
-        prev_total: Optional[float] = None
-
-        if self._fetch_total == 1 and self._fetch_mode_var.get() == "Single Month":
-            chart_year  = int(self._year_combo.get())
-            chart_month = _MONTHS_LONG.index(self._month_combo.get()) + 1
-            prev_total  = self._compute_prev_month_total(chart_year, chart_month)
-
-        self._expenses_tab.set_db(self._db)
-        self._expenses_tab.load_rows(rows)
-        self._charts_tab.update_charts(rows, chart_year, chart_month, prev_total)
-        self._settings_tab.refresh()
-        self._review_tab.refresh()
-        self._update_review_badge()
+        self._refresh_derived_views(preserve_expense_filters=False)
 
         self._fetch_btn.configure(state="normal")
         self._refresh_btn.configure(state="normal")
         self._show_progress(False)
-        self._update_summary_card(rows, prev_total)
         self._last_fetched_lbl.configure(
             text=f"Last fetched: {datetime.now().strftime('%H:%M')}",
-            text_color=SUCCESS,
+            text_color=WARNING if self._fetch_stats["truncated"] or int(self._fetch_stats["parse_failures"]) else SUCCESS,
         )
-        self._show_status(f"✅ Loaded {len(rows)} expense(s)" if rows else "No expenses found.")
+        self._show_status(self._build_fetch_status_message(len(rows)) if rows else "No expenses found.")
+
+        warning_lines = self._build_fetch_warning_lines()
+        if warning_lines and (self._fetch_stats["truncated"] or int(self._fetch_stats["parse_failures"])):
+            self._msgbox_warning("Fetch Completed With Warnings", "\n".join(warning_lines))
 
         if not rows:
             n = self._fetch_total
@@ -640,7 +728,7 @@ class MainWindow:
             )
         except Exception as exc:
             logger.debug("Could not compute prev month total: %s", exc)
-            return None────────────────────────────────────────────────────────────────
+            return None
 
     def _on_connect(self) -> None:
         if not CREDENTIALS_PATH.exists():
@@ -721,6 +809,7 @@ class MainWindow:
                 if self._fetch_mode_var.get() == "Single Month" else _NOW_MONTH
             self._charts_tab.update_charts(self._current_rows, y, m)
             self._update_summary_card(self._current_rows)
+            self._trends_tab.refresh()
 
         if field == "status":
             self._review_tab.refresh()
@@ -755,8 +844,18 @@ class MainWindow:
         self._review_tab.refresh()
         self._update_review_badge()
 
-    def _on_review_correction(self, msg_id: str, new_label: str) -> None:
-        self._update_review_badge()
+    def _on_review_correction(
+        self,
+        msg_id: str,
+        new_label: str,
+        new_category: Optional[str] = None,
+    ) -> None:
+        self._apply_review_correction_to_current_rows(msg_id, new_label, new_category)
+        self._refresh_derived_views(preserve_expense_filters=True)
+        if new_label == "active":
+            self._show_status("✅ Review correction saved and expense restored.")
+        else:
+            self._show_status("✅ Review correction saved and item excluded.")
 
     def _on_training_finished(self, success: bool, message: str) -> None:
         if success:

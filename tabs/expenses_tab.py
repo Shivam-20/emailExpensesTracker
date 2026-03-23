@@ -59,8 +59,18 @@ class ExpensesTab:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def load_rows(self, rows: list[dict]) -> None:
+        self.refresh_rows(rows, preserve_filters=False)
+
+    def refresh_rows(self, rows: list[dict], preserve_filters: bool = True) -> None:
         self._all_rows = rows
-        self._active_categories.clear()
+        if preserve_filters:
+            available_categories = {
+                r.get("category_edited") or r.get("category", "Other")
+                for r in rows
+            }
+            self._active_categories.intersection_update(available_categories)
+        else:
+            self._active_categories.clear()
         self._rebuild_chips()
         self._apply_filters()
 
@@ -200,6 +210,12 @@ class ExpensesTab:
         self._tree.bind("<Button-3>", self._on_right_click)
         self._tree.bind("<Double-1>", self._on_double_click)
         self._tree.bind("<<TreeviewSelect>>", self._on_selection_changed)
+        self._tree.bind("<Control-a>", self._select_all_visible_rows)
+        self._tree.bind("<Control-A>", self._select_all_visible_rows)
+        self._tree.bind("<Escape>", self._clear_selection)
+        self._tree.bind("<Delete>", self._exclude_selected_rows)
+        self._tree.bind("<Control-c>", self._copy_selected_row_event)
+        self._tree.bind("<Control-C>", self._copy_selected_row_event)
 
         # Colour tags
         for cat, color in CATEGORY_COLORS.items():
@@ -213,6 +229,17 @@ class ExpensesTab:
 
         self._bulk_frame = ctk.CTkFrame(bottom, fg_color="transparent")
         self._bulk_frame.pack(side="left")
+
+        ctk.CTkButton(self._bulk_frame, text="Select All", command=self._select_all_visible_rows,
+                       font=ctk.CTkFont(family="Inter", size=11),
+                       fg_color="transparent", hover_color=SURFACE_HOVER, text_color=TEXT_DIM,
+                       border_color=BORDER, border_width=1, corner_radius=6, height=26, width=90,
+                       ).pack(side="left", padx=(0, 6))
+        ctk.CTkButton(self._bulk_frame, text="Clear", command=self._clear_selection,
+                       font=ctk.CTkFont(family="Inter", size=11),
+                       fg_color="transparent", hover_color=SURFACE_HOVER, text_color=TEXT_DIM,
+                       border_color=BORDER, border_width=1, corner_radius=6, height=26, width=72,
+                       ).pack(side="left", padx=(0, 6))
 
         for label, cmd in [
             ("✓ Active", lambda: self._bulk_set_status("active")),
@@ -230,6 +257,14 @@ class ExpensesTab:
             font=ctk.CTkFont(family="Inter", size=11),
         )
         self._summary_lbl.pack(side="right")
+
+        self._hint_lbl = ctk.CTkLabel(
+            bottom,
+            text="Ctrl+A select all • Delete exclude • Double-click edit",
+            text_color=TEXT_DIM,
+            font=ctk.CTkFont(family="Inter", size=10),
+        )
+        self._hint_lbl.pack(side="right", padx=(0, 12))
 
         # Sort state
         self._sort_col: Optional[str] = None
@@ -263,6 +298,23 @@ class ExpensesTab:
             btn.pack(side="left", padx=3)
             self._chip_btns[cat] = btn
 
+        all_active = not self._active_categories
+        all_btn = ctk.CTkButton(
+            self._chips_inner, text="All",
+            command=self._clear_category_filters,
+            font=ctk.CTkFont(family="Inter", size=10),
+            fg_color=ACCENT if all_active else "transparent",
+            hover_color=ACCENT_DARK,
+            text_color="#1e1e2e" if all_active else TEXT_DIM,
+            border_color=ACCENT_DARK,
+            border_width=1,
+            corner_radius=999,
+            height=22,
+            width=54,
+        )
+        all_btn.pack(side="left", padx=3)
+        self._chip_btns["__all__"] = all_btn
+
         for cat in cats_in_data:
             _make_chip(cat)
 
@@ -273,6 +325,11 @@ class ExpensesTab:
             self._active_categories.discard(cat)
         else:
             self._active_categories.add(cat)
+        self._rebuild_chips()
+        self._apply_filters()
+
+    def _clear_category_filters(self) -> None:
+        self._active_categories.clear()
         self._rebuild_chips()
         self._apply_filters()
 
@@ -381,6 +438,29 @@ class ExpensesTab:
 
     def _on_selection_changed(self, event) -> None:
         self._selected_ids = set(self._tree.selection())
+
+    def _select_all_visible_rows(self, event=None):
+        if not self._visible_rows:
+            return "break"
+        ids = [r.get("id", "") for r in self._visible_rows if r.get("id")]
+        if ids:
+            self._tree.selection_set(ids)
+            self._tree.focus(ids[0])
+            self._selected_ids = set(ids)
+        return "break"
+
+    def _clear_selection(self, event=None):
+        self._tree.selection_remove(self._tree.selection())
+        self._selected_ids.clear()
+        return "break"
+
+    def _exclude_selected_rows(self, event=None):
+        self._bulk_set_status("excluded")
+        return "break"
+
+    def _copy_selected_row_event(self, event=None):
+        self._ctx_copy_row()
+        return "break"
 
     def _get_focused_row(self) -> Optional[dict]:
         item = self._tree.focus()

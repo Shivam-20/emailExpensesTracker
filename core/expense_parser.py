@@ -8,7 +8,7 @@ import base64
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -158,6 +158,7 @@ def parse_gmail_message(
     classification_source = "rules"
     needs_review          = 0
     status                = "active"
+    notes                 = None
 
     try:
         from classifier import classify, EmailInput
@@ -183,13 +184,18 @@ def parse_gmail_message(
         log_classification(cl_result, email_id=msg_id)
 
     except ImportError:
+        classification_source = "rules_fallback"
         logger.debug("Classifier not available — using rule-based fallback only")
     except Exception as exc:
-        logger.warning("Classifier error for %r: %s — proceeding with active status", subject, exc)
+        classification_source = "rules_fallback"
+        status = "review"
+        needs_review = 1
+        notes = "Classifier fallback triggered; requires review."
+        logger.warning("Classifier error for %r: %s — sending to review", subject, exc)
 
     return {
         "id":                    msg_id,
-        "fetch_date":            datetime.utcnow().isoformat(),
+        "fetch_date":            datetime.now(timezone.utc).isoformat(),
         "email_date":            email_date,
         "month":                 month,
         "sender":                sender_name or sender_email,
@@ -205,7 +211,7 @@ def parse_gmail_message(
         "confidence":            confidence,
         "status":                status,
         "snippet":               snippet,
-        "notes":                 None,
+        "notes":                 notes,
         "classification_source": classification_source,
         "needs_review":          needs_review,
     }
