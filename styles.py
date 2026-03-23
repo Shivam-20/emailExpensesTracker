@@ -1,10 +1,9 @@
 """
-styles.py — Global dark theme palette and QSS stylesheets for v2.
-Catppuccin-Mocha inspired with improved responsiveness and polish.
+styles.py — Colour tokens and CTk theme configuration.
+QSS/QPalette removed; colour constants reused for matplotlib and runtime badge colouring.
 """
 
-from PyQt6.QtGui import QColor, QPalette
-from PyQt6.QtWidgets import QApplication
+import customtkinter as ctk
 
 # ── Colour tokens ─────────────────────────────────────────────────────────────
 BG             = "#0f0f1a"
@@ -34,33 +33,28 @@ BORDER_BRIGHT  = "#45475a"
 AMBER          = "#f9e2af"
 
 # ── Typography ───────────────────────────────────────────────────────────────
-FONT_FAMILY    = "'Inter', 'Segoe UI', 'DejaVu Sans', sans-serif"
-FONT_SIZE_BASE = "13px"
-FONT_SIZE_SM   = "11px"
-FONT_SIZE_XS   = "10px"
-FONT_SIZE_LG   = "15px"
-FONT_SIZE_XL   = "18px"
-FONT_SIZE_XXL  = "24px"
+FONT_FAMILY    = "Inter"
+FONT_SIZE_BASE = 13
+FONT_SIZE_SM   = 11
+FONT_SIZE_XS   = 10
+FONT_SIZE_LG   = 15
+FONT_SIZE_XL   = 18
+FONT_SIZE_XXL  = 24
 
-# ── Spacing ──────────────────────────────────────────────────────────────────
-SPACING_XS  = "4px"
-SPACING_SM  = "8px"
-SPACING_MD  = "12px"
-SPACING_LG  = "16px"
-SPACING_XL  = "20px"
-SPACING_XXL = "24px"
+# ── Spacing (pixels) ─────────────────────────────────────────────────────────
+SPACING_XS  = 4
+SPACING_SM  = 8
+SPACING_MD  = 12
+SPACING_LG  = 16
+SPACING_XL  = 20
+SPACING_XXL = 24
 
 # ── Border Radius ─────────────────────────────────────────────────────────────
-RADIUS_SM   = "4px"
-RADIUS_MD   = "8px"
-RADIUS_LG   = "12px"
-RADIUS_XL   = "16px"
-RADIUS_FULL = "9999px"
-
-# ── Shadows ────────────────────────────────────────────────────────────────────
-SHADOW_SM = "rgba(0, 0, 0, 0.3)"
-SHADOW_MD = "rgba(0, 0, 0, 0.5)"
-SHADOW_LG = "rgba(0, 0, 0, 0.7)"
+RADIUS_SM   = 4
+RADIUS_MD   = 8
+RADIUS_LG   = 12
+RADIUS_XL   = 16
+RADIUS_FULL = 999
 
 # ── Category Colors ───────────────────────────────────────────────────────────
 CATEGORY_COLORS: dict[str, str] = {
@@ -93,462 +87,106 @@ CONFIDENCE_BADGES = {
 }
 
 
-# ── Theme Application ────────────────────────────────────────────────────────
-def apply_dark_theme(app: QApplication) -> None:
-    app.setStyle("Fusion")
-    p = QPalette()
-    c = QColor
-    p.setColor(QPalette.ColorRole.Window,          c(BG))
-    p.setColor(QPalette.ColorRole.WindowText,      c(TEXT))
-    p.setColor(QPalette.ColorRole.Base,            c(SURFACE))
-    p.setColor(QPalette.ColorRole.AlternateBase,   c(SURFACE2))
-    p.setColor(QPalette.ColorRole.ToolTipBase,     c(SURFACE))
-    p.setColor(QPalette.ColorRole.ToolTipText,     c(TEXT))
-    p.setColor(QPalette.ColorRole.Text,            c(TEXT))
-    p.setColor(QPalette.ColorRole.Button,          c(SURFACE))
-    p.setColor(QPalette.ColorRole.ButtonText,      c(TEXT))
-    p.setColor(QPalette.ColorRole.BrightText,      c(ERROR))
-    p.setColor(QPalette.ColorRole.Link,            c(ACCENT))
-    p.setColor(QPalette.ColorRole.Highlight,       c(ACCENT))
-    p.setColor(QPalette.ColorRole.HighlightedText, c("#ffffff"))
-    p.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text,       c(TEXT_DIM))
-    p.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, c(TEXT_DIM))
-    app.setPalette(p)
+# ── CTk Theme Configuration ───────────────────────────────────────────────────
+def configure_ctk_theme() -> None:
+    """Apply the Catppuccin-Mocha dark palette to CustomTkinter."""
+    ctk.set_appearance_mode("dark")
+    ctk.set_default_color_theme("dark-blue")
 
+    # Override CTk's internal colour map for a fully custom palette
+    theme = ctk.ThemeManager.theme
+    if not theme:
+        return
 
-# ── QSS Stylesheet ─────────────────────────────────────────────────────────────
-MAIN_STYLE = f"""
+    def _set(component: str, key: str, light: str, dark: str) -> None:
+        try:
+            theme[component][key] = [light, dark]
+        except (KeyError, TypeError):
+            pass
 
-/* ━━━━━━━━━━━━━━━━  BASE  ━━━━━━━━━━━━━━━━ */
-QWidget {{
-    font-family: {FONT_FAMILY};
-    font-size: {FONT_SIZE_BASE};
-    color: {TEXT};
-    background-color: {BG};
-}}
-QMainWindow, QDialog {{ background-color: {BG}; }}
+    # CTkFrame
+    _set("CTkFrame",       "fg_color",       SURFACE2,  SURFACE2)
+    _set("CTkFrame",       "top_fg_color",   SURFACE,   SURFACE)
+    _set("CTkFrame",       "border_color",   BORDER,    BORDER)
 
-/* ── Tooltip ── */
-QToolTip {{
-    background-color: {SURFACE3};
-    color: {TEXT};
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_SM};
-    padding: 6px 10px;
-    font-size: {FONT_SIZE_SM};
-}}
+    # CTkButton
+    _set("CTkButton",      "fg_color",       ACCENT,    ACCENT)
+    _set("CTkButton",      "hover_color",    ACCENT_LIGHT, ACCENT_LIGHT)
+    _set("CTkButton",      "text_color",     "#1e1e2e", "#1e1e2e")
+    _set("CTkButton",      "border_color",   ACCENT_DARK, ACCENT_DARK)
 
-/* ━━━━━━━━━━━━━━━━  SIDEBAR  ━━━━━━━━━━━━━━━━ */
-#sidebar {{
-    background-color: {SIDEBAR_BG};
-    border-right: 1px solid {BORDER};
-}}
-#appTitle {{
-    font-size: {FONT_SIZE_XL};
-    font-weight: bold;
-    color: {ACCENT};
-    padding: 6px 0 4px 0;
-}}
-#accountPill {{
-    background-color: {SURFACE};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS_FULL};
-    padding: 4px 12px;
-    color: {TEXT_DIM};
-    font-size: {FONT_SIZE_SM};
-}}
-#accountPill[connected="true"] {{
-    background-color: {SUCCESS_BG};
-    border-color: {SUCCESS};
-    color: {SUCCESS};
-}}
+    # CTkLabel
+    _set("CTkLabel",       "fg_color",       "transparent", "transparent")
+    _set("CTkLabel",       "text_color",     TEXT, TEXT)
 
-/* Section labels — objectName="sectionLabel" */
-#sectionLabel {{
-    color: {TEXT_DIM};
-    font-size: {FONT_SIZE_XS};
-    font-weight: 700;
-    padding: 2px 0 2px 7px;
-    border-left: 2px solid {ACCENT_DARK};
-}}
+    # CTkEntry
+    _set("CTkEntry",       "fg_color",       SURFACE, SURFACE)
+    _set("CTkEntry",       "border_color",   BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkEntry",       "text_color",     TEXT, TEXT)
+    _set("CTkEntry",       "placeholder_text_color", TEXT_DIM, TEXT_DIM)
 
-/* ━━━━━━━━━━━━━━━━  BUTTONS  ━━━━━━━━━━━━━━━━ */
-QPushButton {{
-    background-color: {SURFACE};
-    color: {TEXT};
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_MD};
-    padding: 6px 14px;
-    min-height: 30px;
-    font-size: {FONT_SIZE_BASE};
-}}
-QPushButton:focus  {{ outline: none; border-color: {ACCENT}; }}
-QPushButton:hover  {{ background-color: {SURFACE_HOVER}; border-color: {ACCENT_DARK}; }}
-QPushButton:pressed {{ background-color: {SURFACE_ACTIVE}; }}
-QPushButton:disabled {{ color: {TEXT_MUTE}; border-color: {SURFACE}; background-color: {SURFACE}; }}
+    # CTkComboBox
+    _set("CTkComboBox",    "fg_color",       SURFACE, SURFACE)
+    _set("CTkComboBox",    "border_color",   BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkComboBox",    "button_color",   SURFACE_HOVER, SURFACE_HOVER)
+    _set("CTkComboBox",    "button_hover_color", SURFACE_ACTIVE, SURFACE_ACTIVE)
+    _set("CTkComboBox",    "text_color",     TEXT, TEXT)
+    _set("CTkComboBox",    "dropdown_fg_color", SURFACE, SURFACE)
+    _set("CTkComboBox",    "dropdown_text_color", TEXT, TEXT)
+    _set("CTkComboBox",    "dropdown_hover_color", SURFACE_HOVER, SURFACE_HOVER)
 
-#primaryBtn {{
-    background-color: {ACCENT};
-    color: #1e1e2e;
-    font-weight: 700;
-    border: none;
-    min-height: 34px;
-    padding: 7px 16px;
-    border-radius: {RADIUS_MD};
-}}
-#primaryBtn:hover   {{ background-color: {ACCENT_LIGHT}; }}
-#primaryBtn:pressed {{ background-color: {ACCENT_DARK}; color: #ffffff; }}
-#primaryBtn:focus   {{ outline: none; border: 1px solid {ACCENT_LIGHT}; }}
+    # CTkScrollableFrame
+    _set("CTkScrollableFrame", "fg_color",   SURFACE2, SURFACE2)
+    _set("CTkScrollableFrame", "border_color", BORDER, BORDER)
+    _set("CTkScrollableFrame", "scrollbar_button_color", BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkScrollableFrame", "scrollbar_button_hover_color", ACCENT_DARK, ACCENT_DARK)
 
-#ghostBtn {{
-    background: transparent;
-    border: 1px solid {ACCENT_DARK};
-    color: {ACCENT};
-    min-height: 28px;
-    padding: 5px 12px;
-}}
-#ghostBtn:hover   {{ background-color: rgba(203,166,247,0.12); border-color: {ACCENT}; }}
-#ghostBtn:pressed {{ background-color: rgba(203,166,247,0.22); }}
-#ghostBtn:focus   {{ outline: none; }}
+    # CTkTabview
+    _set("CTkTabview",     "fg_color",       BG,      BG)
+    _set("CTkTabview",     "segmented_button_fg_color", SURFACE2, SURFACE2)
+    _set("CTkTabview",     "segmented_button_selected_color", BG, BG)
+    _set("CTkTabview",     "segmented_button_selected_hover_color", SURFACE_HOVER, SURFACE_HOVER)
+    _set("CTkTabview",     "segmented_button_unselected_color", SURFACE2, SURFACE2)
+    _set("CTkTabview",     "segmented_button_unselected_hover_color", SURFACE_HOVER, SURFACE_HOVER)
+    _set("CTkTabview",     "text_color",     TEXT, TEXT)
+    _set("CTkTabview",     "text_color_disabled", TEXT_DIM, TEXT_DIM)
+    _set("CTkTabview",     "border_color",   BORDER, BORDER)
 
-#dangerBtn {{
-    background-color: {ERROR_BG};
-    color: {ERROR};
-    border: 1px solid {ERROR};
-}}
-#dangerBtn:hover {{ background-color: {ERROR}; color: #ffffff; }}
+    # CTkProgressBar
+    _set("CTkProgressBar", "fg_color",       SURFACE, SURFACE)
+    _set("CTkProgressBar", "progress_color", ACCENT,  ACCENT)
+    _set("CTkProgressBar", "border_color",   BORDER,  BORDER)
 
-/* ━━━━━━━━━━━━━━━━  CHIPS  ━━━━━━━━━━━━━━━━ */
-#chipActive {{
-    background-color: {ACCENT};
-    color: #1e1e2e;
-    border: none;
-    border-radius: {RADIUS_FULL};
-    padding: 3px 10px;
-    font-size: {FONT_SIZE_SM};
-    font-weight: 600;
-    min-height: 24px;
-}}
-#chipInactive {{
-    background-color: {SURFACE};
-    color: {TEXT_DIM};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS_FULL};
-    padding: 3px 10px;
-    font-size: {FONT_SIZE_SM};
-    min-height: 24px;
-}}
-#chipInactive:hover {{ background-color: {SURFACE_HOVER}; color: {TEXT}; border-color: {ACCENT_DARK}; }}
+    # CTkCheckBox
+    _set("CTkCheckBox",    "fg_color",       ACCENT,  ACCENT)
+    _set("CTkCheckBox",    "hover_color",    ACCENT_DARK, ACCENT_DARK)
+    _set("CTkCheckBox",    "checkmark_color", "#1e1e2e", "#1e1e2e")
+    _set("CTkCheckBox",    "border_color",   BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkCheckBox",    "text_color",     TEXT, TEXT)
 
-/* ━━━━━━━━━━━━━━━━  INPUT CONTROLS  ━━━━━━━━━━━━━━━━ */
-QComboBox, QLineEdit, QSpinBox, QDateEdit {{
-    background-color: {SURFACE};
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_SM};
-    padding: 4px 8px;
-    color: {TEXT};
-    min-height: 26px;
-    selection-background-color: {ACCENT};
-    selection-color: #1e1e2e;
-}}
-QComboBox:focus, QLineEdit:focus, QSpinBox:focus, QDateEdit:focus {{
-    outline: none;
-    border-color: {ACCENT};
-    background-color: {SURFACE_HOVER};
-}}
-QComboBox:hover, QSpinBox:hover, QDateEdit:hover {{
-    border-color: {ACCENT_DARK};
-}}
+    # CTkSlider
+    _set("CTkSlider",      "fg_color",       SURFACE_HOVER, SURFACE_HOVER)
+    _set("CTkSlider",      "progress_color", ACCENT, ACCENT)
+    _set("CTkSlider",      "button_color",   ACCENT, ACCENT)
+    _set("CTkSlider",      "button_hover_color", ACCENT_LIGHT, ACCENT_LIGHT)
 
-/* Drop-down arrow area */
-QComboBox::drop-down, QDateEdit::drop-down {{
-    border: none;
-    width: 22px;
-    border-left: 1px solid {BORDER};
-}}
-QComboBox::down-arrow, QDateEdit::down-arrow {{
-    width: 8px;
-    height: 8px;
-}}
+    # CTkTextbox
+    _set("CTkTextbox",     "fg_color",       SURFACE, SURFACE)
+    _set("CTkTextbox",     "border_color",   BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkTextbox",     "text_color",     TEXT, TEXT)
+    _set("CTkTextbox",     "scrollbar_button_color", BORDER_BRIGHT, BORDER_BRIGHT)
+    _set("CTkTextbox",     "scrollbar_button_hover_color", ACCENT_DARK, ACCENT_DARK)
 
-QComboBox QAbstractItemView {{
-    background-color: {SURFACE};
-    color: {TEXT};
-    selection-background-color: {ACCENT};
-    selection-color: #1e1e2e;
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_SM};
-    padding: 2px;
-    outline: none;
-}}
-QComboBox QAbstractItemView::item {{
-    padding: 5px 10px;
-    min-height: 26px;
-    border-radius: {RADIUS_SM};
-}}
-QComboBox QAbstractItemView::item:selected {{
-    background-color: {ACCENT};
-    color: #1e1e2e;
-}}
+    # CTkSegmentedButton
+    _set("CTkSegmentedButton", "fg_color",          SURFACE2, SURFACE2)
+    _set("CTkSegmentedButton", "selected_color",    ACCENT, ACCENT)
+    _set("CTkSegmentedButton", "selected_hover_color", ACCENT_LIGHT, ACCENT_LIGHT)
+    _set("CTkSegmentedButton", "unselected_color",  SURFACE, SURFACE)
+    _set("CTkSegmentedButton", "unselected_hover_color", SURFACE_HOVER, SURFACE_HOVER)
+    _set("CTkSegmentedButton", "text_color",        TEXT, TEXT)
+    _set("CTkSegmentedButton", "text_color_disabled", TEXT_DIM, TEXT_DIM)
 
-/* SpinBox buttons */
-QSpinBox::up-button, QSpinBox::down-button {{
-    border: none;
-    width: 18px;
-    background-color: {SURFACE};
-}}
-QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
-    background-color: {SURFACE_HOVER};
-}}
-
-/* Calendar popup for QDateEdit */
-QCalendarWidget {{
-    background-color: {SURFACE};
-    color: {TEXT};
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_MD};
-}}
-QCalendarWidget QToolButton {{
-    background-color: transparent;
-    color: {ACCENT};
-    font-weight: bold;
-    border: none;
-    padding: 4px 8px;
-    min-height: 26px;
-}}
-QCalendarWidget QToolButton:hover {{ background-color: {SURFACE_HOVER}; border-radius: {RADIUS_SM}; }}
-QCalendarWidget QMenu {{
-    background-color: {SURFACE};
-    color: {TEXT};
-    border: 1px solid {BORDER_BRIGHT};
-}}
-QCalendarWidget QSpinBox {{
-    background-color: {SURFACE};
-    border: 1px solid {BORDER_BRIGHT};
-    color: {TEXT};
-    font-weight: bold;
-}}
-QCalendarWidget QAbstractItemView:enabled {{
-    background-color: {SURFACE};
-    color: {TEXT};
-    selection-background-color: {ACCENT};
-    selection-color: #1e1e2e;
-}}
-QCalendarWidget QAbstractItemView:disabled {{ color: {TEXT_MUTE}; }}
-
-/* ━━━━━━━━━━━━━━━━  TABLE  ━━━━━━━━━━━━━━━━ */
-QTableWidget {{
-    background-color: {SURFACE};
-    alternate-background-color: {SURFACE2};
-    gridline-color: {BORDER};
-    color: {TEXT};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS_SM};
-    selection-background-color: rgba(203,166,247,0.25);
-    selection-color: {TEXT};
-    outline: none;
-}}
-QTableWidget::item {{
-    padding: 6px 10px;
-    border-bottom: 1px solid {BORDER};
-}}
-QTableWidget::item:selected {{
-    background-color: rgba(203,166,247,0.18);
-    color: {TEXT};
-}}
-QTableWidget::item:hover {{
-    background-color: {SURFACE_HOVER};
-}}
-
-QHeaderView::section {{
-    background-color: {SURFACE2};
-    color: {TEXT_DIM};
-    border: none;
-    border-right: 1px solid {BORDER};
-    border-bottom: 2px solid {BORDER_BRIGHT};
-    padding: 7px 10px;
-    font-weight: 700;
-    font-size: {FONT_SIZE_XS};
-}}
-QHeaderView::section:hover {{ background-color: {SURFACE_HOVER}; color: {TEXT}; }}
-QHeaderView {{
-    background-color: {SURFACE2};
-}}
-QHeaderView::section:first {{ border-top-left-radius: {RADIUS_SM}; }}
-QHeaderView::section:last  {{ border-top-right-radius: {RADIUS_SM}; border-right: none; }}
-
-/* ━━━━━━━━━━━━━━━━  TABS  ━━━━━━━━━━━━━━━━ */
-QTabWidget::pane {{
-    border: 1px solid {BORDER};
-    background-color: {BG};
-    border-radius: {RADIUS_MD};
-    border-top-left-radius: 0;
-    margin-top: -1px;
-    padding: {SPACING_MD};
-}}
-QTabBar::tab {{
-    background-color: {SURFACE2};
-    color: {TEXT_DIM};
-    border: 1px solid {BORDER};
-    border-bottom: none;
-    padding: 8px 18px;
-    margin-right: 2px;
-    margin-top: 4px;
-    border-top-left-radius: {RADIUS_SM};
-    border-top-right-radius: {RADIUS_SM};
-    font-size: {FONT_SIZE_SM};
-    font-weight: 500;
-    min-width: 110px;
-}}
-QTabBar::tab:selected {{
-    background-color: {BG};
-    color: {ACCENT};
-    border-bottom: 2px solid {ACCENT};
-    font-weight: 600;
-}}
-QTabBar::tab:hover:!selected {{
-    background-color: {SURFACE_HOVER};
-    color: {TEXT};
-    border-bottom: 1px solid {ACCENT_DARK};
-}}
-
-/* ━━━━━━━━━━━━━━━━  SCROLLBARS  ━━━━━━━━━━━━━━━━ */
-QScrollBar:vertical {{
-    background: transparent;
-    width: 8px;
-    margin: 0;
-}}
-QScrollBar::handle:vertical {{
-    background: {BORDER_BRIGHT};
-    border-radius: 4px;
-    min-height: 24px;
-    margin: 2px;
-}}
-QScrollBar::handle:vertical:hover {{ background: {ACCENT_DARK}; }}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: transparent; }}
-
-QScrollBar:horizontal {{
-    background: transparent;
-    height: 8px;
-    margin: 0;
-}}
-QScrollBar::handle:horizontal {{
-    background: {BORDER_BRIGHT};
-    border-radius: 4px;
-    min-width: 24px;
-    margin: 2px;
-}}
-QScrollBar::handle:horizontal:hover {{ background: {ACCENT_DARK}; }}
-QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: transparent; }}
-
-QScrollArea {{ border: none; background: transparent; }}
-QScrollArea > QWidget > QWidget {{ background: transparent; }}
-
-/* ━━━━━━━━━━━━━━━━  PROGRESS BAR  ━━━━━━━━━━━━━━━━ */
-QProgressBar {{
-    background-color: {SURFACE};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS_SM};
-    height: 6px;
-    text-align: center;
-    font-size: 0px;
-}}
-QProgressBar::chunk {{
-    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-        stop:0 {ACCENT_DARK}, stop:1 {ACCENT});
-    border-radius: {RADIUS_SM};
-}}
-
-/* ━━━━━━━━━━━━━━━━  CARDS  ━━━━━━━━━━━━━━━━ */
-#summaryCard {{
-    background-color: {SURFACE2};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS_MD};
-    padding: 2px;
-}}
-#summaryValue {{
-    color: {TEXT};
-    font-size: 13px;
-    font-weight: 700;
-}}
-#cardLabel {{
-    color: {TEXT_DIM};
-    font-size: {FONT_SIZE_XS};
-    font-weight: 600;
-}}
-#cardValue {{
-    color: {TEXT};
-    font-size: {FONT_SIZE_LG};
-    font-weight: 700;
-}}
-
-/* ━━━━━━━━━━━━━━━━  MISC  ━━━━━━━━━━━━━━━━ */
-#separator {{
-    background-color: {BORDER};
-    max-height: 1px;
-    min-height: 1px;
-    margin: 2px 0;
-}}
-#statusLabel {{
-    color: {TEXT_DIM};
-    font-size: {FONT_SIZE_SM};
-}}
-QStatusBar {{
-    background-color: {SIDEBAR_BG};
-    color: {TEXT_DIM};
-    border-top: 1px solid {BORDER};
-    font-size: {FONT_SIZE_SM};
-    padding: 2px 6px;
-}}
-QStatusBar::item {{ border: none; }}
-
-QMessageBox {{
-    background-color: {SURFACE};
-}}
-QMessageBox QLabel {{ color: {TEXT}; }}
-QMessageBox QPushButton {{ min-width: 80px; }}
-
-#bulkBar {{
-    background-color: rgba(166,130,216,0.18);
-    border-top: 1px solid {ACCENT_DARK};
-    border-bottom: 1px solid {ACCENT_DARK};
-}}
-
-QMenu {{
-    background-color: {SURFACE};
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_SM};
-    padding: 4px;
-    color: {TEXT};
-}}
-QMenu::item {{
-    padding: 6px 28px 6px 12px;
-    border-radius: {RADIUS_SM};
-}}
-QMenu::item:selected {{ background-color: {SURFACE_HOVER}; color: {TEXT}; }}
-QMenu::indicator {{ width: 14px; height: 14px; margin-left: 6px; }}
-
-QCheckBox {{
-    spacing: 8px;
-    color: {TEXT};
-}}
-QCheckBox::indicator {{
-    width: 16px;
-    height: 16px;
-    border: 1px solid {BORDER_BRIGHT};
-    border-radius: {RADIUS_SM};
-    background: {SURFACE};
-}}
-QCheckBox::indicator:checked {{
-    background-color: {ACCENT};
-    border-color: {ACCENT};
-}}
-QCheckBox::indicator:hover {{ border-color: {ACCENT_DARK}; }}
-
-QLabel#fetchHint {{
-    color: {TEXT_MUTE};
-    font-size: {FONT_SIZE_XS};
-}}
-"""
+def bind_tree_scroll(tree):
+    """Enable mouse wheel scrolling on Linux (X11) for ttk.Treeview widgets."""
+    tree.bind("<Button-4>", lambda e: tree.yview_scroll(-1, "units"))
+    tree.bind("<Button-5>", lambda e: tree.yview_scroll(1, "units"))

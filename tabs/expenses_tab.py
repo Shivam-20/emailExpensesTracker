@@ -1,938 +1,642 @@
+
 """
-tabs/expenses_tab.py — Full expense table with toolbar, category chips,
-amount filter, bulk actions, context menu, and inline editing.
+tabs/expenses_tab.py — Full expense table (ttk.Treeview) with toolbar,
+category chips, amount filter, bulk actions, and inline editing.
 """
 
-import json
+import csv
 import logging
-from typing import Optional
+from tkinter import filedialog, messagebox, simpledialog
+from typing import Callable, Optional
 
-from PyQt6.QtCore import Qt, QDate, QEvent, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QAction, QWheelEvent
-from PyQt6.QtWidgets import (
-    QAbstractItemView, QCheckBox, QDateEdit, QDialog, QDialogButtonBox,
-    QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
-    QSpinBox, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
-    QComboBox,
-)
+import customtkinter as ctk
+import tkinter as tk
+import tkinter.ttk as ttk
 
 from config.category_map import ALL_CATEGORIES
 from styles import (
     CATEGORY_COLORS, CONFIDENCE_COLORS, CONFIDENCE_BADGES,
-    TEXT, TEXT_DIM, SURFACE, SURFACE2, SURFACE3, SURFACE_HOVER,
-    ACCENT, ACCENT_DK, WARNING, ERROR, SUCCESS, AMBER, BORDER,
+    TEXT, TEXT_DIM, SURFACE, SURFACE_HOVER, SURFACE2,
+    ACCENT, ACCENT_DARK, WARNING, ERROR, SUCCESS, AMBER, BORDER,
+    BG, BORDER_BRIGHT, bind_tree_scroll
 )
 
 logger = logging.getLogger(__name__)
 
 COLUMNS = [
-    "✓", "Date", "Sender", "Subject", "Amount",
-    "Currency", "Payment", "Category", "Tags", "Confidence", "Status"
+    "Date", "Sender", "Subject", "Amount",
+    "Currency", "Payment", "Category", "Tags", "Confidence", "Status",
 ]
-CI = {name: i for i, name in enumerate(COLUMNS)}
+COL_WIDTHS = {
+    "Date": 90, "Sender": 180, "Subject": 280, "Amount": 90,
+    "Currency": 70, "Payment": 120, "Category": 110,
+    "Tags": 90, "Confidence": 80, "Status": 80,
+}
 
 
-class ExpensesTab(QWidget):
-    """Tab 1 — Expense table with all v2 features."""
+class ExpensesTab:
+    """Tab 1 — Expense table with filtering, inline editing, and bulk actions."""
 
-    # Emitted when user edits a row field (for DB persistence)
-    field_changed     = pyqtSignal(str, str, object)   # (msg_id, field, value)
-    exclude_requested = pyqtSignal(str, str)            # (msg_id, sender_email)
-    review_requested  = pyqtSignal(str)                 # (msg_id,) → mark for review
-
-    def __init__(self, db=None, parent=None) -> None:
-        super().__init__(parent)
-        self._db = db
+    def __init__(self, parent, db=None) -> None:
+        self._parent   = parent
+        self._db       = db
         self._all_rows: list[dict] = []
         self._visible_rows: list[dict] = []
-        self._active_categories: set[str] = set()  # empty = all
-        self._chip_btns: dict[str, QPushButton] = {}
+        self._active_categories: set[str] = set()
+        self._chip_btns: dict[str, ctk.CTkButton] = {}
+        self._selected_ids: set[str] = set()
+
+        # Callbacks for MainWindow
+        self.on_field_changed: Optional[Callable] = None
+        self.on_exclude:       Optional[Callable] = None
+        self.on_review:        Optional[Callable] = None
+
         self._setup_ui()
 
     def set_db(self, db) -> None:
         self._db = db
-
-    def eventFilter(self, obj, event) -> bool:
-        """Redirect mouse-wheel over the chips scroll area to scroll horizontally."""
-        if obj is self._chips_scroll and event.type() == QEvent.Type.Wheel:
-            sb = self._chips_scroll.horizontalScrollBar()
-            sb.setValue(sb.value() - event.angleDelta().y())
-            return True
-        return super().eventFilter(obj, event)
 
     # ── Public API ────────────────────────────────────────────────────────────
 
     def load_rows(self, rows: list[dict]) -> None:
         self._all_rows = rows
         self._active_categories.clear()
-        self._update_all_chip_state()
+        self._rebuild_chips()
         self._apply_filters()
-
-    def get_visible_rows(self) -> list[dict]:
-        return list(self._visible_rows)
 
     def clear(self) -> None:
         self._all_rows = []
         self._visible_rows = []
-        self._table.setRowCount(0)
-        self._update_summary_label()
+        self._tree.delete(*self._tree.get_children())
+        self._update_summary()
+
+    def filter_by_category(self, cat: str) -> None:
+        self._active_categories = {cat}
+        self._rebuild_chips()
+        self._apply_filters()
 
     # ── UI setup ──────────────────────────────────────────────────────────────
 
     def _setup_ui(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 6, 10, 6)
-        layout.setSpacing(5)
+        frame = ctk.CTkFrame(self._parent, fg_color=BG, corner_radius=0)
+        frame.pack(fill="both", expand=True)
 
-        # ── Toolbar ───────────────────────────────────────────────────────
-        toolbar = QWidget()
-        tb_layout = QVBoxLayout(toolbar)
-        tb_layout.setContentsMargins(0, 0, 0, 0)
-        tb_layout.setSpacing(4)
+        # ── Toolbar (search, amount filter, export) ───────────────────────
+        toolbar = ctk.CTkFrame(frame, fg_color="transparent")
+        toolbar.pack(fill="x", padx=8, pady=(8, 4))
 
-        # Search bar (prominent)
-        self._search = QLineEdit()
-        self._search.setPlaceholderText("Search sender, subject, category, tag…")
-        self._search.setClearButtonEnabled(True)
-        self._search.setMinimumHeight(32)
-        self._search.textChanged.connect(self._apply_filters)
-        tb_layout.addWidget(self._search)
+        self._search_var = ctk.StringVar()
+        self._search_var.trace_add("write", lambda *_: self._apply_filters())
+        search_entry = ctk.CTkEntry(
+            toolbar, textvariable=self._search_var, width=260,
+            placeholder_text="Search sender, subject, category, tag…",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+        )
+        search_entry.pack(side="left", padx=(0, 8))
 
-        # Category chips — horizontally scrollable, mousewheel enabled
-        chips_scroll = QScrollArea()
-        chips_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        chips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        chips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        chips_scroll.setFixedHeight(32)
-        chips_scroll.setWidgetResizable(True)
-        chips_scroll.installEventFilter(self)   # mousewheel → horizontal scroll
+        ctk.CTkLabel(toolbar, text="≥₹", text_color=TEXT_DIM,
+                      font=ctk.CTkFont(family="Inter", size=12)).pack(side="left")
+        self._min_amt_var = ctk.StringVar(value="")
+        self._min_amt_var.trace_add("write", lambda *_: self._apply_filters())
+        ctk.CTkEntry(toolbar, textvariable=self._min_amt_var, width=70,
+                      placeholder_text="min",
+                      font=ctk.CTkFont(family="Inter", size=12),
+                      fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+                      ).pack(side="left", padx=(2, 4))
 
-        chips_widget = QWidget()
-        chips_layout = QHBoxLayout(chips_widget)
-        chips_layout.setContentsMargins(0, 0, 0, 0)
-        chips_layout.setSpacing(4)
+        ctk.CTkLabel(toolbar, text="≤₹", text_color=TEXT_DIM,
+                      font=ctk.CTkFont(family="Inter", size=12)).pack(side="left")
+        self._max_amt_var = ctk.StringVar(value="")
+        self._max_amt_var.trace_add("write", lambda *_: self._apply_filters())
+        ctk.CTkEntry(toolbar, textvariable=self._max_amt_var, width=70,
+                      placeholder_text="max",
+                      font=ctk.CTkFont(family="Inter", size=12),
+                      fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+                      ).pack(side="left", padx=(2, 8))
 
-        all_chip = QPushButton("All")
-        all_chip.setObjectName("chipActive")
-        all_chip.setCheckable(True)
-        all_chip.setChecked(True)
-        all_chip.clicked.connect(lambda: self._on_all_chip())
-        chips_layout.addWidget(all_chip)
-        self._chip_btns["All"] = all_chip
+        self._status_filter_var = ctk.StringVar(value="Active")
+        ctk.CTkComboBox(
+            toolbar,
+            values=["All", "Active", "Excluded", "Review"],
+            variable=self._status_filter_var,
+            command=lambda _: self._apply_filters(),
+            width=100, state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+            button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE, dropdown_text_color=TEXT,
+            dropdown_hover_color=SURFACE_HOVER,
+        ).pack(side="left", padx=(0, 8))
 
-        for cat in ALL_CATEGORIES:
-            btn = QPushButton(cat)
-            btn.setObjectName("chipInactive")
-            btn.setCheckable(True)
-            btn.clicked.connect(lambda checked, c=cat: self._on_chip_toggled(c, checked))
-            chips_layout.addWidget(btn)
+        ctk.CTkButton(toolbar, text="📥 Export CSV", command=self._export_csv,
+                       font=ctk.CTkFont(family="Inter", size=11),
+                       fg_color="transparent", hover_color=SURFACE_HOVER, text_color=ACCENT,
+                       border_color=ACCENT_DARK, border_width=1, corner_radius=6, height=28,
+                       ).pack(side="right")
+
+        # ── Category chips ────────────────────────────────────────────────
+        chips_wrapper = ctk.CTkFrame(frame, fg_color="transparent", height=36)
+        chips_wrapper.pack(fill="x", padx=8, pady=(0, 4))
+        chips_wrapper.pack_propagate(False)
+
+        chips_canvas = tk.Canvas(chips_wrapper, bg=BG, height=34, highlightthickness=0)
+        chips_canvas.pack(fill="x", expand=True, side="left")
+        self._chips_inner = ctk.CTkFrame(chips_canvas, fg_color="transparent")
+        self._chips_window = chips_canvas.create_window((0, 0), window=self._chips_inner, anchor="nw")
+        chips_canvas.bind("<Configure>", lambda e: chips_canvas.configure(scrollregion=chips_canvas.bbox("all")))
+        chips_canvas.bind("<MouseWheel>", lambda e: chips_canvas.xview_scroll(-1 * int(e.delta / 120), "units"))
+        self._chips_canvas = chips_canvas
+
+        # ── Context menu ──────────────────────────────────────────────────
+        self._ctx_menu = tk.Menu(frame._canvas if hasattr(frame, "_canvas") else frame._parent, tearoff=0,
+                                  bg=SURFACE, fg=TEXT, activebackground=SURFACE_HOVER, activeforeground=TEXT,
+                                  borderwidth=0, font=("Inter", 11))
+        self._ctx_menu.add_command(label="Edit Amount…",   command=self._ctx_edit_amount)
+        self._ctx_menu.add_command(label="Set Category…",  command=self._ctx_set_category)
+        self._ctx_menu.add_separator()
+        self._ctx_menu.add_command(label="✓ Mark Active",    command=lambda: self._set_status_selected("active"))
+        self._ctx_menu.add_command(label="🚫 Exclude",       command=lambda: self._set_status_selected("excluded"))
+        self._ctx_menu.add_command(label="🔍 Mark for Review", command=lambda: self._set_status_selected("review"))
+        self._ctx_menu.add_separator()
+        self._ctx_menu.add_command(label="🔖 Add Tag…",     command=self._ctx_add_tag)
+        self._ctx_menu.add_command(label="📋 Copy Row",     command=self._ctx_copy_row)
+
+        # ── Treeview table ────────────────────────────────────────────────
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Expenses.Treeview",
+                         background=SURFACE, foreground=TEXT, fieldbackground=SURFACE,
+                         rowheight=28, font=("Inter", 11))
+        style.configure("Expenses.Treeview.Heading",
+                         background="#16162a", foreground=TEXT_DIM, font=("Inter", 10, "bold"),
+                         relief="flat")
+        style.map("Expenses.Treeview",
+                  background=[("selected", ACCENT_DARK)],
+                  foreground=[("selected", "#1e1e2e")])
+
+        tree_frame = ctk.CTkFrame(frame, fg_color=SURFACE, corner_radius=8)
+        tree_frame.pack(fill="both", expand=True, padx=8, pady=(0, 4))
+
+        self._tree = ttk.Treeview(
+            tree_frame, style="Expenses.Treeview",
+            columns=COLUMNS, show="headings",
+            selectmode="extended",
+        )
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical",   command=self._tree.yview)
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self._tree.xview)
+        self._tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+
+        vsb.pack(side="right",  fill="y")
+        hsb.pack(side="bottom", fill="x")
+        self._tree.pack(fill="both", expand=True)
+
+        for col in COLUMNS:
+            self._tree.heading(col, text=col, command=lambda c=col: self._sort_by(c))
+            self._tree.column(col, width=COL_WIDTHS[col], anchor="w",
+                               minwidth=50, stretch=(col in ("Sender", "Subject")))
+
+        bind_tree_scroll(self._tree)
+        self._tree.bind("<Button-3>", self._on_right_click)
+        self._tree.bind("<Double-1>", self._on_double_click)
+        self._tree.bind("<<TreeviewSelect>>", self._on_selection_changed)
+
+        # Colour tags
+        for cat, color in CATEGORY_COLORS.items():
+            self._tree.tag_configure(f"cat_{cat}", foreground=color)
+        self._tree.tag_configure("excluded", foreground=TEXT_DIM)
+        self._tree.tag_configure("review",   foreground=AMBER)
+
+        # ── Bulk action bar & summary ─────────────────────────────────────
+        bottom = ctk.CTkFrame(frame, fg_color="transparent")
+        bottom.pack(fill="x", padx=8, pady=(0, 6))
+
+        self._bulk_frame = ctk.CTkFrame(bottom, fg_color="transparent")
+        self._bulk_frame.pack(side="left")
+
+        for label, cmd in [
+            ("✓ Active", lambda: self._bulk_set_status("active")),
+            ("🚫 Exclude", lambda: self._bulk_set_status("excluded")),
+            ("🔍 Review", lambda: self._bulk_set_status("review")),
+        ]:
+            ctk.CTkButton(self._bulk_frame, text=label, command=cmd,
+                           font=ctk.CTkFont(family="Inter", size=11),
+                           fg_color="transparent", hover_color=SURFACE_HOVER, text_color=TEXT_DIM,
+                           border_color=BORDER, border_width=1, corner_radius=6, height=26, width=90,
+                           ).pack(side="left", padx=(0, 6))
+
+        self._summary_lbl = ctk.CTkLabel(
+            bottom, text="", text_color=TEXT_DIM,
+            font=ctk.CTkFont(family="Inter", size=11),
+        )
+        self._summary_lbl.pack(side="right")
+
+        # Sort state
+        self._sort_col: Optional[str] = None
+        self._sort_asc: bool = True
+
+    # ── Chip rebuild ──────────────────────────────────────────────────────────
+
+    def _rebuild_chips(self) -> None:
+        for widget in self._chips_inner.winfo_children():
+            widget.destroy()
+        self._chip_btns.clear()
+
+        cats_in_data = sorted({
+            r.get("category_edited") or r.get("category", "Other")
+            for r in self._all_rows
+        })
+
+        def _make_chip(cat: str) -> None:
+            color  = CATEGORY_COLORS.get(cat, "#6c7086")
+            active = cat in self._active_categories
+            fg     = "#1e1e2e" if active else color
+            bg     = color     if active else "transparent"
+            btn = ctk.CTkButton(
+                self._chips_inner, text=cat,
+                command=lambda c=cat: self._toggle_chip(c),
+                font=ctk.CTkFont(family="Inter", size=10),
+                fg_color=bg, hover_color=color, text_color=fg,
+                border_color=color, border_width=1, corner_radius=999,
+                height=22, width=max(60, len(cat) * 8),
+            )
+            btn.pack(side="left", padx=3)
             self._chip_btns[cat] = btn
 
-        chips_layout.addStretch()
-        chips_scroll.setWidget(chips_widget)
-        self._chips_scroll = chips_scroll
-        tb_layout.addWidget(chips_scroll)
+        for cat in cats_in_data:
+            _make_chip(cat)
 
-        # Combined filter row: amount range + date range + column toggle
-        filter_row = QWidget()
-        filter_layout = QHBoxLayout(filter_row)
-        filter_layout.setContentsMargins(0, 0, 0, 0)
-        filter_layout.setSpacing(5)
+        self._chips_inner.update_idletasks()
 
-        # Amount range
-        min_lbl = QLabel("₹ Min")
-        min_lbl.setObjectName("statusLabel")
-        filter_layout.addWidget(min_lbl)
-        self._min_spin = QSpinBox()
-        self._min_spin.setRange(0, 9_999_999)
-        self._min_spin.setValue(0)
-        self._min_spin.setFixedWidth(80)
-        self._min_spin.setToolTip("Minimum amount filter")
-        filter_layout.addWidget(self._min_spin)
-
-        max_lbl = QLabel("Max")
-        max_lbl.setObjectName("statusLabel")
-        filter_layout.addWidget(max_lbl)
-        self._max_spin = QSpinBox()
-        self._max_spin.setRange(0, 9_999_999)
-        self._max_spin.setValue(0)
-        self._max_spin.setSpecialValueText("∞")
-        self._max_spin.setFixedWidth(80)
-        self._max_spin.setToolTip("Maximum amount filter (0 = no limit)")
-        filter_layout.addWidget(self._max_spin)
-
-        apply_btn = QPushButton("▶")
-        apply_btn.setFixedWidth(28)
-        apply_btn.setToolTip("Apply amount filter")
-        apply_btn.clicked.connect(self._apply_filters)
-        filter_layout.addWidget(apply_btn)
-
-        # Separator
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.VLine)
-        sep.setStyleSheet(f"color: #45475a;")
-        filter_layout.addWidget(sep)
-
-        # Date range
-        from_lbl = QLabel("From")
-        from_lbl.setObjectName("statusLabel")
-        filter_layout.addWidget(from_lbl)
-        self._date_from = QDateEdit()
-        self._date_from.setCalendarPopup(True)
-        self._date_from.setDisplayFormat("MMM d yy")
-        self._date_from.setSpecialValueText("Any")
-        self._date_from.setMinimumDate(QDate(2000, 1, 1))
-        self._date_from.setDate(self._date_from.minimumDate())
-        self._date_from.setFixedWidth(90)
-        self._date_from.setToolTip("Filter: from date (inclusive)")
-        self._date_from.dateChanged.connect(self._apply_filters)
-        filter_layout.addWidget(self._date_from)
-
-        to_lbl = QLabel("To")
-        to_lbl.setObjectName("statusLabel")
-        filter_layout.addWidget(to_lbl)
-        self._date_to = QDateEdit()
-        self._date_to.setCalendarPopup(True)
-        self._date_to.setDisplayFormat("MMM d yy")
-        self._date_to.setSpecialValueText("Any")
-        self._date_to.setMinimumDate(QDate(2000, 1, 1))
-        self._date_to.setDate(self._date_to.minimumDate())
-        self._date_to.setFixedWidth(90)
-        self._date_to.setToolTip("Filter: to date (inclusive)")
-        self._date_to.dateChanged.connect(self._apply_filters)
-        filter_layout.addWidget(self._date_to)
-
-        clear_date_btn = QPushButton("✕")
-        clear_date_btn.setFixedWidth(26)
-        clear_date_btn.setToolTip("Clear date filters")
-        clear_date_btn.clicked.connect(self._clear_date_filters)
-        filter_layout.addWidget(clear_date_btn)
-
-        filter_layout.addStretch()
-
-        self._col_btn = QPushButton("Columns ▼")
-        self._col_btn.setObjectName("ghostBtn")
-        self._col_btn.setToolTip("Show/hide table columns")
-        self._col_btn.clicked.connect(self._show_column_menu)
-        filter_layout.addWidget(self._col_btn)
-
-        tb_layout.addWidget(filter_row)
-        layout.addWidget(toolbar)
-
-        # ── Table ─────────────────────────────────────────────────────────
-        self._table = QTableWidget()
-        self._table.setColumnCount(len(COLUMNS))
-        self._table.setHorizontalHeaderLabels(COLUMNS)
-        self._table.setAlternatingRowColors(True)
-        self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self._table.setSortingEnabled(True)
-        self._table.verticalHeader().setVisible(False)
-        self._table.verticalHeader().setDefaultSectionSize(30)
-        self._table.setShowGrid(False)
-        self._table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self._table.customContextMenuRequested.connect(self._show_context_menu)
-        self._table.cellDoubleClicked.connect(self._on_cell_double_clicked)
-        self._table.itemChanged.connect(self._on_item_changed)
-
-        hdr = self._table.horizontalHeader()
-        hdr.setSectionResizeMode(CI["✓"],          QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Date"],        QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Sender"],      QHeaderView.ResizeMode.Interactive)
-        hdr.setSectionResizeMode(CI["Subject"],     QHeaderView.ResizeMode.Stretch)
-        hdr.setSectionResizeMode(CI["Amount"],      QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Currency"],    QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Payment"],     QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Category"],    QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Tags"],        QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Confidence"],  QHeaderView.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(CI["Status"],      QHeaderView.ResizeMode.ResizeToContents)
-        self._table.setColumnWidth(CI["Sender"],  170)
-
-        layout.addWidget(self._table, stretch=1)
-
-        # ── Bulk action bar (hidden by default) ───────────────────────────
-        self._bulk_bar = QWidget()
-        self._bulk_bar.setObjectName("bulkBar")
-        self._bulk_bar.setVisible(False)
-        bulk_layout = QHBoxLayout(self._bulk_bar)
-        bulk_layout.setContentsMargins(10, 4, 10, 4)
-
-        self._bulk_label = QLabel("0 rows selected")
-        self._bulk_label.setStyleSheet(f"color: #ffffff; font-weight: bold;")
-        bulk_layout.addWidget(self._bulk_label)
-        bulk_layout.addStretch()
-
-        for text, slot in [
-            ("Exclude Selected",  self._bulk_exclude),
-            ("Change Category",   self._bulk_change_category),
-            ("🔍 Mark for Review", self._bulk_mark_review),
-            ("Export Selected",   self._bulk_export),
-        ]:
-            btn = QPushButton(text)
-            btn.setStyleSheet("background: rgba(255,255,255,0.15); color: #fff; border-radius:5px;")
-            btn.clicked.connect(slot)
-            bulk_layout.addWidget(btn)
-
-        layout.addWidget(self._bulk_bar)
-
-        # ── Summary row ───────────────────────────────────────────────────
-        self._summary_label = QLabel("No data loaded")
-        self._summary_label.setObjectName("statusLabel")
-        self._summary_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        layout.addWidget(self._summary_label)
-
-        # Connect checkbox column header to select-all
-        self._table.horizontalHeader().sectionClicked.connect(self._on_header_clicked)
-        self._table.itemSelectionChanged.connect(self._update_bulk_bar)
-
-    # ── Filter logic ──────────────────────────────────────────────────────────
-
-    def _apply_filters(self) -> None:
-        query    = self._search.text().strip().lower()
-        min_amt  = self._min_spin.value()
-        max_amt  = self._max_spin.value()
-
-        min_date_qdate = self._date_from.minimumDate()
-        from_qdate     = self._date_from.date()
-        to_qdate       = self._date_to.date()
-        use_from = from_qdate > min_date_qdate
-        use_to   = to_qdate   > min_date_qdate
-
-        filtered = []
-        for row in self._all_rows:
-            # Category chip filter
-            if self._active_categories:
-                cat = row.get("category_edited") or row.get("category", "Other")
-                if cat not in self._active_categories:
-                    continue
-
-            # Amount range
-            amt = row.get("amount_edited") or row.get("amount") or 0
-            if amt < min_amt:
-                continue
-            if max_amt > 0 and amt > max_amt:
-                continue
-
-            # Date range
-            if use_from or use_to:
-                date_str = (row.get("email_date") or "")[:10]
-                if use_from and date_str < from_qdate.toString("yyyy-MM-dd"):
-                    continue
-                if use_to and date_str > to_qdate.toString("yyyy-MM-dd"):
-                    continue
-
-            # Text search
-            if query:
-                haystack = " ".join([
-                    row.get("sender", ""),
-                    row.get("sender_email", ""),
-                    row.get("subject", ""),
-                    row.get("category_edited") or row.get("category", ""),
-                    row.get("tags", ""),
-                ]).lower()
-                if query not in haystack:
-                    continue
-
-            filtered.append(row)
-
-        self._visible_rows = filtered
-        self._populate_table(filtered)
-
-    def _clear_date_filters(self) -> None:
-        min_d = self._date_from.minimumDate()
-        self._date_from.setDate(min_d)
-        self._date_to.setDate(min_d)
-        self._apply_filters()
-
-    def _show_column_menu(self) -> None:
-        from PyQt6.QtCore import QPoint
-        menu = QMenu(self)
-        for col_name in COLUMNS:
-            if col_name == "✓":
-                continue
-            act = menu.addAction(col_name)
-            act.setCheckable(True)
-            act.setChecked(not self._table.isColumnHidden(CI[col_name]))
-            act.toggled.connect(
-                lambda checked, c=CI[col_name]: self._table.setColumnHidden(c, not checked)
-            )
-        menu.exec(self._col_btn.mapToGlobal(QPoint(0, self._col_btn.height())))
-
-    def filter_by_category(self, category: str) -> None:
-        """Called externally (e.g., chart drill-down) to filter to one category."""
-        self._active_categories = {category}
-        self._update_all_chip_state()
-        self._apply_filters()
-
-    def _populate_table(self, rows: list[dict]) -> None:
-        self._table.setSortingEnabled(False)
-        self._table.blockSignals(True)
-        self._table.setRowCount(0)
-        self._table.setRowCount(len(rows))
-
-        for r, row in enumerate(rows):
-            msg_id    = row.get("id", "")
-            status    = row.get("status", "active")
-            conf      = row.get("confidence", "LOW")
-            cat       = row.get("category_edited") or row.get("category", "Other")
-            amount    = row.get("amount_edited") or row.get("amount") or 0
-            tags_raw  = row.get("tags", "[]")
-            is_dup    = status == "duplicate"
-            is_excl   = status == "excluded"
-
-            try:
-                tags_list = json.loads(tags_raw)
-            except (ValueError, TypeError):
-                tags_list = []
-
-            sym = _currency_sym(row.get("currency", "INR"))
-
-            is_edited_amt = row.get("amount_edited") is not None and row.get("amount_edited") != row.get("amount")
-            is_edited_cat = row.get("category_edited") is not None and row.get("category_edited") != row.get("category")
-
-            status_text = _status_label(status, is_dup)
-            if status == "review":
-                status_badge = f"🔍 {status_text}"
-                status_badge_color = WARNING
-            elif status == "excluded":
-                status_badge = f"🚫 {status_text}"
-                status_badge_color = TEXT_DIM
-            else:
-                status_badge = f"✓ {status_text}"
-                status_badge_color = SUCCESS
-
-            items = [
-                _item("",               CI["✓"],          center=True),
-                _item(row.get("email_date", ""), CI["Date"],     center=True),
-                _item(_trunc(row.get("sender",""),28),  CI["Sender"]),
-                _item(_trunc(row.get("subject",""),45), CI["Subject"]),
-                _item(f"{sym}{amount:,.2f}", CI["Amount"],    right=True, bold=is_edited_amt),
-                _item(row.get("currency","INR"),     CI["Currency"],  center=True),
-                _item(_trunc(row.get("payment_method","Unknown"),22), CI["Payment"]),
-                _item(_create_category_chip(cat), CI["Category"]),
-                _item(", ".join(tags_list), CI["Tags"]),
-                _item(_create_badge(
-                    _conf_label(conf),
-                    CONFIDENCE_BADGES.get(conf, CONFIDENCE_BADGES["NONE"])[0],
-                    CONFIDENCE_BADGES.get(conf, CONFIDENCE_BADGES["NONE"])[1]
-                ), CI["Confidence"]),
-                _item(_create_badge(
-                    status_badge,
-                    "#1e3a26" if status == "active" else "#3a2628" if status == "excluded" else "#3a3528",
-                    status_badge_color
-                ), CI["Status"]),
-            ]
-
-            for col, item in enumerate(items):
-                item.setData(Qt.ItemDataRole.UserRole, msg_id)
-                self._table.setItem(r, col, item)
-
-            # Checkbox
-            chk_item = self._table.item(r, CI["✓"])
-            chk_item.setCheckState(Qt.CheckState.Unchecked)
-            chk_item.setFlags(chk_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-
-            # Numeric sort key for amount
-            amt_item = self._table.item(r, CI["Amount"])
-            amt_item.setData(Qt.ItemDataRole.UserRole + 1, amount)
-
-            # Row appearance
-            conf_color = CATEGORY_COLORS.get(cat, CATEGORY_COLORS["Other"])
-            cat_item   = self._table.item(r, CI["Category"])
-            cat_item.setForeground(QColor(conf_color))
-            bold = QFont(); bold.setBold(True)
-            cat_item.setFont(bold)
-
-            # Confidence badge color + tooltip
-            c_item = self._table.item(r, CI["Confidence"])
-            c_item.setForeground(QColor(CONFIDENCE_COLORS.get(conf, TEXT_DIM)))
-            source = row.get("classification_source", "")
-            source_label = {
-                "rules":        "Stage 1: Rule engine (keyword scoring)",
-                "ml":           "Stage 2: TF-IDF + Naive Bayes",
-                "distilbert":   "Stage 3: DistilBERT",
-                "phi4-mini":    "Stage 3: phi4-mini via Ollama",
-                "human_review": "Manually reviewed",
-            }.get(source, source or "Unknown")
-            c_item.setToolTip(f"Confidence: {conf}\nClassified by: {source_label}")
-
-            if is_excl:
-                for col in range(len(COLUMNS)):
-                    it = self._table.item(r, col)
-                    if it:
-                        it.setForeground(QColor(TEXT_DIM))
-                        f = it.font(); f.setStrikeOut(True); it.setFont(f)
-
-            if is_dup:
-                dup_item = self._table.item(r, CI["Status"])
-                dup_item.setForeground(QColor(WARNING))
-
-            if conf == "LOW":
-                # Amber tint for row background of low-confidence
-                for col in range(len(COLUMNS)):
-                    it = self._table.item(r, col)
-                    if it and not is_excl:
-                        it.setBackground(QColor("#2a2318"))
-
-        self._table.blockSignals(False)
-        self._table.setSortingEnabled(True)
-        self._update_summary_label()
-        self._update_bulk_bar()
-
-    def _update_summary_label(self) -> None:
-        total   = len(self._all_rows)
-        visible = len(self._visible_rows)
-        if total == 0:
-            self._summary_label.setText("No data loaded")
-            return
-        total_amt = sum(
-            (r.get("amount_edited") or r.get("amount") or 0)
-            for r in self._visible_rows
-            if r.get("status") != "excluded"
-        )
-        sym = _currency_sym("INR")
-        self._summary_label.setText(
-            f"Showing {visible} of {total} expenses · {sym}{total_amt:,.2f} total"
-        )
-
-    # ── Chip logic ────────────────────────────────────────────────────────────
-
-    def _on_all_chip(self) -> None:
-        self._active_categories.clear()
-        self._update_all_chip_state()
-        self._apply_filters()
-
-    def _on_chip_toggled(self, category: str, checked: bool) -> None:
-        if checked:
-            self._active_categories.add(category)
+    def _toggle_chip(self, cat: str) -> None:
+        if cat in self._active_categories:
+            self._active_categories.discard(cat)
         else:
-            self._active_categories.discard(category)
-        self._update_all_chip_state()
+            self._active_categories.add(cat)
+        self._rebuild_chips()
         self._apply_filters()
 
     def _update_all_chip_state(self) -> None:
-        all_active = len(self._active_categories) == 0
-        all_btn = self._chip_btns["All"]
-        all_btn.setObjectName("chipActive" if all_active else "chipInactive")
-        all_btn.setChecked(all_active)
-        all_btn.style().unpolish(all_btn)
-        all_btn.style().polish(all_btn)
+        self._active_categories.clear()
+        self._rebuild_chips()
 
-        for cat, btn in self._chip_btns.items():
-            if cat == "All":
-                continue
-            active = cat in self._active_categories
-            btn.setObjectName("chipActive" if active else "chipInactive")
-            btn.setChecked(active)
-            btn.style().unpolish(btn)
-            btn.style().polish(btn)
+    # ── Filtering ─────────────────────────────────────────────────────────────
 
-    # ── Header click (select all checkboxes) ─────────────────────────────────
+    def _apply_filters(self) -> None:
+        query  = self._search_var.get().lower().strip()
+        status = self._status_filter_var.get()
+        cats   = self._active_categories
 
-    def _on_header_clicked(self, col: int) -> None:
-        if col != CI["✓"]:
-            return
-        self._table.blockSignals(True)
-        state = Qt.CheckState.Checked
-        for r in range(self._table.rowCount()):
-            item = self._table.item(r, CI["✓"])
-            if item:
-                item.setCheckState(state)
-        self._table.blockSignals(False)
-        self._update_bulk_bar()
+        try:    min_amt = float(self._min_amt_var.get())
+        except (ValueError, TypeError): min_amt = None
+        try:    max_amt = float(self._max_amt_var.get())
+        except (ValueError, TypeError): max_amt = None
 
-    def _update_bulk_bar(self) -> None:
-        checked = self._get_checked_msg_ids()
-        visible = len(checked) > 0
-        self._bulk_bar.setVisible(visible)
-        if visible:
-            self._bulk_label.setText(f"{len(checked)} row(s) selected")
+        def _keep(r: dict) -> bool:
+            st = r.get("status", "active") or "active"
+            if status == "Active"   and st == "excluded":  return False
+            if status == "Excluded" and st != "excluded":  return False
+            if status == "Review"   and st != "review":    return False
 
-    def _get_checked_msg_ids(self) -> list[str]:
-        ids = []
-        for r in range(self._table.rowCount()):
-            item = self._table.item(r, CI["✓"])
-            if item and item.checkState() == Qt.CheckState.Checked:
-                msg_id = item.data(Qt.ItemDataRole.UserRole)
-                if msg_id:
-                    ids.append(msg_id)
-        return ids
+            cat = r.get("category_edited") or r.get("category", "Other")
+            if cats and cat not in cats:
+                return False
 
-    # ── Bulk actions ──────────────────────────────────────────────────────────
+            amt = r.get("amount_edited") or r.get("amount") or 0
+            if min_amt is not None and amt < min_amt: return False
+            if max_amt is not None and amt > max_amt: return False
 
-    def _bulk_exclude(self) -> None:
-        ids = self._get_checked_msg_ids()
-        for row in self._all_rows:
-            if row.get("id") in ids:
-                row["status"] = "excluded"
-                self.field_changed.emit(row["id"], "status", "excluded")
-        self._apply_filters()
+            if query:
+                haystack = " ".join(str(v) for v in [
+                    r.get("sender", ""), r.get("sender_email", ""),
+                    r.get("subject", ""), cat,
+                    r.get("tags", ""), r.get("payment_method", ""),
+                ]).lower()
+                if query not in haystack:
+                    return False
+            return True
 
-    def _bulk_change_category(self) -> None:
-        ids = self._get_checked_msg_ids()
-        if not ids:
-            return
-        dlg = _CategoryPickerDialog(self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            cat = dlg.selected_category()
-            for row in self._all_rows:
-                if row.get("id") in ids:
-                    row["category_edited"] = cat
-                    self.field_changed.emit(row["id"], "category_edited", cat)
-            self._apply_filters()
+        self._visible_rows = [r for r in self._all_rows if _keep(r)]
+        if self._sort_col:
+            self._sort_rows()
+        self._populate_table()
+        self._update_summary()
 
-    def _bulk_mark_review(self) -> None:
-        ids = set(self._get_checked_msg_ids())
-        for row in self._all_rows:
-            if row.get("id") in ids:
-                row["status"] = "review"
-                self.field_changed.emit(row["id"], "status", "review")
-        self._apply_filters()
+    def _populate_table(self) -> None:
+        self._tree.delete(*self._tree.get_children())
+        sym_map = {"INR": "₹", "USD": "$", "EUR": "€", "GBP": "£"}
+        for row in self._visible_rows:
+            cat    = row.get("category_edited") or row.get("category", "Other")
+            amt    = row.get("amount_edited") or row.get("amount") or 0
+            sym    = sym_map.get(row.get("currency", "INR"), "")
+            st     = row.get("status", "active") or "active"
+            conf   = row.get("confidence", "") or ""
+            iid    = row.get("id", "")
+            tags   = (row.get("tags") or "").strip()
 
-    def _bulk_export(self) -> None:
-        from core.csv_exporter import export_to_csv
-        ids  = set(self._get_checked_msg_ids())
-        rows = [r for r in self._visible_rows if r.get("id") in ids]
-        export_to_csv(self, rows, 0, 0)
+            vals = [
+                (row.get("email_date") or "")[:10],
+                _trunc(row.get("sender") or row.get("sender_email") or "", 30),
+                _trunc(row.get("subject", ""), 55),
+                f"{sym}{amt:,.2f}",
+                row.get("currency", "INR"),
+                _trunc(row.get("payment_method", ""), 20),
+                cat,
+                tags[:12] if tags else "",
+                conf,
+                st,
+            ]
 
-    # ── Cell double-click (inline amount edit) ────────────────────────────────
+            tag = "excluded" if st == "excluded" else ("review" if st == "review" else f"cat_{cat}")
+            self._tree.insert("", "end", iid=iid, values=vals, tags=(tag,))
 
-    def _on_cell_double_clicked(self, row: int, col: int) -> None:
-        if col == CI["Amount"]:
-            self._start_amount_edit(row)
+    # ── Sort ──────────────────────────────────────────────────────────────────
+
+    def _sort_by(self, col: str) -> None:
+        if self._sort_col == col:
+            self._sort_asc = not self._sort_asc
         else:
-            msg_id = self._table.item(row, 0)
-            if msg_id:
-                mid = msg_id.data(Qt.ItemDataRole.UserRole)
-                exp = next((r for r in self._visible_rows if r.get("id") == mid), None)
-                if exp:
-                    dlg = _ExpenseDetailDialog(exp, self)
-                    dlg.exec()
+            self._sort_col = col
+            self._sort_asc = True
+        self._sort_rows()
+        self._populate_table()
 
-    def _start_amount_edit(self, row: int) -> None:
-        item = self._table.item(row, CI["Amount"])
-        if not item:
-            return
-        msg_id = item.data(Qt.ItemDataRole.UserRole)
-        raw_amt = item.data(Qt.ItemDataRole.UserRole + 1) or 0
+    def _sort_rows(self) -> None:
+        col = self._sort_col
+        def _key(r: dict):
+            if col == "Amount":
+                return r.get("amount_edited") or r.get("amount") or 0
+            if col == "Date":
+                return r.get("email_date", "") or ""
+            if col == "Category":
+                return r.get("category_edited") or r.get("category", "Other")
+            if col == "Sender":
+                return r.get("sender", "") or ""
+            if col == "Status":
+                return r.get("status", "") or ""
+            return ""
+        self._visible_rows.sort(key=_key, reverse=not self._sort_asc)
 
-        editor = QLineEdit(self._table)
-        editor.setText(f"{raw_amt:.2f}")
-        editor.selectAll()
-        self._table.setCellWidget(row, CI["Amount"], editor)
-        editor.setFocus()
+    # ── Selection ─────────────────────────────────────────────────────────────
 
-        def commit():
-            try:
-                new_val = float(editor.text().replace(",", ""))
-                item.setText(f"₹{new_val:,.2f}")
-                item.setData(Qt.ItemDataRole.UserRole + 1, new_val)
-                for r in self._all_rows:
-                    if r.get("id") == msg_id:
-                        r["amount_edited"] = new_val
-                self.field_changed.emit(msg_id, "amount_edited", new_val)
-            except ValueError:
-                pass
-            finally:
-                self._table.removeCellWidget(row, CI["Amount"])
+    def _on_selection_changed(self, event) -> None:
+        self._selected_ids = set(self._tree.selection())
 
-        editor.editingFinished.connect(commit)
-        editor.returnPressed.connect(commit)
-
-    def _on_item_changed(self, item: QTableWidgetItem) -> None:
-        # Only react to checkbox changes
-        if item.column() == CI["✓"]:
-            self._update_bulk_bar()
+    def _get_focused_row(self) -> Optional[dict]:
+        item = self._tree.focus()
+        return next((r for r in self._visible_rows if r.get("id") == item), None)
 
     # ── Context menu ──────────────────────────────────────────────────────────
 
-    def _show_context_menu(self, pos) -> None:
-        row = self._table.rowAt(pos.y())
-        if row < 0 or row >= len(self._visible_rows):
+    def _on_right_click(self, event) -> None:
+        row = self._tree.identify_row(event.y)
+        if row:
+            self._tree.focus(row)
+            self._tree.selection_set(row)
+        try:
+            self._ctx_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self._ctx_menu.grab_release()
+
+    def _ctx_edit_amount(self) -> None:
+        row = self._get_focused_row()
+        if not row:
             return
-        exp = self._visible_rows[row]
-        msg_id = exp.get("id", "")
-        status = exp.get("status", "active")
+        dlg = _EditAmountDialog(self._tree, row)
+        if dlg.result is not None:
+            self._persist_field(row["id"], "amount_edited", dlg.result)
+            row["amount_edited"] = dlg.result
+            self._populate_table()
 
-        menu = QMenu(self)
+    def _ctx_set_category(self) -> None:
+        row = self._get_focused_row()
+        if not row:
+            return
+        dlg = _SetCategoryDialog(self._tree, row)
+        if dlg.result:
+            self._persist_field(row["id"], "category_edited", dlg.result)
+            row["category_edited"] = dlg.result
+            self._rebuild_chips()
+            self._populate_table()
 
-        # Edit category
-        cat_menu = menu.addMenu("✏️  Edit category")
-        for cat in ALL_CATEGORIES:
-            act = cat_menu.addAction(cat)
-            act.triggered.connect(lambda _, c=cat, m=msg_id, e=exp: self._ctx_set_category(e, c))
+    def _ctx_add_tag(self) -> None:
+        row = self._get_focused_row()
+        if not row:
+            return
+        tag = simpledialog.askstring("Add Tag", "Tag:", parent=self._tree)
+        if tag:
+            existing = (row.get("tags") or "").strip()
+            new_tags = (existing + " " + tag.strip()).strip() if existing else tag.strip()
+            self._persist_field(row["id"], "tags", new_tags)
+            row["tags"] = new_tags
+            self._populate_table()
 
-        menu.addAction("🏷️  Add / edit tags").triggered.connect(
-            lambda: self._ctx_edit_tags(exp)
-        )
-        menu.addSeparator()
+    def _ctx_copy_row(self) -> None:
+        row = self._get_focused_row()
+        if not row:
+            return
+        text = " | ".join(str(v) for v in [
+            (row.get("email_date") or "")[:10],
+            row.get("sender", ""),
+            row.get("subject", ""),
+            row.get("amount_edited") or row.get("amount") or 0,
+            row.get("currency", "INR"),
+            row.get("category_edited") or row.get("category", "Other"),
+        ])
+        self._tree.clipboard_clear()
+        self._tree.clipboard_append(text)
 
-        if status != "excluded":
-            menu.addAction("🚫  Exclude this row").triggered.connect(
-                lambda: self._ctx_exclude(exp, True)
-            )
-        else:
-            menu.addAction("↩️  Un-exclude").triggered.connect(
-                lambda: self._ctx_exclude(exp, False)
-            )
-
-        if status != "duplicate":
-            menu.addAction("🔁  Mark as duplicate").triggered.connect(
-                lambda: self._ctx_mark_dup(exp, True)
-            )
-        else:
-            menu.addAction("🔁  Un-mark duplicate").triggered.connect(
-                lambda: self._ctx_mark_dup(exp, False)
-            )
-
-        menu.addSeparator()
-        if status != "review":
-            menu.addAction("🔍  Mark for Review").triggered.connect(
-                lambda: self._ctx_mark_review(exp, True)
-            )
-        else:
-            menu.addAction("✅  Remove from Review").triggered.connect(
-                lambda: self._ctx_mark_review(exp, False)
-            )
-
-        menu.addSeparator()
-        menu.addAction("📋  View full email").triggered.connect(
-            lambda: _ExpenseDetailDialog(exp, self).exec()
-        )
-        menu.addAction("📤  Export this row").triggered.connect(
-            lambda: self._ctx_export_row(exp)
-        )
-
-        menu.exec(self._table.viewport().mapToGlobal(pos))
-
-    def _ctx_set_category(self, exp: dict, cat: str) -> None:
-        exp["category_edited"] = cat
-        self.field_changed.emit(exp["id"], "category_edited", cat)
-        self._apply_filters()
-
-    def _ctx_edit_tags(self, exp: dict) -> None:
-        dlg = _TagEditorDialog(exp, self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            tags = dlg.get_tags()
-            tags_json = json.dumps(tags)
-            exp["tags"] = tags_json
-            self.field_changed.emit(exp["id"], "tags", tags_json)
+    def _set_status_selected(self, status: str) -> None:
+        item = self._tree.focus()
+        if not item:
+            return
+        row = next((r for r in self._visible_rows if r.get("id") == item), None)
+        if row:
+            self._persist_field(row["id"], "status", status)
+            row["status"] = status
+            if status == "excluded" and self.on_exclude:
+                self.on_exclude(row["id"], row.get("sender_email", row.get("sender", "")))
+            elif status == "review" and self.on_review:
+                self.on_review(row["id"])
             self._apply_filters()
 
-    def _ctx_exclude(self, exp: dict, exclude: bool) -> None:
-        new_status = "excluded" if exclude else "active"
-        exp["status"] = new_status
-        self.field_changed.emit(exp["id"], "status", new_status)
+    # ── Double-click inline edit ──────────────────────────────────────────────
+
+    def _on_double_click(self, event) -> None:
+        row  = self._tree.identify_row(event.y)
+        col  = self._tree.identify_column(event.x)
+        if not row or not col:
+            return
+        col_idx = int(col[1:]) - 1
+        col_name = COLUMNS[col_idx] if col_idx < len(COLUMNS) else ""
+        data_row = next((r for r in self._visible_rows if r.get("id") == row), None)
+        if not data_row:
+            return
+        if col_name == "Amount":
+            self._ctx_edit_amount()
+        elif col_name == "Category":
+            self._ctx_set_category()
+        elif col_name == "Status":
+            self._ctx_cycle_status(data_row)
+        elif col_name == "Tags":
+            self._ctx_add_tag()
+
+    def _ctx_cycle_status(self, row: dict) -> None:
+        cycle = {"active": "excluded", "excluded": "review", "review": "active"}
+        curr  = row.get("status", "active") or "active"
+        new_status = cycle.get(curr, "active")
+        self._persist_field(row["id"], "status", new_status)
+        row["status"] = new_status
+        if new_status == "review" and self.on_review:
+            self.on_review(row["id"])
         self._apply_filters()
 
-    def _ctx_mark_dup(self, exp: dict, is_dup: bool) -> None:
-        new_status = "duplicate" if is_dup else "active"
-        exp["status"] = new_status
-        self.field_changed.emit(exp["id"], "status", new_status)
+    # ── Bulk actions ──────────────────────────────────────────────────────────
+
+    def _bulk_set_status(self, status: str) -> None:
+        selected = list(self._tree.selection())
+        if not selected:
+            messagebox.showinfo("No Selection", "Select rows first (Shift-click or Ctrl-click).")
+            return
+        for iid in selected:
+            rr = next((r for r in self._visible_rows if r.get("id") == iid), None)
+            if rr:
+                self._persist_field(rr["id"], "status", status)
+                rr["status"] = status
         self._apply_filters()
 
-    def _ctx_mark_review(self, exp: dict, mark: bool) -> None:
-        new_status = "review" if mark else "active"
-        exp["status"] = new_status
-        self.field_changed.emit(exp["id"], "status", new_status)
-        if mark:
-            self.review_requested.emit(exp["id"])
-        self._apply_filters()
+    # ── Persist ───────────────────────────────────────────────────────────────
 
-    def _ctx_export_row(self, exp: dict) -> None:
-        from core.csv_exporter import export_to_csv
-        export_to_csv(self, [exp], 0, 0)
+    def _persist_field(self, msg_id: str, field: str, value) -> None:
+        if self.on_field_changed:
+            self.on_field_changed(msg_id, field, value)
+
+    # ── Export ────────────────────────────────────────────────────────────────
+
+    def _export_csv(self) -> None:
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
+            initialfile="expenses.csv",
+        )
+        if not path:
+            return
+        rows = self._visible_rows
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(COLUMNS)
+                sym_map = {"INR": "₹", "USD": "$", "EUR": "€", "GBP": "£"}
+                for row in rows:
+                    cat = row.get("category_edited") or row.get("category", "Other")
+                    amt = row.get("amount_edited") or row.get("amount") or 0
+                    sym = sym_map.get(row.get("currency", "INR"), "")
+                    writer.writerow([
+                        (row.get("email_date") or "")[:10],
+                        row.get("sender", ""),
+                        row.get("subject", ""),
+                        f"{sym}{amt:,.2f}",
+                        row.get("currency", "INR"),
+                        row.get("payment_method", ""),
+                        cat,
+                        row.get("tags", ""),
+                        row.get("confidence", ""),
+                        row.get("status", "active"),
+                    ])
+            messagebox.showinfo("Exported", f"Exported {len(rows)} rows to:\n{path}")
+        except OSError as exc:
+            messagebox.showerror("Export Failed", str(exc))
+
+    # ── Summary ───────────────────────────────────────────────────────────────
+
+    def _update_summary(self) -> None:
+        active = [r for r in self._visible_rows if r.get("status") != "excluded"]
+        total  = sum(r.get("amount_edited") or r.get("amount") or 0 for r in active)
+        sym_map = {"INR": "₹", "USD": "$", "EUR": "€", "GBP": "£"}
+        currencies = [r.get("currency", "INR") for r in active]
+        sym = sym_map.get(max(set(currencies), key=currencies.count), "") if currencies else "₹"
+        self._summary_lbl.configure(
+            text=f"{len(self._visible_rows)} rows • {len(active)} active • {sym}{total:,.2f}"
+        )
+
+
+# ── Helper dialogs ────────────────────────────────────────────────────────────
+
+class _EditAmountDialog(ctk.CTkToplevel):
+    def __init__(self, parent, row: dict) -> None:
+        super().__init__(parent)
+        self.title("Edit Amount")
+        self.geometry("300x150")
+        self.resizable(False, False)
+        self.grab_set()
+        self.result: Optional[float] = None
+        self.configure(fg_color=BG)
+
+        curr = row.get("amount_edited") or row.get("amount") or 0
+        ctk.CTkLabel(self, text=f"Amount for: {_trunc(row.get('subject',''), 40)}",
+                      text_color=TEXT_DIM, font=ctk.CTkFont(family="Inter", size=11)).pack(pady=(12, 4))
+        self._entry = ctk.CTkEntry(self, width=160, font=ctk.CTkFont(family="Inter", size=13),
+                                    fg_color=SURFACE, border_color=BORDER, text_color=TEXT)
+        self._entry.insert(0, str(curr))
+        self._entry.select_range(0, "end")
+        self._entry.pack(pady=4)
+        self._entry.focus()
+        self._entry.bind("<Return>", lambda e: self._save())
+
+        row_btns = ctk.CTkFrame(self, fg_color="transparent")
+        row_btns.pack(pady=8)
+        ctk.CTkButton(row_btns, text="Save", command=self._save,
+                       fg_color=ACCENT, text_color="#1e1e2e", corner_radius=8, width=80).pack(side="left", padx=6)
+        ctk.CTkButton(row_btns, text="Cancel", command=self.destroy,
+                       fg_color="transparent", text_color=TEXT_DIM, border_color=BORDER, border_width=1,
+                       corner_radius=8, width=80).pack(side="left")
+        self.wait_window(self)
+
+    def _save(self) -> None:
+        try:
+            self.result = float(self._entry.get())
+        except ValueError:
+            pass
+        self.destroy()
+
+
+class _SetCategoryDialog(ctk.CTkToplevel):
+    def __init__(self, parent, row: dict) -> None:
+        super().__init__(parent)
+        self.title("Set Category")
+        self.geometry("300x150")
+        self.resizable(False, False)
+        self.grab_set()
+        self.result: Optional[str] = None
+        self.configure(fg_color=BG)
+
+        ctk.CTkLabel(self, text=f"Category for: {_trunc(row.get('subject',''), 40)}",
+                      text_color=TEXT_DIM, font=ctk.CTkFont(family="Inter", size=11)).pack(pady=(12, 4))
+
+        self._var = ctk.StringVar(value=row.get("category_edited") or row.get("category", "Other"))
+        ctk.CTkComboBox(self, values=ALL_CATEGORIES, variable=self._var, state="readonly", width=200,
+                         font=ctk.CTkFont(family="Inter", size=12),
+                         fg_color=SURFACE, border_color=BORDER, text_color=TEXT,
+                         button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+                         dropdown_fg_color=SURFACE, dropdown_text_color=TEXT,
+                         dropdown_hover_color=SURFACE_HOVER,
+                         ).pack(pady=4)
+
+        row_btns = ctk.CTkFrame(self, fg_color="transparent")
+        row_btns.pack(pady=8)
+        ctk.CTkButton(row_btns, text="Save", command=self._save,
+                       fg_color=ACCENT, text_color="#1e1e2e", corner_radius=8, width=80).pack(side="left", padx=6)
+        ctk.CTkButton(row_btns, text="Cancel", command=self.destroy,
+                       fg_color="transparent", text_color=TEXT_DIM, border_color=BORDER, border_width=1,
+                       corner_radius=8, width=80).pack(side="left")
+        self.wait_window(self)
+
+    def _save(self) -> None:
+        self.result = self._var.get()
+        self.destroy()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _item(text: str, col: int, center: bool = False, right: bool = False, bold: bool = False) -> QTableWidgetItem:
-    it = QTableWidgetItem(text)
-    if center:
-        it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-    elif right:
-        it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-    else:
-        it.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-    if bold:
-        f = it.font(); f.setBold(True); it.setFont(f)
-    return it
-
-
-def _currency_sym(currency: str) -> str:
-    return {"INR": "₹", "USD": "$", "EUR": "€", "GBP": "£"}.get(currency, "")
-
-
 def _trunc(text: str, n: int) -> str:
     return text if len(text) <= n else text[:n - 1] + "…"
-
-
-def _conf_label(conf: str) -> str:
-    return {"HIGH": "High", "MEDIUM": "Med", "LOW": "Low", "NONE": "—"}.get(conf, conf)
-
-
-def _status_label(status: str, is_dup: bool) -> str:
-    if is_dup:
-        return "Duplicate"
-    return {"active": "Active", "excluded": "Excluded", "review": "Review", "duplicate": "Duplicate"}.get(status, status)
-
-
-def _create_badge(text: str, bg_color: str, fg_color: str) -> str:
-    """Create HTML badge styling."""
-    return f"""
-    <div style='
-        background-color: {bg_color};
-        color: {fg_color};
-        padding: 3px 10px;
-        border-radius: 12px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 11px;
-    '>{text}</div>
-    """
-
-
-def _create_category_chip(category: str) -> str:
-    """Create HTML for category with color indicator."""
-    color = CATEGORY_COLORS.get(category, CATEGORY_COLORS["Other"])
-    return f"""
-    <div style='display: flex; align-items: center; gap: 6px;'>
-        <span style='
-            width: 8px;
-            height: 8px;
-            background-color: {color};
-            border-radius: 50%;
-        '></span>
-        <span style='font-weight: 500;'>{category}</span>
-    </div>
-    """
-
-
-# ── Sub-dialogs ───────────────────────────────────────────────────────────────
-
-class _ExpenseDetailDialog(QDialog):
-    def __init__(self, exp: dict, parent=None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("Expense Detail")
-        self.setMinimumSize(520, 400)
-        layout = QVBoxLayout(self)
-
-        title = QLabel(f"<b>{exp.get('subject','')}</b>")
-        title.setWordWrap(True)
-        title.setStyleSheet(f"font-size:15px; color:{ACCENT};")
-        layout.addWidget(title)
-
-        cat   = exp.get("category_edited") or exp.get("category","Other")
-        color = CATEGORY_COLORS.get(cat, "#888")
-        sym   = _currency_sym(exp.get("currency","INR"))
-        amt   = exp.get("amount_edited") or exp.get("amount") or 0
-
-        for label, value in [
-            ("Date",     exp.get("email_date","")),
-            ("From",     f"{exp.get('sender','')} &lt;{exp.get('sender_email','')}&gt;"),
-            ("Amount",   f"<b>{sym}{amt:,.2f}  {exp.get('currency','INR')}</b>"),
-            ("Payment",  exp.get("payment_method","Unknown")),
-            ("Category", f"<span style='color:{color};font-weight:bold'>{cat}</span>"),
-            ("Confidence", exp.get("confidence","")),
-            ("Snippet",  exp.get("snippet","—")),
-        ]:
-            row_w = QFrame()
-            rl = QHBoxLayout(row_w); rl.setContentsMargins(0,0,0,0)
-            lbl = QLabel(f"<span style='color:{TEXT_DIM}'>{label}:</span>")
-            lbl.setFixedWidth(90)
-            val = QLabel(value); val.setWordWrap(True)
-            val.setTextFormat(Qt.TextFormat.RichText)
-            rl.addWidget(lbl); rl.addWidget(val, stretch=1)
-            layout.addWidget(row_w)
-
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-
-
-class _TagEditorDialog(QDialog):
-    def __init__(self, exp: dict, parent=None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("Edit Tags")
-        self.setMinimumWidth(380)
-        layout = QVBoxLayout(self)
-
-        try:
-            self._tags: list[str] = json.loads(exp.get("tags", "[]") or "[]")
-        except (ValueError, TypeError):
-            self._tags = []
-
-        layout.addWidget(QLabel("Current tags:"))
-        self._tags_widget = QWidget()
-        self._tags_layout = QHBoxLayout(self._tags_widget)
-        self._tags_layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self._tags_widget)
-        self._refresh_tag_chips()
-
-        add_row = QWidget()
-        add_layout = QHBoxLayout(add_row)
-        add_layout.setContentsMargins(0, 0, 0, 0)
-        self._tag_input = QLineEdit()
-        self._tag_input.setPlaceholderText("New tag…")
-        self._tag_input.returnPressed.connect(self._add_tag)
-        add_layout.addWidget(self._tag_input)
-        add_btn = QPushButton("Add")
-        add_btn.clicked.connect(self._add_tag)
-        add_layout.addWidget(add_btn)
-        layout.addWidget(add_row)
-
-        btns = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
-        )
-        btns.accepted.connect(self.accept)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-
-    def _add_tag(self) -> None:
-        tag = self._tag_input.text().strip().lower()
-        if tag and tag not in self._tags:
-            self._tags.append(tag)
-            self._tag_input.clear()
-            self._refresh_tag_chips()
-
-    def _remove_tag(self, tag: str) -> None:
-        if tag in self._tags:
-            self._tags.remove(tag)
-            self._refresh_tag_chips()
-
-    def _refresh_tag_chips(self) -> None:
-        while self._tags_layout.count():
-            child = self._tags_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        for tag in self._tags:
-            chip = QPushButton(f"{tag}  ×")
-            chip.setObjectName("chipActive")
-            chip.clicked.connect(lambda _, t=tag: self._remove_tag(t))
-            self._tags_layout.addWidget(chip)
-        self._tags_layout.addStretch()
-
-    def get_tags(self) -> list[str]:
-        return list(self._tags)
-
-
-class _CategoryPickerDialog(QDialog):
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle("Select Category")
-        layout = QVBoxLayout(self)
-        self._combo = QComboBox()
-        for cat in ALL_CATEGORIES:
-            self._combo.addItem(cat)
-        layout.addWidget(self._combo)
-        btns = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        btns.accepted.connect(self.accept)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-
-    def selected_category(self) -> str:
-        return self._combo.currentText()

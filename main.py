@@ -7,17 +7,11 @@ import json
 import logging
 import sys
 from pathlib import Path
+from tkinter import filedialog
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import (
-    QApplication, QButtonGroup, QDialog, QDialogButtonBox,
-    QFileDialog, QLabel, QMessageBox, QPushButton,
-    QRadioButton, QVBoxLayout, QWidget,
-)
+import customtkinter as ctk
 
-from main_window import MainWindow
-from styles import apply_dark_theme
+from styles import configure_ctk_theme, ACCENT, TEXT, TEXT_DIM, SURFACE, BORDER_BRIGHT, BG
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,7 +25,7 @@ _DEFAULT_DATA_DIR = Path.home() / ".config" / "expense-tracker"
 
 
 def get_data_dir() -> Path:
-    """Return the user's chosen data directory, running first-run dialog if needed."""
+    """Return the user's chosen data directory, or None if not set yet."""
     if _BOOTSTRAP_FILE.exists():
         try:
             path = Path(_BOOTSTRAP_FILE.read_text().strip())
@@ -42,108 +36,158 @@ def get_data_dir() -> Path:
     return None
 
 
-def run_first_run_dialog(app: QApplication) -> Path:
-    """Show first-run setup dialog and return the chosen data directory."""
-    dlg = FirstRunDialog()
-    if dlg.exec() != QDialog.DialogCode.Accepted:
-        sys.exit(0)
-    path = dlg.chosen_path()
-    path.mkdir(parents=True, exist_ok=True)
+def _save_bootstrap_path(path: Path) -> None:
     _BOOTSTRAP_FILE.write_text(str(path))
-    return path
 
 
-class FirstRunDialog(QDialog):
-    """
-    Shown on first launch to let user choose where to store app data.
-    """
-    def __init__(self, parent=None) -> None:
+# ── First-run dialog ──────────────────────────────────────────────────────────
+
+class FirstRunDialog(ctk.CTkToplevel):
+    """Modal shown on first launch to let user choose where to store app data."""
+
+    def __init__(self, parent) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Welcome to Expense Tracker")
-        self.setMinimumWidth(440)
-        self._custom_path: Path = Path.home() / "expense-tracker-data"
+        self.title("Welcome to Expense Tracker")
+        self.geometry("460x320")
+        self.resizable(False, False)
+        self.grab_set()           # make modal
+        self.focus_set()
+        self.transient(parent)
+
+        self._chosen_path: Path = Path.home() / "expense-tracker-data"
+        self._radio_var = ctk.StringVar(value="default")
+        self._result: Path | None = None
+
         self._setup_ui()
+        self.protocol("WM_DELETE_WINDOW", self._on_cancel)
+        self.wait_window(self)    # block until closed
 
     def _setup_ui(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setSpacing(12)
-        layout.setContentsMargins(24, 20, 24, 20)
+        self.configure(fg_color=BG)
+        pad = {"padx": 24, "pady": 0}
 
-        hdr = QLabel("💰 Welcome to Expense Tracker")
-        hdr.setStyleSheet("font-size: 17px; font-weight: bold;")
-        layout.addWidget(hdr)
+        # Title
+        ctk.CTkLabel(
+            self, text="💰  Welcome to Expense Tracker",
+            font=ctk.CTkFont(family="Inter", size=17, weight="bold"),
+            text_color=ACCENT,
+        ).pack(pady=(20, 4), **pad)
 
-        layout.addWidget(QLabel("Where should we store your app data?\n(SQLite database, Gmail token, settings)"))
+        ctk.CTkLabel(
+            self,
+            text="Where should we store your app data?\n(SQLite database, Gmail token, settings)",
+            font=ctk.CTkFont(family="Inter", size=12),
+            text_color=TEXT_DIM,
+            justify="center",
+        ).pack(pady=(0, 14))
 
-        self._grp = QButtonGroup(self)
+        # Radio options
+        options = [
+            ("default",   f"~/.config/expense-tracker/  (recommended)"),
+            ("script",    "Same folder as this script"),
+            ("custom",    "Browse…"),
+        ]
+        for value, label in options:
+            ctk.CTkRadioButton(
+                self,
+                text=label,
+                variable=self._radio_var,
+                value=value,
+                command=self._on_radio,
+                font=ctk.CTkFont(family="Inter", size=12),
+                text_color=TEXT,
+                fg_color=ACCENT,
+                hover_color=ACCENT,
+                border_color=BORDER_BRIGHT,
+            ).pack(anchor="w", padx=36, pady=3)
 
-        r1 = QRadioButton(f"  ~/.config/expense-tracker/  (recommended)")
-        r1.setChecked(True)
-        r2 = QRadioButton(f"  Same folder as this script")
-        self._r_custom = QRadioButton("  Browse…")
-        self._browse_btn = QPushButton("Browse…")
-        self._browse_btn.setEnabled(False)
-        self._browse_btn.clicked.connect(self._browse)
+        # Browse button
+        self._browse_btn = ctk.CTkButton(
+            self,
+            text="Browse…",
+            command=self._browse,
+            font=ctk.CTkFont(family="Inter", size=12),
+            state="disabled",
+            fg_color=SURFACE,
+            hover_color=BORDER_BRIGHT,
+            text_color=TEXT,
+            border_color=BORDER_BRIGHT,
+            border_width=1,
+            corner_radius=8,
+        )
+        self._browse_btn.pack(anchor="w", padx=70, pady=(4, 0))
 
-        self._grp.addButton(r1, 0)
-        self._grp.addButton(r2, 1)
-        self._grp.addButton(self._r_custom, 2)
-        self._grp.idClicked.connect(self._on_radio)
+        # Path label
+        self._path_lbl = ctk.CTkLabel(
+            self, text="", text_color=TEXT_DIM,
+            font=ctk.CTkFont(family="Inter", size=10),
+        )
+        self._path_lbl.pack(pady=(4, 0))
 
-        for w in (r1, r2, self._r_custom):
-            layout.addWidget(w)
-        layout.addWidget(self._browse_btn)
+        # Get Started button
+        ctk.CTkButton(
+            self,
+            text="Get Started →",
+            command=self._on_accept,
+            font=ctk.CTkFont(family="Inter", size=13, weight="bold"),
+            corner_radius=8,
+            fg_color=ACCENT,
+            hover_color=ACCENT,
+            text_color="#1e1e2e",
+        ).pack(pady=(16, 20), ipadx=20, ipady=4)
 
-        self._path_lbl = QLabel("")
-        self._path_lbl.setStyleSheet("color: #888; font-size: 11px;")
-        layout.addWidget(self._path_lbl)
-
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        btns.button(QDialogButtonBox.StandardButton.Ok).setText("Get Started →")
-        btns.accepted.connect(self.accept)
-        layout.addWidget(btns)
-
-    def _on_radio(self, btn_id: int) -> None:
-        self._browse_btn.setEnabled(btn_id == 2)
+    def _on_radio(self) -> None:
+        is_custom = self._radio_var.get() == "custom"
+        self._browse_btn.configure(state="normal" if is_custom else "disabled")
 
     def _browse(self) -> None:
-        chosen = QFileDialog.getExistingDirectory(self, "Choose Data Directory")
+        chosen = filedialog.askdirectory(title="Choose Data Directory")
         if chosen:
-            self._custom_path = Path(chosen)
-            self._path_lbl.setText(str(self._custom_path))
+            self._chosen_path = Path(chosen)
+            self._path_lbl.configure(text=str(self._chosen_path))
 
-    def chosen_path(self) -> Path:
-        btn_id = self._grp.checkedId()
-        if btn_id == 0:
-            return _DEFAULT_DATA_DIR
-        elif btn_id == 1:
-            return Path(__file__).parent
+    def _on_accept(self) -> None:
+        val = self._radio_var.get()
+        if val == "default":
+            self._result = _DEFAULT_DATA_DIR
+        elif val == "script":
+            self._result = Path(__file__).parent
         else:
-            return self._custom_path
+            self._result = self._chosen_path
+        self.destroy()
 
+    def _on_cancel(self) -> None:
+        self._result = None
+        self.destroy()
+
+    def chosen_path(self) -> Path | None:
+        return self._result
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
-    app = QApplication(sys.argv)
-    app.setApplicationName("Gmail Expense Tracker")
-    app.setOrganizationName("ExpenseTracker")
-    app.setApplicationVersion("2.0.0")
+    configure_ctk_theme()
 
-    font = QFont("Inter", 10)
-    font.setStyleHint(QFont.StyleHint.SansSerif)
-    app.setFont(font)
-
-    apply_dark_theme(app)
+    root = ctk.CTk()
+    root.withdraw()   # hide root temporarily while checking data dir
 
     data_dir = get_data_dir()
     if data_dir is None:
-        data_dir = run_first_run_dialog(app)
+        dlg = FirstRunDialog(root)
+        data_dir = dlg.chosen_path()
+        if data_dir is None:
+            root.destroy()
+            sys.exit(0)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        _save_bootstrap_path(data_dir)
 
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    window = MainWindow(data_dir)
-    window.show()
-
-    sys.exit(app.exec())
+    from main_window import MainWindow
+    window = MainWindow(root, data_dir)
+    root.deiconify()
+    root.mainloop()
 
 
 if __name__ == "__main__":

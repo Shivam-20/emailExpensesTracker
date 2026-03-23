@@ -2,17 +2,16 @@
 tests/test_gmail_worker.py — Unit tests for workers/gmail_worker.py.
 
 All Gmail API calls are mocked. No real network traffic.
+Updated for callback-based threading.Thread API (no PyQt6 signals).
 """
 
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# We need a minimal PyQt6 QApplication for QThread signals
-from PyQt6.QtWidgets import QApplication
-
-_app = QApplication.instance() or QApplication([])
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 # ---------------------------------------------------------------------------
@@ -35,46 +34,41 @@ def _make_worker(**overrides):
 
 
 # ---------------------------------------------------------------------------
-# Signal wiring tests
+# Callback API tests (replaces old Qt signal tests)
 # ---------------------------------------------------------------------------
 
-class TestGmailWorkerSignals:
-    """Verify that all expected signals fire correctly."""
+class TestGmailWorkerCallbacks:
+    """Verify that callbacks are invoked correctly."""
 
-    def test_finished_signal(self):
-        worker = _make_worker()
+    def test_finished_callback(self):
         results = []
-        worker.finished.connect(results.append)
-        worker.finished.emit([{"id": "abc", "amount": 100}])
+        worker = _make_worker(on_finished=results.append)
+        worker._dispatch(worker._on_finished, [{"id": "abc", "amount": 100}])
         assert len(results) == 1
         assert results[0][0]["id"] == "abc"
 
-    def test_error_signal(self):
-        worker = _make_worker()
+    def test_error_callback(self):
         errors = []
-        worker.error.connect(errors.append)
-        worker.error.emit("Gmail API quota exceeded")
+        worker = _make_worker(on_error=errors.append)
+        worker._dispatch(worker._on_error, "Gmail API quota exceeded")
         assert "quota" in errors[0].lower()
 
-    def test_progress_signal(self):
-        worker = _make_worker()
+    def test_progress_callback(self):
         progress_data = []
-        worker.progress.connect(lambda c, t: progress_data.append((c, t)))
-        worker.progress.emit(5, 10)
+        worker = _make_worker(on_progress=lambda c, t: progress_data.append((c, t)))
+        worker._dispatch(worker._on_progress, 5, 10)
         assert progress_data == [(5, 10)]
 
-    def test_authenticated_signal(self):
-        worker = _make_worker()
+    def test_authenticated_callback(self):
         emails = []
-        worker.authenticated.connect(emails.append)
-        worker.authenticated.emit("user@example.com")
+        worker = _make_worker(on_authenticated=emails.append)
+        worker._dispatch(worker._on_authenticated, "user@example.com")
         assert emails == ["user@example.com"]
 
-    def test_labels_ready_signal(self):
-        worker = _make_worker()
+    def test_labels_ready_callback(self):
         label_data = []
-        worker.labels_ready.connect(label_data.append)
-        worker.labels_ready.emit([{"id": "INBOX", "name": "Inbox"}])
+        worker = _make_worker(on_labels_ready=label_data.append)
+        worker._dispatch(worker._on_labels_ready, [{"id": "INBOX", "name": "Inbox"}])
         assert label_data[0][0]["name"] == "Inbox"
 
 
@@ -138,9 +132,9 @@ class TestGmailWorkerRun:
     def _patch_auth(self):
         """Return a dict of patches for all auth/core imports inside _run()."""
         return {
-            "creds": patch("core.gmail_auth.get_credentials", return_value=MagicMock()),
-            "email": patch("core.gmail_auth.get_authenticated_email", return_value="test@gmail.com"),
-            "labels": patch("core.gmail_auth.get_gmail_labels", return_value=[]),
+            "creds":   patch("core.gmail_auth.get_credentials",         return_value=MagicMock()),
+            "email":   patch("core.gmail_auth.get_authenticated_email", return_value="test@gmail.com"),
+            "labels":  patch("core.gmail_auth.get_gmail_labels",        return_value=[]),
             "service": patch("core.gmail_auth.get_gmail_service"),
         }
 
@@ -151,9 +145,8 @@ class TestGmailWorkerRun:
         mock_db.has_month.return_value = True
         mock_db.get_month_expenses.return_value = cached
 
-        worker = _make_worker(force_refresh=False)
         finished_rows = []
-        worker.finished.connect(finished_rows.append)
+        worker = _make_worker(force_refresh=False, on_finished=finished_rows.append)
 
         patches = self._patch_auth()
         with patches["creds"], patches["email"], patches["labels"], patches["service"]:
@@ -164,12 +157,11 @@ class TestGmailWorkerRun:
         assert finished_rows[0] == cached
 
     def test_error_emitted_on_auth_failure(self):
-        """Worker emits error when auth raises AuthError."""
+        """Worker calls on_error when auth raises AuthError."""
         from core.gmail_auth import AuthError
 
-        worker = _make_worker()
         errors = []
-        worker.error.connect(errors.append)
+        worker = _make_worker(on_error=errors.append)
 
         with patch("core.gmail_auth.get_credentials", side_effect=AuthError("bad token")):
             worker._run()
@@ -178,16 +170,15 @@ class TestGmailWorkerRun:
         assert "bad token" in errors[0]
 
     def test_empty_gmail_results(self):
-        """Worker emits finished([]) when Gmail returns no messages."""
+        """Worker calls on_finished([]) when Gmail returns no messages."""
         mock_db = MagicMock()
         mock_db.has_month.return_value = False
 
         mock_service = MagicMock()
         mock_service.users().messages().list().execute.return_value = {"messages": []}
 
-        worker = _make_worker()
         finished_rows = []
-        worker.finished.connect(finished_rows.append)
+        worker = _make_worker(on_finished=finished_rows.append)
 
         patches = self._patch_auth()
         with patches["creds"], patches["email"], patches["labels"]:
@@ -202,17 +193,14 @@ class TestGmailWorkerRun:
         mock_db = MagicMock()
         mock_db.has_month.return_value = False
 
-        # Return messages but worker is aborted
         mock_service = MagicMock()
         mock_service.users().messages().list().execute.return_value = {
             "messages": [{"id": f"msg{i}"} for i in range(10)],
         }
 
-        worker = _make_worker()
-        worker.abort()  # Abort before run
-
         finished_rows = []
-        worker.finished.connect(finished_rows.append)
+        worker = _make_worker(on_finished=finished_rows.append)
+        worker.abort()   # abort before run
 
         patches = self._patch_auth()
         with patches["creds"], patches["email"], patches["labels"]:
@@ -237,12 +225,10 @@ class TestGmailWorkerRun:
 
         mock_service = MagicMock()
         mock_service.users().messages().list().execute.side_effect = [page1, page2]
-        # parse returns None so no expenses are found
         mock_service.users().messages().get().execute.return_value = {"id": "p1m1"}
 
-        worker = _make_worker()
         finished_rows = []
-        worker.finished.connect(finished_rows.append)
+        worker = _make_worker(on_finished=finished_rows.append)
 
         patches = self._patch_auth()
         with patches["creds"], patches["email"], patches["labels"]:
@@ -260,29 +246,32 @@ class TestGmailWorkerRun:
 # ---------------------------------------------------------------------------
 
 class TestAuthOnlyWorker:
-    def test_signals_exist(self):
+    def test_callbacks_exist_as_private(self):
+        """AuthOnlyWorker exposes callback protocol, not Qt signals."""
         from workers.gmail_worker import AuthOnlyWorker
         worker = AuthOnlyWorker(data_dir=Path("/tmp/test"))
-        assert hasattr(worker, "authenticated")
-        assert hasattr(worker, "labels_ready")
-        assert hasattr(worker, "error")
+        assert callable(worker._on_authenticated)
+        assert callable(worker._on_labels_ready)
+        assert callable(worker._on_error)
 
-    def test_emits_authenticated(self):
+    def test_callback_called_on_authenticated(self):
         from workers.gmail_worker import AuthOnlyWorker
-        worker = AuthOnlyWorker(data_dir=Path("/tmp/test"))
         emails = []
-        worker.authenticated.connect(emails.append)
-        worker.authenticated.emit("user@test.com")
+        worker = AuthOnlyWorker(
+            data_dir=Path("/tmp/test"),
+            on_authenticated=emails.append,
+        )
+        worker._dispatch(worker._on_authenticated, "user@test.com")
         assert emails == ["user@test.com"]
 
-    def test_emits_error_on_failure(self):
+    def test_callback_called_on_error(self):
         from workers.gmail_worker import AuthOnlyWorker
-        worker = AuthOnlyWorker(data_dir=Path("/tmp/test"))
         errors = []
-        worker.error.connect(errors.append)
-
+        worker = AuthOnlyWorker(
+            data_dir=Path("/tmp/test"),
+            on_error=errors.append,
+        )
         with patch("core.gmail_auth.get_credentials", side_effect=Exception("no creds")):
             worker.run()
-
         assert len(errors) == 1
         assert "no creds" in errors[0]

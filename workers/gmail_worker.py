@@ -1,40 +1,32 @@
 """
-workers/gmail_worker.py — QThread for fetching, parsing, deduplicating, and caching expenses.
+workers/gmail_worker.py — Background Thread for fetching, parsing, deduplicating, and caching expenses.
 
-Signals
+Callbacks (passed at construction instead of Qt signals)
 -------
-progress(int, int)  current_count, total_count
-status(str)         human-readable status message
-finished(list)      list of row dicts (sqlite3.Row or plain dict)
-error(str)          error message
-authenticated(str)  emitted with email address after successful auth
-labels_ready(list)  emitted with [{id, name}] label list after auth
+on_progress(int, int)   current_count, total_count
+on_status(str)          human-readable status message
+on_finished(list)       list of row dicts
+on_error(str)           error message
+on_authenticated(str)   email address after successful auth
+on_labels_ready(list)   [{id, name}] label list after auth
 """
 
 import calendar
 import logging
+import threading
 from pathlib import Path
-from typing import Optional
-
-from PyQt6.QtCore import QThread, pyqtSignal
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
 MAX_MESSAGES = 500
 
 
-class GmailWorker(QThread):
+class GmailWorker(threading.Thread):
     """
     Background thread: authenticate → check cache → fetch Gmail → parse →
-    deduplicate → save to SQLite → emit rows.
+    deduplicate → save to SQLite → call on_finished.
     """
-
-    progress      = pyqtSignal(int, int)   # (current, total)
-    status        = pyqtSignal(str)
-    finished      = pyqtSignal(list)
-    error         = pyqtSignal(str)
-    authenticated = pyqtSignal(str)        # email address
-    labels_ready  = pyqtSignal(list)       # list[dict]
 
     def __init__(
         self,
@@ -44,19 +36,48 @@ class GmailWorker(QThread):
         label_id: Optional[str] = None,
         force_refresh: bool = False,
         custom_rules: Optional[list[dict]] = None,
-        parent=None,
+        on_progress: Optional[Callable] = None,
+        on_status: Optional[Callable] = None,
+        on_finished: Optional[Callable] = None,
+        on_error: Optional[Callable] = None,
+        on_authenticated: Optional[Callable] = None,
+        on_labels_ready: Optional[Callable] = None,
+        ui_ref=None,   # CTk root or widget for after() dispatch
     ) -> None:
-        super().__init__(parent)
-        self.data_dir      = data_dir
-        self.year          = year
-        self.month         = month
-        self.label_id      = label_id
-        self.force_refresh = force_refresh
-        self.custom_rules  = custom_rules or []
-        self._abort        = False
+        super().__init__(daemon=True)
+        self.data_dir        = data_dir
+        self.year            = year
+        self.month           = month
+        self.label_id        = label_id
+        self.force_refresh   = force_refresh
+        self.custom_rules    = custom_rules or []
+        self._abort          = False
+        self._ui             = ui_ref
+
+        self._on_progress      = on_progress      or (lambda *_: None)
+        self._on_status        = on_status        or (lambda *_: None)
+        self._on_finished      = on_finished      or (lambda *_: None)
+        self._on_error         = on_error         or (lambda *_: None)
+        self._on_authenticated = on_authenticated or (lambda *_: None)
+        self._on_labels_ready  = on_labels_ready  or (lambda *_: None)
 
     def abort(self) -> None:
         self._abort = True
+
+    def is_running(self) -> bool:
+        return self.is_alive()
+
+    def wait(self, timeout_ms: int = 3000) -> None:
+        self.join(timeout=timeout_ms / 1000)
+
+    # ── UI-safe dispatch ──────────────────────────────────────────────────────
+
+    def _dispatch(self, fn: Callable, *args) -> None:
+        """Call fn(*args) on the UI thread via widget.after()."""
+        if self._ui and self._ui.winfo_exists():
+            self._ui.after(0, lambda: fn(*args))
+        else:
+            fn(*args)
 
     # ── Thread entry ──────────────────────────────────────────────────────────
 
@@ -65,7 +86,7 @@ class GmailWorker(QThread):
             self._run()
         except Exception as exc:
             logger.exception("GmailWorker error")
-            self.error.emit(f"Unexpected error: {exc}")
+            self._dispatch(self._on_error, f"Unexpected error: {exc}")
 
     def _run(self) -> None:
         from core.gmail_auth import (
@@ -77,18 +98,18 @@ class GmailWorker(QThread):
         from core.deduplicator import find_duplicates
 
         # ── Auth ──────────────────────────────────────────────────────────
-        self.status.emit("🔑 Authenticating…")
+        self._dispatch(self._on_status, "🔑 Authenticating…")
         try:
-            creds   = get_credentials(self.data_dir)
-            email   = get_authenticated_email(self.data_dir)
-            self.authenticated.emit(email)
-            labels  = get_gmail_labels(self.data_dir)
-            self.labels_ready.emit(labels)
+            creds  = get_credentials(self.data_dir)
+            email  = get_authenticated_email(self.data_dir)
+            self._dispatch(self._on_authenticated, email)
+            labels = get_gmail_labels(self.data_dir)
+            self._dispatch(self._on_labels_ready, labels)
         except AuthError as exc:
-            self.error.emit(str(exc))
+            self._dispatch(self._on_error, str(exc))
             return
 
-        service = get_gmail_service(self.data_dir, creds)
+        service   = get_gmail_service(self.data_dir, creds)
         month_str = f"{self.year}-{self.month:02d}"
 
         # ── Cache check ───────────────────────────────────────────────────
@@ -96,18 +117,19 @@ class GmailWorker(QThread):
         db.connect()
 
         if not self.force_refresh and db.has_month(month_str):
-            self.status.emit(f"📦 Loading from cache: {month_str}…")
+            self._dispatch(self._on_status, f"📦 Loading from cache: {month_str}…")
             rows = db.get_month_expenses(month_str)
             db.close()
-            self.finished.emit([dict(r) for r in rows])
-            self.status.emit(f"✅ Loaded {len(rows)} expense(s) from cache.")
-            self.progress.emit(len(rows), len(rows))
+            self._dispatch(self._on_finished, [dict(r) for r in rows])
+            self._dispatch(self._on_status, f"✅ Loaded {len(rows)} expense(s) from cache.")
+            self._dispatch(self._on_progress, len(rows), len(rows))
             return
 
         # ── Gmail fetch ───────────────────────────────────────────────────
         query = self._build_query()
-        self.status.emit(f"🔍 Searching Gmail for {calendar.month_name[self.month]} {self.year}…")
-        self.progress.emit(0, 1)
+        self._dispatch(self._on_status,
+                       f"🔍 Searching Gmail for {calendar.month_name[self.month]} {self.year}…")
+        self._dispatch(self._on_progress, 0, 1)
 
         msg_ids: list[str] = []
         page_token: Optional[str] = None
@@ -123,8 +145,8 @@ class GmailWorker(QThread):
             if self.label_id:
                 kwargs["labelIds"] = [self.label_id]
 
-            result = service.users().messages().list(**kwargs).execute()
-            msgs   = result.get("messages", [])
+            result  = service.users().messages().list(**kwargs).execute()
+            msgs    = result.get("messages", [])
             msg_ids.extend(m["id"] for m in msgs)
 
             page_token = result.get("nextPageToken")
@@ -132,17 +154,18 @@ class GmailWorker(QThread):
                 break
 
         total = len(msg_ids)
-        self.status.emit(f"📬 Found {total} candidate email(s) — parsing…")
+        self._dispatch(self._on_status,
+                       f"📬 Found {total} candidate email(s) — parsing…")
 
         if total == 0:
             db.close()
-            self.finished.emit([])
-            self.status.emit("✅ No expense emails found.")
-            self.progress.emit(0, 0)
+            self._dispatch(self._on_finished, [])
+            self._dispatch(self._on_status, "✅ No expense emails found.")
+            self._dispatch(self._on_progress, 0, 0)
             return
 
         # Get ignore list once
-        ignore_rows = db.get_ignore_list()
+        ignore_rows     = db.get_ignore_list()
         ignore_senders  = {r["value"] for r in ignore_rows if r["type"] == "sender"}
         ignore_subjects = {r["value"] for r in ignore_rows if r["type"] == "subject"}
 
@@ -160,17 +183,16 @@ class GmailWorker(QThread):
 
                 row = parse_gmail_message(msg, self.custom_rules)
                 if row is None:
-                    self.progress.emit(idx + 1, total)
+                    self._dispatch(self._on_progress, idx + 1, total)
                     continue
 
-                # Check ignore list
                 sender_l  = row["sender"].lower() + " " + row["sender_email"].lower()
                 subject_l = row["subject"].lower()
                 if any(ig in sender_l  for ig in ignore_senders):
-                    self.progress.emit(idx + 1, total)
+                    self._dispatch(self._on_progress, idx + 1, total)
                     continue
                 if any(ig in subject_l for ig in ignore_subjects):
-                    self.progress.emit(idx + 1, total)
+                    self._dispatch(self._on_progress, idx + 1, total)
                     continue
 
                 row["month"] = month_str
@@ -179,28 +201,26 @@ class GmailWorker(QThread):
             except Exception as exc:
                 logger.warning("Failed to parse message %s: %s", msg_id, exc)
 
-            self.progress.emit(idx + 1, total)
-            self.status.emit(
-                f"📧 {idx + 1}/{total} — {len(parsed)} expense(s) found…"
-            )
+            self._dispatch(self._on_progress, idx + 1, total)
+            self._dispatch(self._on_status,
+                           f"📧 {idx + 1}/{total} — {len(parsed)} expense(s) found…")
 
         # ── Deduplication ─────────────────────────────────────────────────
-        self.status.emit("🔍 Detecting duplicates…")
+        self._dispatch(self._on_status, "🔍 Detecting duplicates…")
         parsed = find_duplicates(parsed)
 
         # ── Persist ───────────────────────────────────────────────────────
-        self.status.emit("💾 Saving to cache…")
+        self._dispatch(self._on_status, "💾 Saving to cache…")
         inserted = db.upsert_expenses(parsed)
-        rows = db.get_month_expenses(month_str)
+        rows     = db.get_month_expenses(month_str)
         db.close()
 
-        self.progress.emit(total, total)
-        self.status.emit(
-            f"✅ {len(rows)} expense(s) — "
-            f"{calendar.month_name[self.month]} {self.year} "
-            f"({inserted} new)."
-        )
-        self.finished.emit([dict(r) for r in rows])
+        self._dispatch(self._on_progress, total, total)
+        self._dispatch(self._on_status,
+                       f"✅ {len(rows)} expense(s) — "
+                       f"{calendar.month_name[self.month]} {self.year} "
+                       f"({inserted} new).")
+        self._dispatch(self._on_finished, [dict(r) for r in rows])
 
     # ── Query builder ─────────────────────────────────────────────────────────
 
@@ -216,16 +236,29 @@ class GmailWorker(QThread):
         return f"subject:({keywords}) {exclude} after:{after} before:{before}"
 
 
-class AuthOnlyWorker(QThread):
+class AuthOnlyWorker(threading.Thread):
     """Lightweight worker that only authenticates and fetches labels."""
 
-    authenticated = pyqtSignal(str)
-    labels_ready  = pyqtSignal(list)
-    error         = pyqtSignal(str)
+    def __init__(
+        self,
+        data_dir: Path,
+        on_authenticated: Optional[Callable] = None,
+        on_labels_ready: Optional[Callable] = None,
+        on_error: Optional[Callable] = None,
+        ui_ref=None,
+    ) -> None:
+        super().__init__(daemon=True)
+        self.data_dir        = data_dir
+        self._ui             = ui_ref
+        self._on_authenticated = on_authenticated or (lambda *_: None)
+        self._on_labels_ready  = on_labels_ready  or (lambda *_: None)
+        self._on_error         = on_error         or (lambda *_: None)
 
-    def __init__(self, data_dir: Path, parent=None) -> None:
-        super().__init__(parent)
-        self.data_dir = data_dir
+    def _dispatch(self, fn: Callable, *args) -> None:
+        if self._ui and self._ui.winfo_exists():
+            self._ui.after(0, lambda: fn(*args))
+        else:
+            fn(*args)
 
     def run(self) -> None:
         try:
@@ -236,7 +269,7 @@ class AuthOnlyWorker(QThread):
             get_credentials(self.data_dir)
             email  = get_authenticated_email(self.data_dir)
             labels = get_gmail_labels(self.data_dir)
-            self.authenticated.emit(email)
-            self.labels_ready.emit(labels)
+            self._dispatch(self._on_authenticated, email)
+            self._dispatch(self._on_labels_ready, labels)
         except Exception as exc:
-            self.error.emit(str(exc))
+            self._dispatch(self._on_error, str(exc))

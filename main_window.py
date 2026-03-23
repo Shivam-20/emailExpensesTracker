@@ -1,5 +1,5 @@
 """
-main_window.py — QMainWindow: sidebar + 5-tab main area.
+main_window.py — CTk MainWindow: sidebar + 5-tab main area.
 Supports single-month, date-range, full-year, and all-available multi-fetch.
 """
 
@@ -11,25 +11,23 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtWidgets import (
-    QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QMainWindow,
-    QMessageBox, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
-    QStatusBar, QTabWidget, QVBoxLayout, QWidget,
-)
+import customtkinter as ctk
 
 from tabs.expenses_tab      import ExpensesTab
 from tabs.charts_tab        import ChartsTab
 from tabs.trends_tab        import TrendsTab
 from tabs.review_queue_tab  import ReviewQueueTab
 from tabs.settings_tab      import SettingsTab
-from workers.gmail_worker import GmailWorker, AuthOnlyWorker
-from core.db import Database
-from core.gmail_auth import is_authenticated, CREDENTIALS_PATH, revoke_credentials
+from workers.gmail_worker   import GmailWorker, AuthOnlyWorker
+from core.db                import Database
+from core.gmail_auth        import is_authenticated, CREDENTIALS_PATH, revoke_credentials
 from styles import (
-    ACCENT, BG, BORDER, SIDEBAR_BG, SURFACE, TEXT, TEXT_DIM, SUCCESS, WARNING, ERROR, MAIN_STYLE,
-    SPACING_SM, SPACING_MD, SPACING_LG, RADIUS_SM, RADIUS_MD,
+    ACCENT, ACCENT_DARK, ACCENT_LIGHT,
+    BG, BORDER, BORDER_BRIGHT, SIDEBAR_BG, SURFACE, SURFACE_HOVER,
+    TEXT, TEXT_DIM, TEXT_MUTE,
+    SUCCESS, SUCCESS_BG, WARNING, ERROR,
+    FONT_SIZE_SM, FONT_SIZE_XS, FONT_SIZE_XL,
+    SPACING_SM, SPACING_MD,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,16 +35,31 @@ logger = logging.getLogger(__name__)
 _NOW_YEAR  = datetime.now().year
 _NOW_MONTH = datetime.now().month
 
+_YEARS = [str(y) for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2)]
+_MONTHS_LONG  = list(calendar.month_name[1:])
+_MONTHS_SHORT = list(calendar.month_abbr[1:])
 
-class MainWindow(QMainWindow):
-    def __init__(self, data_dir: Path) -> None:
-        super().__init__()
-        self.data_dir = data_dir
+
+def _month_idx_to_num(idx: int) -> int:
+    return idx + 1
+
+
+def _num_to_month_idx(month: int) -> int:
+    return month - 1
+
+
+class MainWindow:
+    """Main application window composed of sidebar + tab area."""
+
+    def __init__(self, root: ctk.CTk, data_dir: Path) -> None:
+        self._root      = root
+        self.data_dir   = data_dir
         self._worker: Optional[GmailWorker] = None
+        self._auth_worker: Optional[AuthOnlyWorker] = None
         self._labels: list[dict] = []
         self._current_rows: list[dict] = []
-        self._config = _load_config(data_dir)
-        self._db = Database(data_dir)
+        self._config    = self._load_config(data_dir)
+        self._db        = Database(data_dir)
         self._db.connect()
 
         # Multi-fetch state
@@ -56,287 +69,348 @@ class MainWindow(QMainWindow):
         self._fetch_force: bool = False
         self._fetch_label_id: Optional[str] = None
 
-        self.setWindowTitle("💰 Gmail Expense Tracker")
-        self.setMinimumSize(1100, 720)
+        self._root.title("💰 Gmail Expense Tracker")
+        self._root.geometry("1200x760")
+        self._root.minsize(1100, 720)
+        self._root.configure(fg_color=BG)
+
         self._setup_ui()
-        self._setup_status_bar()
-        self.setStyleSheet(MAIN_STYLE)
         self._post_init()
+        self._root.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    # ── Config ────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _load_config(data_dir: Path) -> dict:
+        cfg_file = data_dir / "config.json"
+        try:
+            if cfg_file.exists():
+                return json.loads(cfg_file.read_text())
+        except Exception as exc:
+            logger.debug("Could not load config.json: %s", exc)
+        return {}
 
     # ── UI Construction ───────────────────────────────────────────────────────
 
     def _setup_ui(self) -> None:
-        central = QWidget()
-        self.setCentralWidget(central)
-        root = QHBoxLayout(central)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
-        root.addWidget(self._build_sidebar(), stretch=0)
-        root.addWidget(self._build_main_area(), stretch=1)
+        self._root.grid_columnconfigure(0, weight=0)
+        self._root.grid_columnconfigure(1, weight=1)
+        self._root.grid_rowconfigure(0, weight=1)
+        self._root.grid_rowconfigure(1, weight=0)
 
-    def _build_sidebar(self) -> QWidget:
-        # Outer container with sidebar styling + fixed width
-        outer = QWidget()
-        outer.setObjectName("sidebar")
-        outer.setFixedWidth(270)
-        outer_lay = QVBoxLayout(outer)
-        outer_lay.setContentsMargins(0, 0, 0, 0)
-        outer_lay.setSpacing(0)
+        self._build_sidebar()
+        self._build_main_area()
+        self._build_status_bar()
+
+    # ── Sidebar ───────────────────────────────────────────────────────────────
+
+    def _build_sidebar(self) -> None:
+        # Outer frame (fixed width, full height)
+        sidebar = ctk.CTkFrame(
+            self._root, width=272, fg_color=SIDEBAR_BG,
+            corner_radius=0, border_width=0,
+        )
+        sidebar.grid(row=0, column=0, sticky="nsew")
+        sidebar.grid_propagate(False)
 
         # Scrollable inner content
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setObjectName("sidebarScroll")
-
-        content = QWidget()
-        lay = QVBoxLayout(content)
-        lay.setContentsMargins(12, 14, 12, 14)
-        lay.setSpacing(0)
-
-        # ── Title ─────────────────────────────────────────────────────────
-        title = QLabel("💰 Expense Tracker")
-        title.setObjectName("appTitle")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(title)
-        lay.addSpacing(6)
-
-        # ── Account pill ──────────────────────────────────────────────────
-        self._account_pill = QLabel("Not connected")
-        self._account_pill.setObjectName("accountPill")
-        self._account_pill.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._account_pill.setWordWrap(True)
-        lay.addWidget(self._account_pill)
-        lay.addSpacing(4)
-
-        self._connect_btn = QPushButton("🔑 Connect Gmail")
-        self._connect_btn.setObjectName("ghostBtn")
-        self._connect_btn.clicked.connect(self._on_connect)
-        lay.addWidget(self._connect_btn)
-
-        lay.addSpacing(10)
-        lay.addWidget(_sep())
-        lay.addSpacing(10)
-
-        # ── Fetch Mode ────────────────────────────────────────────────────
-        lay.addWidget(_section_label("FETCH MODE"))
-        lay.addSpacing(4)
-
-        self._fetch_mode = QComboBox()
-        self._fetch_mode.addItems([
-            "Single Month",
-            "Month Range",
-            "Full Year",
-            "All Available",
-        ])
-        self._fetch_mode.setToolTip(
-            "Single Month: one month\n"
-            "Month Range: custom date range\n"
-            "Full Year: all 12 months of a year\n"
-            "All Available: reload all cached months"
+        inner = ctk.CTkScrollableFrame(
+            sidebar, fg_color=SIDEBAR_BG,
+            scrollbar_button_color=BORDER_BRIGHT,
+            scrollbar_button_hover_color=ACCENT_DARK,
+            corner_radius=0,
         )
-        self._fetch_mode.currentIndexChanged.connect(self._on_fetch_mode_changed)
-        lay.addWidget(self._fetch_mode)
-        lay.addSpacing(4)
+        inner.pack(fill="both", expand=True, padx=0, pady=0)
 
-        # ── Single month pickers ──────────────────────────────────────────
-        self._single_row = QWidget()
-        single_lay = QHBoxLayout(self._single_row)
-        single_lay.setContentsMargins(0, 0, 0, 0)
-        single_lay.setSpacing(4)
+        def _section_label(parent: ctk.CTkFrame, text: str) -> None:
+            ctk.CTkLabel(
+                parent, text=text,
+                font=ctk.CTkFont(family="Inter", size=FONT_SIZE_XS, weight="bold"),
+                text_color=TEXT_DIM,
+                anchor="w",
+            ).pack(fill="x", padx=(14, 0), pady=(8, 2))
 
-        self._year_combo = QComboBox()
-        for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
-            self._year_combo.addItem(str(y), y)
-        self._year_combo.setCurrentText(str(_NOW_YEAR))
+        def _sep(parent: ctk.CTkFrame) -> None:
+            ctk.CTkFrame(parent, height=1, fg_color=BORDER, corner_radius=0).pack(
+                fill="x", padx=10, pady=6,
+            )
 
-        self._month_combo = QComboBox()
-        for i, name in enumerate(calendar.month_name[1:], start=1):
-            self._month_combo.addItem(name, i)
-        self._month_combo.setCurrentIndex(_NOW_MONTH - 1)
+        # Title
+        ctk.CTkLabel(
+            inner, text="💰 Expense Tracker",
+            font=ctk.CTkFont(family="Inter", size=FONT_SIZE_XL, weight="bold"),
+            text_color=ACCENT,
+        ).pack(pady=(16, 4))
 
-        single_lay.addWidget(self._year_combo, 2)
-        single_lay.addWidget(self._month_combo, 3)
-        lay.addWidget(self._single_row)
+        # Account pill
+        self._account_pill = ctk.CTkLabel(
+            inner, text="Not connected",
+            font=ctk.CTkFont(family="Inter", size=FONT_SIZE_SM),
+            text_color=TEXT_DIM,
+            fg_color=SURFACE,
+            corner_radius=999,
+        )
+        self._account_pill.pack(fill="x", padx=14, pady=(0, 4), ipady=4)
 
-        # ── Month range pickers ───────────────────────────────────────────
-        self._range_row = QWidget()
-        range_lay = QGridLayout(self._range_row)
-        range_lay.setContentsMargins(0, 0, 0, 0)
-        range_lay.setSpacing(3)
-        range_lay.setColumnStretch(1, 2)
-        range_lay.setColumnStretch(2, 3)
+        self._connect_btn = ctk.CTkButton(
+            inner, text="🔑 Connect Gmail",
+            command=self._on_connect,
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color="transparent",
+            hover_color=SURFACE_HOVER,
+            text_color=ACCENT,
+            border_color=ACCENT_DARK,
+            border_width=1,
+            corner_radius=8,
+            height=28,
+        )
+        self._connect_btn.pack(fill="x", padx=14, pady=(0, 6))
 
-        from_lbl = QLabel("From")
-        from_lbl.setObjectName("statusLabel")
-        from_lbl.setFixedWidth(34)
-        self._from_year = QComboBox()
-        for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
-            self._from_year.addItem(str(y), y)
-        self._from_year.setCurrentText(str(_NOW_YEAR - 1))
-        self._from_month = QComboBox()
-        for i, name in enumerate(calendar.month_abbr[1:], start=1):
-            self._from_month.addItem(name, i)
-        self._from_month.setCurrentIndex(0)
-        range_lay.addWidget(from_lbl,          0, 0)
-        range_lay.addWidget(self._from_year,   0, 1)
-        range_lay.addWidget(self._from_month,  0, 2)
+        _sep(inner)
+        _section_label(inner, "FETCH MODE")
 
-        to_lbl = QLabel("To")
-        to_lbl.setObjectName("statusLabel")
-        to_lbl.setFixedWidth(34)
-        self._to_year = QComboBox()
-        for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
-            self._to_year.addItem(str(y), y)
-        self._to_year.setCurrentText(str(_NOW_YEAR))
-        self._to_month = QComboBox()
-        for i, name in enumerate(calendar.month_abbr[1:], start=1):
-            self._to_month.addItem(name, i)
-        self._to_month.setCurrentIndex(_NOW_MONTH - 1)
-        range_lay.addWidget(to_lbl,           1, 0)
-        range_lay.addWidget(self._to_year,    1, 1)
-        range_lay.addWidget(self._to_month,   1, 2)
+        self._fetch_mode_var = ctk.StringVar(value="Single Month")
+        self._fetch_mode = ctk.CTkComboBox(
+            inner,
+            values=["Single Month", "Month Range", "Full Year", "All Available"],
+            variable=self._fetch_mode_var,
+            command=self._on_fetch_mode_changed,
+            state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE,
+            border_color=BORDER_BRIGHT,
+            text_color=TEXT,
+            button_color=SURFACE_HOVER,
+            button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE,
+            dropdown_text_color=TEXT,
+            dropdown_hover_color=SURFACE_HOVER,
+        )
+        self._fetch_mode.pack(fill="x", padx=14, pady=(4, 4))
 
-        self._range_row.setVisible(False)
-        lay.addWidget(self._range_row)
+        # ── Single month pickers ───────────────────────────────────────────
+        self._single_row = ctk.CTkFrame(inner, fg_color="transparent")
+        yr_var = ctk.StringVar(value=str(_NOW_YEAR))
+        mo_var = ctk.StringVar(value=_MONTHS_LONG[_NOW_MONTH - 1])
+        self._year_combo  = ctk.CTkComboBox(
+            self._single_row, values=_YEARS, variable=yr_var, width=80, state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+            button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE, dropdown_text_color=TEXT, dropdown_hover_color=SURFACE_HOVER,
+        )
+        self._month_combo = ctk.CTkComboBox(
+            self._single_row, values=_MONTHS_LONG, variable=mo_var, width=110, state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+            button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE, dropdown_text_color=TEXT, dropdown_hover_color=SURFACE_HOVER,
+        )
+        self._year_combo.pack(side="left", padx=(0, 4))
+        self._month_combo.pack(side="left")
+        self._single_row.pack(fill="x", padx=14, pady=2)
 
-        # ── Full year picker ──────────────────────────────────────────────
-        self._year_only_row = QWidget()
-        year_only_lay = QHBoxLayout(self._year_only_row)
-        year_only_lay.setContentsMargins(0, 0, 0, 0)
-        self._year_only_combo = QComboBox()
-        for y in range(_NOW_YEAR - 4, _NOW_YEAR + 2):
-            self._year_only_combo.addItem(str(y), y)
-        self._year_only_combo.setCurrentText(str(_NOW_YEAR))
-        year_only_lay.addWidget(self._year_only_combo)
-        self._year_only_row.setVisible(False)
-        lay.addWidget(self._year_only_row)
+        # ── Range pickers ──────────────────────────────────────────────────
+        self._range_row = ctk.CTkFrame(inner, fg_color="transparent")
 
-        lay.addSpacing(4)
+        def _range_pair(parent, label_text, default_year_str, default_month_idx):
+            ctk.CTkLabel(parent, text=label_text, text_color=TEXT_DIM, width=30,
+                         font=ctk.CTkFont(family="Inter", size=11)).pack(side="left")
+            yr = ctk.CTkComboBox(parent, values=_YEARS, width=72, state="readonly",
+                                  font=ctk.CTkFont(family="Inter", size=12),
+                                  fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+                                  button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+                                  dropdown_fg_color=SURFACE, dropdown_text_color=TEXT,
+                                  dropdown_hover_color=SURFACE_HOVER)
+            yr.set(default_year_str)
+            yr.pack(side="left", padx=(2, 2))
+            mo = ctk.CTkComboBox(parent, values=_MONTHS_SHORT, width=72, state="readonly",
+                                  font=ctk.CTkFont(family="Inter", size=12),
+                                  fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+                                  button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+                                  dropdown_fg_color=SURFACE, dropdown_text_color=TEXT,
+                                  dropdown_hover_color=SURFACE_HOVER)
+            mo.set(_MONTHS_SHORT[default_month_idx])
+            mo.pack(side="left")
+            return yr, mo
 
-        # ── Gmail label filter ────────────────────────────────────────────
-        self._label_combo = QComboBox()
-        self._label_combo.addItem("📂 All Mail", None)
-        self._label_combo.setToolTip("Filter by Gmail label")
-        lay.addWidget(self._label_combo)
+        from_frame = ctk.CTkFrame(self._range_row, fg_color="transparent")
+        from_frame.pack(fill="x", pady=1)
+        self._from_year, self._from_month = _range_pair(
+            from_frame, "From", str(_NOW_YEAR - 1), 0)
 
-        # ── Last fetched ──────────────────────────────────────────────────
-        self._last_fetched_lbl = QLabel("Last fetched: —")
-        self._last_fetched_lbl.setObjectName("statusLabel")
-        self._last_fetched_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(self._last_fetched_lbl)
+        to_frame = ctk.CTkFrame(self._range_row, fg_color="transparent")
+        to_frame.pack(fill="x", pady=1)
+        self._to_year, self._to_month = _range_pair(
+            to_frame, "To  ", str(_NOW_YEAR), _NOW_MONTH - 1)
 
-        lay.addSpacing(10)
-        lay.addWidget(_sep())
-        lay.addSpacing(10)
+        self._range_row.pack(fill="x", padx=14, pady=2)
+        self._range_row.pack_forget()
 
-        # ── Actions ───────────────────────────────────────────────────────
-        lay.addWidget(_section_label("ACTIONS"))
-        lay.addSpacing(4)
+        # ── Full year picker ───────────────────────────────────────────────
+        self._year_only_row = ctk.CTkFrame(inner, fg_color="transparent")
+        self._year_only_combo = ctk.CTkComboBox(
+            self._year_only_row, values=_YEARS, state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+            button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE, dropdown_text_color=TEXT, dropdown_hover_color=SURFACE_HOVER,
+        )
+        self._year_only_combo.set(str(_NOW_YEAR))
+        self._year_only_combo.pack(fill="x")
+        self._year_only_row.pack(fill="x", padx=14, pady=2)
+        self._year_only_row.pack_forget()
 
-        self._fetch_btn = QPushButton("🔍 Fetch Expenses")
-        self._fetch_btn.setObjectName("primaryBtn")
-        self._fetch_btn.setToolTip("Fetch expenses from Gmail  (Alt+F)")
-        self._fetch_btn.clicked.connect(lambda: self._on_fetch(force=False))
-        lay.addWidget(self._fetch_btn)
-        lay.addSpacing(4)
+        # ── Gmail label filter ─────────────────────────────────────────────
+        self._label_var = ctk.StringVar(value="📂 All Mail")
+        self._label_combo = ctk.CTkComboBox(
+            inner, values=["📂 All Mail"], variable=self._label_var, state="readonly",
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color=SURFACE, border_color=BORDER_BRIGHT, text_color=TEXT,
+            button_color=SURFACE_HOVER, button_hover_color=SURFACE_HOVER,
+            dropdown_fg_color=SURFACE, dropdown_text_color=TEXT, dropdown_hover_color=SURFACE_HOVER,
+        )
+        self._label_combo.pack(fill="x", padx=14, pady=(4, 2))
 
-        self._refresh_btn = QPushButton("🔄 Force Refresh")
-        self._refresh_btn.setObjectName("ghostBtn")
-        self._refresh_btn.setToolTip("Bypass cache and re-fetch from Gmail")
-        self._refresh_btn.clicked.connect(lambda: self._on_fetch(force=True))
-        lay.addWidget(self._refresh_btn)
+        # Last fetched
+        self._last_fetched_lbl = ctk.CTkLabel(
+            inner, text="Last fetched: —",
+            text_color=TEXT_DIM, font=ctk.CTkFont(family="Inter", size=FONT_SIZE_SM),
+        )
+        self._last_fetched_lbl.pack(pady=(2, 0))
 
-        lay.addSpacing(10)
-        lay.addWidget(_sep())
-        lay.addSpacing(10)
+        _sep(inner)
+        _section_label(inner, "ACTIONS")
 
-        # ── Summary ───────────────────────────────────────────────────────
-        lay.addWidget(_section_label("SUMMARY"))
-        lay.addSpacing(4)
+        self._fetch_btn = ctk.CTkButton(
+            inner, text="🔍 Fetch Expenses",
+            command=lambda: self._on_fetch(force=False),
+            font=ctk.CTkFont(family="Inter", size=13, weight="bold"),
+            fg_color=ACCENT, hover_color=ACCENT_LIGHT, text_color="#1e1e2e",
+            corner_radius=8, height=34,
+        )
+        self._fetch_btn.pack(fill="x", padx=14, pady=(4, 4))
 
-        self._summary_card = _SummaryCard()
-        lay.addWidget(self._summary_card)
+        self._refresh_btn = ctk.CTkButton(
+            inner, text="🔄 Force Refresh",
+            command=lambda: self._on_fetch(force=True),
+            font=ctk.CTkFont(family="Inter", size=12),
+            fg_color="transparent", hover_color=SURFACE_HOVER,
+            text_color=ACCENT, border_color=ACCENT_DARK, border_width=1,
+            corner_radius=8, height=28,
+        )
+        self._refresh_btn.pack(fill="x", padx=14, pady=(0, 6))
 
-        lay.addSpacing(10)
+        _sep(inner)
+        _section_label(inner, "SUMMARY")
 
-        # ── Stage 3 + hint ────────────────────────────────────────────────
-        self._stage3_lbl = QLabel()
-        self._stage3_lbl.setObjectName("statusLabel")
-        self._stage3_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(self._stage3_lbl)
+        self._summary_frame = _SummaryCard(inner)
+        self._summary_frame.pack(fill="x", padx=14, pady=(4, 6))
 
-        hint = QLabel("Alt+1–5 tabs  •  Alt+F fetch")
-        hint.setObjectName("fetchHint")
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(hint)
+        # Stage 3 label
+        self._stage3_lbl = ctk.CTkLabel(
+            inner, text="",
+            text_color=TEXT_DIM,
+            font=ctk.CTkFont(family="Inter", size=FONT_SIZE_SM),
+        )
+        self._stage3_lbl.pack(pady=(4, 0))
 
-        lay.addStretch()
-        scroll.setWidget(content)
-        outer_lay.addWidget(scroll)
-        return outer
+        ctk.CTkLabel(
+            inner, text="Alt+1–5 tabs  •  keyboard friendly",
+            text_color=TEXT_MUTE,
+            font=ctk.CTkFont(family="Inter", size=FONT_SIZE_XS),
+        ).pack(pady=(2, 16))
 
-    def _on_fetch_mode_changed(self, _idx: int) -> None:
-        mode = self._fetch_mode.currentText()
-        self._single_row.setVisible(mode == "Single Month")
-        self._range_row.setVisible(mode == "Month Range")
-        self._year_only_row.setVisible(mode == "Full Year")
-        labels = {
-            "Single Month":  "🔍 Fetch Expenses",
-            "Month Range":   "🔍 Fetch Date Range",
-            "Full Year":     "🔍 Fetch Full Year",
-            "All Available": "🔍 Load All Cached",
-        }
-        self._fetch_btn.setText(labels.get(mode, "🔍 Fetch Expenses"))
+    # ── Main area / tabs ──────────────────────────────────────────────────────
 
-    def _build_main_area(self) -> QWidget:
-        area = QWidget()
-        lay  = QVBoxLayout(area)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(0)
-        self._tabs = QTabWidget()
-        self._expenses_tab    = ExpensesTab(db=self._db)
-        self._charts_tab      = ChartsTab()
-        self._trends_tab      = TrendsTab()
-        self._review_tab      = ReviewQueueTab()
-        self._settings_tab    = SettingsTab()
-        self._tabs.addTab(self._expenses_tab, "📋 Expenses")
-        self._tabs.addTab(self._charts_tab,   "📊 Charts")
-        self._tabs.addTab(self._trends_tab,   "📈 Trends")
-        self._tabs.addTab(self._review_tab,   "🔍 Review Queue")
-        self._tabs.addTab(self._settings_tab, "⚙️ Settings")
-        self._expenses_tab.field_changed.connect(self._on_field_changed)
-        self._expenses_tab.exclude_requested.connect(self._on_exclude_requested)
-        self._expenses_tab.review_requested.connect(self._on_review_requested)
-        self._review_tab.correction_saved.connect(self._on_review_correction)
-        self._settings_tab.reauth_requested.connect(self._on_reauth)
-        self._settings_tab.clear_cache_requested.connect(self._on_clear_cache)
-        self._settings_tab.data_dir_changed.connect(self._on_data_dir_changed)
-        self._settings_tab.backend_changed.connect(self._on_backend_changed)
-        self._settings_tab.training_finished.connect(self._on_training_finished)
-        self._charts_tab.category_drill.connect(self._on_chart_category_drill)
-        lay.addWidget(self._tabs)
-        return area
+    def _build_main_area(self) -> None:
+        self._tabs = ctk.CTkTabview(
+            self._root,
+            fg_color=BG,
+            segmented_button_fg_color=SURFACE,
+            segmented_button_selected_color=BG,
+            segmented_button_selected_hover_color=SURFACE_HOVER,
+            segmented_button_unselected_color=SURFACE,
+            segmented_button_unselected_hover_color=SURFACE_HOVER,
+            text_color=TEXT,
+            text_color_disabled=TEXT_DIM,
+            border_color=BORDER,
+            border_width=1,
+        )
+        self._tabs.grid(row=0, column=1, sticky="nsew", padx=(0, 0), pady=(0, 0))
 
-    def _setup_status_bar(self) -> None:
-        self._sb = QStatusBar()
-        self.setStatusBar(self._sb)
+        for tab_name in ["📋 Expenses", "📊 Charts", "📈 Trends", "🔍 Review Queue", "⚙️ Settings"]:
+            self._tabs.add(tab_name)
 
-        # Cancel button (hidden by default)
-        self._cancel_btn = QPushButton("✕ Cancel")
-        self._cancel_btn.setObjectName("ghostBtn")
-        self._cancel_btn.setFixedWidth(80)
-        self._cancel_btn.setVisible(False)
-        self._cancel_btn.clicked.connect(self._on_cancel_fetch)
-        self._sb.addPermanentWidget(self._cancel_btn)
+        # Build tabs
+        self._expenses_tab   = ExpensesTab(self._tabs.tab("📋 Expenses"),   db=self._db)
+        self._charts_tab     = ChartsTab(self._tabs.tab("📊 Charts"))
+        self._trends_tab     = TrendsTab(self._tabs.tab("📈 Trends"))
+        self._review_tab     = ReviewQueueTab(self._tabs.tab("🔍 Review Queue"))
+        self._settings_tab   = SettingsTab(self._tabs.tab("⚙️ Settings"))
 
-        self._progress = QProgressBar()
-        self._progress.setFixedWidth(220)
-        self._progress.setRange(0, 100)
-        self._progress.setVisible(False)
-        self._sb.addPermanentWidget(self._progress)
-        self._sb.showMessage("Ready")
+        # Wire up callbacks
+        self._expenses_tab.on_field_changed   = self._on_field_changed
+        self._expenses_tab.on_exclude         = self._on_exclude_requested
+        self._expenses_tab.on_review          = self._on_review_requested
+        self._review_tab.on_corrected  = self._on_review_correction
+        self._settings_tab.on_reauth          = self._on_reauth
+        self._settings_tab.on_clear_cache     = self._on_clear_cache
+        self._settings_tab.on_data_dir_changed = self._on_data_dir_changed
+        self._settings_tab.on_backend_changed = self._on_backend_changed
+        self._settings_tab.on_training_finished = self._on_training_finished
+        self._charts_tab.on_category_drill    = self._on_chart_category_drill
+
+    # ── Status bar ────────────────────────────────────────────────────────────
+
+    def _build_status_bar(self) -> None:
+        bar = ctk.CTkFrame(self._root, height=28, fg_color=SIDEBAR_BG,
+                            corner_radius=0, border_width=0)
+        bar.grid(row=1, column=0, columnspan=2, sticky="ew")
+        bar.grid_propagate(False)
+
+        self._status_lbl = ctk.CTkLabel(
+            bar, text="Ready",
+            text_color=TEXT_DIM, font=ctk.CTkFont(family="Inter", size=FONT_SIZE_SM),
+            anchor="w",
+        )
+        self._status_lbl.pack(side="left", padx=10)
+
+        self._cancel_btn = ctk.CTkButton(
+            bar, text="✕ Cancel",
+            command=self._on_cancel_fetch,
+            font=ctk.CTkFont(family="Inter", size=11),
+            fg_color="transparent", hover_color=SURFACE_HOVER,
+            text_color=TEXT_DIM, border_color=BORDER_BRIGHT, border_width=1,
+            corner_radius=6, height=22, width=80,
+        )
+        # hidden by default — placed with pack_forget
+        self._cancel_btn_visible = False
+
+        self._progress = ctk.CTkProgressBar(
+            bar,
+            width=200, height=8,
+            fg_color=SURFACE, progress_color=ACCENT,
+            corner_radius=4,
+        )
+        self._progress.set(0)
+        # hidden by default
+        self._progress_visible = False
+
+    def _show_status(self, msg: str) -> None:
+        self._status_lbl.configure(text=msg)
+
+    def _show_progress(self, show: bool) -> None:
+        if show and not self._progress_visible:
+            self._cancel_btn.pack(side="right", padx=(0, 4), pady=3)
+            self._progress.pack(side="right", padx=(0, 8), pady=3)
+            self._progress_visible = True
+        elif not show and self._progress_visible:
+            self._cancel_btn.pack_forget()
+            self._progress.pack_forget()
+            self._progress_visible = False
+
+    # ── Post init ─────────────────────────────────────────────────────────────
 
     def _post_init(self) -> None:
         self._settings_tab.set_db(self._db, self.data_dir, self._config)
@@ -344,36 +418,77 @@ class MainWindow(QMainWindow):
         self._review_tab.set_db(self._db, self.data_dir)
         self._update_stage3_label()
         self._update_review_badge()
-        self._setup_tab_shortcuts()
+        self._setup_shortcuts()
         if not CREDENTIALS_PATH.exists():
-            self._account_pill.setText("⚠ credentials.json missing")
+            self._account_pill.configure(text="⚠ credentials.json missing")
             return
         if is_authenticated(self.data_dir):
-            worker = AuthOnlyWorker(self.data_dir, parent=self)
-            worker.authenticated.connect(self._on_authenticated)
-            worker.labels_ready.connect(self._on_labels_ready)
-            worker.error.connect(lambda msg: logger.warning("Auth-only: %s", msg))
-            worker.start()
+            self._auth_worker = AuthOnlyWorker(
+                data_dir=self.data_dir,
+                on_authenticated=self._on_authenticated,
+                on_labels_ready=self._on_labels_ready,
+                on_error=lambda msg: logger.warning("Auth-only: %s", msg),
+                ui_ref=self._root,
+            )
+            self._auth_worker.start()
+
+    # ── Keyboard shortcuts ────────────────────────────────────────────────────
+
+    def _setup_shortcuts(self) -> None:
+        tab_names = ["📋 Expenses", "📊 Charts", "📈 Trends", "🔍 Review Queue", "⚙️ Settings"]
+        for i, name in enumerate(tab_names, start=1):
+            self._root.bind(f"<Alt-Key-{i}>", lambda e, n=name: self._tabs.set(n))
+        self._root.bind("<Alt-f>", lambda e: (
+            self._on_fetch(force=False) if self._fetch_btn.cget("state") != "disabled" else None
+        ))
+
+    # ── Fetch mode UI toggling ───────────────────────────────────────────────
+
+    def _on_fetch_mode_changed(self, _val: str = "") -> None:
+        mode = self._fetch_mode_var.get()
+        if mode == "Single Month":
+            self._single_row.pack(fill="x", padx=14, pady=2)
+            self._range_row.pack_forget()
+            self._year_only_row.pack_forget()
+        elif mode == "Month Range":
+            self._single_row.pack_forget()
+            self._range_row.pack(fill="x", padx=14, pady=2)
+            self._year_only_row.pack_forget()
+        elif mode == "Full Year":
+            self._single_row.pack_forget()
+            self._range_row.pack_forget()
+            self._year_only_row.pack(fill="x", padx=14, pady=2)
+        else:
+            self._single_row.pack_forget()
+            self._range_row.pack_forget()
+            self._year_only_row.pack_forget()
+
+        labels = {
+            "Single Month":  "🔍 Fetch Expenses",
+            "Month Range":   "🔍 Fetch Date Range",
+            "Full Year":     "🔍 Fetch Full Year",
+            "All Available": "🔍 Load All Cached",
+        }
+        self._fetch_btn.configure(text=labels.get(mode, "🔍 Fetch Expenses"))
 
     # ── Fetch orchestration ───────────────────────────────────────────────────
 
     def _build_fetch_months(self) -> list[tuple[int, int]]:
-        """Return list of (year, month) tuples to fetch based on current mode."""
-        mode = self._fetch_mode.currentText()
-
+        mode = self._fetch_mode_var.get()
         if mode == "Single Month":
-            return [(self._year_combo.currentData(), self._month_combo.currentData())]
+            year  = int(self._year_combo.get())
+            month = _MONTHS_LONG.index(self._month_combo.get()) + 1
+            return [(year, month)]
 
         elif mode == "Full Year":
-            year = self._year_only_combo.currentData()
+            year = int(self._year_only_combo.get())
             return [(year, m) for m in range(1, 13)]
 
         elif mode == "Month Range":
-            fy = self._from_year.currentData()
-            fm = self._from_month.currentData()
-            ty = self._to_year.currentData()
-            tm = self._to_month.currentData()
-            # Swap if from > to
+            fy = int(self._from_year.get())
+            fm = _MONTHS_SHORT.index(self._from_month.get()) + 1
+            ty = int(self._to_year.get())
+            tm = _MONTHS_SHORT.index(self._to_month.get()) + 1
             if (fy, fm) > (ty, tm):
                 fy, fm, ty, tm = ty, tm, fy, fm
             months: list[tuple[int, int]] = []
@@ -383,7 +498,7 @@ class MainWindow(QMainWindow):
                 m += 1
                 if m > 12:
                     m = 1; y += 1
-                if len(months) > 60:   # safety cap: max 5 years
+                if len(months) > 60:
                     break
             return months
 
@@ -392,17 +507,18 @@ class MainWindow(QMainWindow):
                 available = self._db.get_available_months()
                 return [(int(s[:4]), int(s[5:7])) for s in available] if available else \
                        [(_NOW_YEAR, _NOW_MONTH)]
-            except Exception:
+            except Exception as exc:
+                logger.debug("Could not load available months: %s", exc)
                 return [(_NOW_YEAR, _NOW_MONTH)]
 
     def _on_fetch(self, force: bool = False) -> None:
         if not CREDENTIALS_PATH.exists():
-            QMessageBox.warning(self, "Missing credentials.json",
-                                "Place credentials.json in the app directory.")
+            self._msgbox_warning("Missing credentials.json",
+                                  "Place credentials.json in the app directory.")
             return
-        if self._worker and self._worker.isRunning():
+        if self._worker and self._worker.is_alive():
             self._worker.abort()
-            self._worker.wait(2000)
+            self._worker.join(2)
 
         months = self._build_fetch_months()
         if not months:
@@ -412,14 +528,17 @@ class MainWindow(QMainWindow):
         self._fetch_accumulated = []
         self._fetch_total       = len(months)
         self._fetch_force       = force
-        self._fetch_label_id    = self._label_combo.currentData()
+        # Map current label selection
+        curr_label = self._label_var.get()
+        self._fetch_label_id = next(
+            (lbl["id"] for lbl in self._labels if lbl["name"] == curr_label.strip("📂 ")),
+            None
+        )
 
-        self._fetch_btn.setEnabled(False)
-        self._refresh_btn.setEnabled(False)
-        self._cancel_btn.setVisible(True)
-        self._progress.setRange(0, 100)
-        self._progress.setValue(0)
-        self._progress.setVisible(True)
+        self._fetch_btn.configure(state="disabled")
+        self._refresh_btn.configure(state="disabled")
+        self._show_progress(True)
+        self._progress.set(0)
         self._expenses_tab.clear()
         self._charts_tab.clear()
 
@@ -432,52 +551,47 @@ class MainWindow(QMainWindow):
 
         year, month = self._fetch_queue.pop(0)
         done = self._fetch_total - len(self._fetch_queue) - 1
-        self._sb.showMessage(
-            f"Fetching {calendar.month_name[month]} {year}…"
-            + (f" ({done + 1}/{self._fetch_total})" if self._fetch_total > 1 else "")
-        )
+        suffix = f" ({done + 1}/{self._fetch_total})" if self._fetch_total > 1 else ""
+        self._show_status(f"Fetching {calendar.month_name[month]} {year}…{suffix}")
+
         rules = self._settings_tab.get_custom_rules()
         self._worker = GmailWorker(
             data_dir=self.data_dir, year=year, month=month,
             label_id=self._fetch_label_id, force_refresh=self._fetch_force,
-            custom_rules=rules, parent=self,
+            custom_rules=rules,
+            on_progress=self._on_month_progress,
+            on_status=self._show_status,
+            on_authenticated=self._on_authenticated,
+            on_labels_ready=self._on_labels_ready,
+            on_finished=self._on_month_fetch_finished,
+            on_error=self._on_worker_error,
+            ui_ref=self._root,
         )
-        self._worker.progress.connect(self._on_month_progress)
-        self._worker.status.connect(self._sb.showMessage)
-        self._worker.authenticated.connect(self._on_authenticated)
-        self._worker.labels_ready.connect(self._on_labels_ready)
-        self._worker.finished.connect(self._on_month_fetch_finished)
-        self._worker.error.connect(self._on_worker_error)
         self._worker.start()
 
     def _on_month_progress(self, current: int, total: int) -> None:
         done = self._fetch_total - len(self._fetch_queue) - 1
-        base_pct = done / self._fetch_total * 100
-        if total > 0:
-            month_pct = current / total * (100 / self._fetch_total)
-        else:
-            month_pct = 100 / self._fetch_total
-        self._progress.setValue(int(base_pct + month_pct))
+        base_pct = done / self._fetch_total
+        month_pct = (current / total / self._fetch_total) if total > 0 else (1 / self._fetch_total)
+        self._progress.set(min(base_pct + month_pct, 1.0))
 
     def _on_month_fetch_finished(self, rows: list) -> None:
         self._fetch_accumulated.extend(rows)
         done = self._fetch_total - len(self._fetch_queue)
-        self._progress.setValue(int(done / self._fetch_total * 100))
+        self._progress.set(done / self._fetch_total)
         self._start_next_fetch()
 
     def _on_all_fetches_complete(self) -> None:
         rows = self._fetch_accumulated
         self._current_rows = rows
 
-        # Determine chart year/month: most recent fetched month
         now = datetime.now()
         chart_year, chart_month = now.year, now.month
-
-        # Compute previous-month total for MoM delta (single-month only)
         prev_total: Optional[float] = None
-        if self._fetch_total == 1 and self._fetch_mode.currentText() == "Single Month":
-            chart_year  = self._year_combo.currentData()
-            chart_month = self._month_combo.currentData()
+
+        if self._fetch_total == 1 and self._fetch_mode_var.get() == "Single Month":
+            chart_year  = int(self._year_combo.get())
+            chart_month = _MONTHS_LONG.index(self._month_combo.get()) + 1
             prev_total  = self._compute_prev_month_total(chart_year, chart_month)
 
         self._expenses_tab.set_db(self._db)
@@ -486,34 +600,32 @@ class MainWindow(QMainWindow):
         self._settings_tab.refresh()
         self._review_tab.refresh()
         self._update_review_badge()
-        self._fetch_btn.setEnabled(True)
-        self._refresh_btn.setEnabled(True)
-        self._cancel_btn.setVisible(False)
-        self._progress.setVisible(False)
-        self._update_summary_card(rows, prev_total)
 
-        # Update last-fetched timestamp
-        self._last_fetched_lbl.setText(
-            f"Last fetched: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        self._fetch_btn.configure(state="normal")
+        self._refresh_btn.configure(state="normal")
+        self._show_progress(False)
+        self._update_summary_card(rows, prev_total)
+        self._last_fetched_lbl.configure(
+            text=f"Last fetched: {datetime.now().strftime('%H:%M')}",
+            text_color=SUCCESS,
         )
-        self._last_fetched_lbl.setStyleSheet(f"color: {SUCCESS}; font-size: 11px;")
+        self._show_status(f"✅ Loaded {len(rows)} expense(s)" if rows else "No expenses found.")
 
         if not rows:
             n = self._fetch_total
             label = "the selected period" if n > 1 else \
-                    f"{calendar.month_name[self._month_combo.currentData()]} {self._year_combo.currentData()}"
-            QMessageBox.information(self, "No Expenses Found",
-                                    f"No expense emails found for {label}.")
+                    f"{_MONTHS_LONG[_MONTHS_LONG.index(self._month_combo.get())]} {self._year_combo.get()}"
+            self._msgbox_info("No Expenses Found",
+                               f"No expense emails found for {label}.")
 
     def _on_cancel_fetch(self) -> None:
-        if self._worker and self._worker.isRunning():
+        if self._worker and self._worker.is_alive():
             self._worker.abort()
         self._fetch_queue = []
-        self._fetch_btn.setEnabled(True)
-        self._refresh_btn.setEnabled(True)
-        self._cancel_btn.setVisible(False)
-        self._progress.setVisible(False)
-        self._sb.showMessage("Fetch cancelled.")
+        self._fetch_btn.configure(state="normal")
+        self._refresh_btn.configure(state="normal")
+        self._show_progress(False)
+        self._show_status("Fetch cancelled.")
 
     def _compute_prev_month_total(self, year: int, month: int) -> Optional[float]:
         prev_m = month - 1 if month > 1 else 12
@@ -526,80 +638,44 @@ class MainWindow(QMainWindow):
                 (r.get("amount_edited") or r.get("amount") or 0)
                 for r in rows if r.get("status") != "excluded"
             )
-        except Exception:
-            return None
-
-    # ── Auth ──────────────────────────────────────────────────────────────────
+        except Exception as exc:
+            logger.debug("Could not compute prev month total: %s", exc)
+            return None────────────────────────────────────────────────────────────────
 
     def _on_connect(self) -> None:
         if not CREDENTIALS_PATH.exists():
-            QMessageBox.warning(self, "Missing credentials.json",
-                                f"Place credentials.json in:\n{CREDENTIALS_PATH}")
+            self._msgbox_warning("Missing credentials.json",
+                                  f"Place credentials.json in:\n{CREDENTIALS_PATH}")
             return
-        self._account_pill.setText("Connecting…")
-        worker = AuthOnlyWorker(self.data_dir, parent=self)
-        worker.authenticated.connect(self._on_authenticated)
-        worker.labels_ready.connect(self._on_labels_ready)
-        worker.error.connect(self._on_worker_error)
-        worker.start()
-        self._worker = worker
+        self._account_pill.configure(text="Connecting…", text_color=TEXT_DIM)
+        self._auth_worker = AuthOnlyWorker(
+            data_dir=self.data_dir,
+            on_authenticated=self._on_authenticated,
+            on_labels_ready=self._on_labels_ready,
+            on_error=self._on_worker_error,
+            ui_ref=self._root,
+        )
+        self._auth_worker.start()
 
     def _on_authenticated(self, email: str) -> None:
-        self._account_pill.setText(f"● {email}")
-        self._account_pill.setProperty("connected", True)
-        self._account_pill.style().unpolish(self._account_pill)
-        self._account_pill.style().polish(self._account_pill)
-        self._connect_btn.setVisible(False)
-        self._sb.showMessage(f"Connected as {email}")
+        self._account_pill.configure(
+            text=f"● {email}", text_color=SUCCESS, fg_color=SUCCESS_BG,
+        )
+        self._connect_btn.pack_forget()
+        self._show_status(f"Connected as {email}")
 
     def _on_labels_ready(self, labels: list) -> None:
         self._labels = labels
-        self._label_combo.clear()
-        self._label_combo.addItem("All Mail", None)
-        for lbl in labels:
-            self._label_combo.addItem(lbl["name"], lbl["id"])
+        names = ["📂 All Mail"] + [lbl["name"] for lbl in labels]
+        self._label_combo.configure(values=names)
+        self._label_var.set("📂 All Mail")
 
-    # ── Field change (with real-time chart refresh) ───────────────────────────
-
-    def _on_field_changed(self, msg_id: str, field: str, value) -> None:
-        try:
-            self._db.update_expense_field(msg_id, field, value)
-        except Exception as exc:
-            logger.error("Persist failed %s/%s: %s", msg_id, field, exc)
-
-        # When status → review, also set needs_review flag
-        if field == "status" and value == "review":
-            try:
-                self._db.conn.execute(
-                    "UPDATE expenses SET needs_review = 1 WHERE id = ?", (msg_id,)
-                )
-                self._db.conn.commit()
-            except Exception as exc:
-                logger.error("Could not set needs_review: %s", exc)
-
-        # Update in-memory copy for chart refresh
-        for r in self._current_rows:
-            if r.get("id") == msg_id:
-                r[field] = value
-                break
-
-        # Real-time chart + summary refresh on data changes
-        if field in ("amount_edited", "category_edited", "status"):
-            y = self._year_combo.currentData() if self._fetch_mode.currentText() == "Single Month" \
-                else datetime.now().year
-            m = self._month_combo.currentData() if self._fetch_mode.currentText() == "Single Month" \
-                else datetime.now().month
-            self._charts_tab.update_charts(self._current_rows, y, m)
-            self._update_summary_card(self._current_rows)
-
-        if field == "status":
-            self._review_tab.refresh()
-            self._update_review_badge()
+    # ── Summary card ──────────────────────────────────────────────────────────
 
     def _update_summary_card(self, rows: list, prev_total: Optional[float] = None) -> None:
         active = [r for r in rows if r.get("status") != "excluded"]
         if not active:
-            self._summary_card.update("—", "—", "—", "")
+            self._summary_frame.update("—", "—", "—", "")
             return
         total = sum(r.get("amount_edited") or r.get("amount") or 0 for r in active)
         cat_totals: dict[str, float] = defaultdict(float)
@@ -614,27 +690,56 @@ class MainWindow(QMainWindow):
             arrow = "↑" if delta_pct >= 0 else "↓"
             delta_str = f"{arrow}{abs(delta_pct):.1f}% vs prev"
 
-        self._summary_card.update(f"₹{total:,.0f}", f"{len(active)} txns", top_cat[:14], delta_str)
+        self._summary_frame.update(f"₹{total:,.0f}", f"{len(active)} txns", top_cat[:14], delta_str)
 
-    # ── Worker errors ─────────────────────────────────────────────────────────
+    # ── Field change ──────────────────────────────────────────────────────────
+
+    def _on_field_changed(self, msg_id: str, field: str, value) -> None:
+        try:
+            self._db.update_expense_field(msg_id, field, value)
+        except Exception as exc:
+            logger.error("Persist failed %s/%s: %s", msg_id, field, exc)
+
+        if field == "status" and value == "review":
+            try:
+                self._db.conn.execute(
+                    "UPDATE expenses SET needs_review = 1 WHERE id = ?", (msg_id,)
+                )
+                self._db.conn.commit()
+            except Exception as exc:
+                logger.error("Could not set needs_review: %s", exc)
+
+        for r in self._current_rows:
+            if r.get("id") == msg_id:
+                r[field] = value
+                break
+
+        if field in ("amount_edited", "category_edited", "status"):
+            y = int(self._year_combo.get()) if self._fetch_mode_var.get() == "Single Month" \
+                else _NOW_YEAR
+            m = (_MONTHS_LONG.index(self._month_combo.get()) + 1) \
+                if self._fetch_mode_var.get() == "Single Month" else _NOW_MONTH
+            self._charts_tab.update_charts(self._current_rows, y, m)
+            self._update_summary_card(self._current_rows)
+
+        if field == "status":
+            self._review_tab.refresh()
+            self._update_review_badge()
+
+    # ── Worker error ──────────────────────────────────────────────────────────
 
     def _on_worker_error(self, msg: str) -> None:
-        self._fetch_btn.setEnabled(True)
-        self._refresh_btn.setEnabled(True)
-        self._cancel_btn.setVisible(False)
-        self._progress.setVisible(False)
-        self._sb.showMessage("❌ Error")
-        QMessageBox.critical(self, "Error", msg)
+        self._fetch_btn.configure(state="normal")
+        self._refresh_btn.configure(state="normal")
+        self._show_progress(False)
+        self._show_status("❌ Error")
+        self._msgbox_error("Error", msg)
 
-    # ── Tab signal handlers ───────────────────────────────────────────────────
+    # ── Tab signal equivalents ────────────────────────────────────────────────
 
     def _on_exclude_requested(self, msg_id: str, sender_email: str) -> None:
-        reply = QMessageBox.question(
-            self, "Add to Ignore List?",
-            f"Also ignore future emails from {sender_email}?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if reply == QMessageBox.StandardButton.Yes:
+        if self._msgbox_yesno("Add to Ignore List?",
+                               f"Also ignore future emails from {sender_email}?"):
             self._db.add_ignore("sender", sender_email)
             self._settings_tab._load_ignore_list()
 
@@ -655,59 +760,48 @@ class MainWindow(QMainWindow):
 
     def _on_training_finished(self, success: bool, message: str) -> None:
         if success:
-            self._sb.showMessage("✅ Model training completed.", 5000)
+            self._show_status("✅ Model training completed.")
         else:
-            self._sb.showMessage(f"❌ Training failed: {message}", 8000)
+            self._show_status(f"❌ Training failed: {message}")
 
     def _on_chart_category_drill(self, category: str) -> None:
-        """When user clicks a chart segment, filter the Expenses tab to that category."""
-        self._tabs.setCurrentWidget(self._expenses_tab)
+        self._tabs.set("📋 Expenses")
         self._expenses_tab.filter_by_category(category)
 
     # ── Review badge ──────────────────────────────────────────────────────────
 
     def _update_review_badge(self) -> None:
         count = self._review_tab.get_review_count()
-        review_idx = self._tabs.indexOf(self._review_tab)
-        if count > 0:
-            badge_color = ERROR if count > 10 else WARNING if count > 5 else ACCENT
-            badge = (f" 🔍 <span style='background-color: {badge_color}; "
-                     f"color: {BG}; padding: 2px 8px; border-radius: 12px; "
-                     f"font-size: 11px; font-weight: 600;'>{count}</span>")
-            self._tabs.setTabText(review_idx, f"Review Queue{badge}")
-        else:
-            self._tabs.setTabText(review_idx, "🔍 Review Queue")
+        badge = f"🔍 Review Queue" + (f" ({count})" if count > 0 else "")
+        self._tabs.tab("🔍 Review Queue")  # tab always exists; text is the key in CTkTabview
 
-    # ── Settings handlers ─────────────────────────────────────────────────────
+    # ── Settings callbacks ────────────────────────────────────────────────────
 
     def _on_reauth(self) -> None:
         revoke_credentials(self.data_dir)
-        self._account_pill.setText("Not connected")
-        self._connect_btn.setVisible(True)
-        QMessageBox.information(self, "Re-authenticate",
-                                "Cleared. Click Connect Gmail to log in again.")
+        self._account_pill.configure(text="Not connected", text_color=TEXT_DIM, fg_color=SURFACE)
+        self._connect_btn.pack(fill="x", padx=14, pady=(0, 6))
+        self._msgbox_info("Re-authenticate",
+                           "Cleared. Click Connect Gmail to log in again.")
 
     def _on_clear_cache(self, month_str: str) -> None:
         if not month_str:
-            if self._fetch_mode.currentText() == "Single Month":
-                year  = self._year_combo.currentData()
-                month = self._month_combo.currentData()
+            if self._fetch_mode_var.get() == "Single Month":
+                year  = int(self._year_combo.get())
+                month = _MONTHS_LONG.index(self._month_combo.get()) + 1
                 month_str = f"{year}-{month:02d}"
             else:
                 month_str = f"{_NOW_YEAR}-{_NOW_MONTH:02d}"
-        reply = QMessageBox.question(self, "Clear Cache",
-            f"Delete cached expenses for {month_str}?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        if reply == QMessageBox.StandardButton.Yes:
+        if self._msgbox_yesno("Clear Cache", f"Delete cached expenses for {month_str}?"):
             self._db.delete_month(month_str)
             self._expenses_tab.clear()
             self._charts_tab.clear()
-            self._sb.showMessage(f"Cache cleared for {month_str}.")
+            self._show_status(f"Cache cleared for {month_str}.")
 
     def _on_data_dir_changed(self, new_path: Path) -> None:
-        QMessageBox.information(self, "Restart Required",
-            f"Data directory will change to:\n{new_path}\n\nRestart the app to apply.")
-        _save_bootstrap_path(new_path)
+        self._msgbox_info("Restart Required",
+                           f"Data directory will change to:\n{new_path}\n\nRestart the app to apply.")
+        _BOOTSTRAP_FILE.write_text(str(new_path))
 
     def _on_backend_changed(self, backend: str) -> None:
         self._update_stage3_label()
@@ -716,138 +810,81 @@ class MainWindow(QMainWindow):
         try:
             from classifier.config import _load_stage3_backend
             backend = _load_stage3_backend()
-        except Exception:
+        except Exception as exc:
+            logger.debug("Could not load stage3 backend: %s", exc)
             backend = "distilbert"
         if backend == "phi4-mini":
-            ollama_ok = self._check_ollama()
-            if ollama_ok:
-                self._stage3_lbl.setText("🦙 Stage 3: phi4-mini ✅")
-                self._stage3_lbl.setStyleSheet(f"color: {SUCCESS};")
-            else:
-                self._stage3_lbl.setText("🦙 Stage 3: phi4-mini ⚠️")
-                self._stage3_lbl.setStyleSheet(f"color: {WARNING};")
+            import urllib.request
+            try:
+                urllib.request.urlopen("http://localhost:11434", timeout=2)
+                self._stage3_lbl.configure(text="🦙 Stage 3: phi4-mini ✅", text_color=SUCCESS)
+            except Exception:
+                self._stage3_lbl.configure(text="🦙 Stage 3: phi4-mini ⚠️", text_color=WARNING)
         else:
-            self._stage3_lbl.setText("🧠 Stage 3: DistilBERT")
-            self._stage3_lbl.setStyleSheet(f"color: {TEXT_DIM};")
+            self._stage3_lbl.configure(text="🧠 Stage 3: DistilBERT", text_color=TEXT_DIM)
 
-    def _check_ollama(self) -> bool:
-        import urllib.request
-        try:
-            urllib.request.urlopen("http://localhost:11434", timeout=2)
-            return True
-        except Exception:
-            return False
+    # ── Dialogs ───────────────────────────────────────────────────────────────
 
-    # ── Keyboard shortcuts ────────────────────────────────────────────────────
+    def _msgbox_info(self, title: str, msg: str) -> None:
+        import tkinter.messagebox as mb
+        mb.showinfo(title, msg)
 
-    def _setup_tab_shortcuts(self) -> None:
-        for key_seq, index in [
-            (QKeySequence("Alt+1"), 0),
-            (QKeySequence("Alt+2"), 1),
-            (QKeySequence("Alt+3"), 2),
-            (QKeySequence("Alt+4"), 3),
-            (QKeySequence("Alt+5"), 4),
-        ]:
-            sc = QShortcut(key_seq, self)
-            sc.activated.connect(lambda i=index: self._tabs.setCurrentIndex(i))
+    def _msgbox_warning(self, title: str, msg: str) -> None:
+        import tkinter.messagebox as mb
+        mb.showwarning(title, msg)
 
-        fetch_sc = QShortcut(QKeySequence("Alt+F"), self)
-        fetch_sc.activated.connect(
-            lambda: self._fetch_btn.click() if self._fetch_btn.isEnabled() else None
-        )
+    def _msgbox_error(self, title: str, msg: str) -> None:
+        import tkinter.messagebox as mb
+        mb.showerror(title, msg)
+
+    def _msgbox_yesno(self, title: str, msg: str) -> bool:
+        import tkinter.messagebox as mb
+        return mb.askyesno(title, msg)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    def closeEvent(self, event) -> None:
-        if self._worker and self._worker.isRunning():
+    def _on_close(self) -> None:
+        if self._worker and self._worker.is_alive():
             self._worker.abort()
-            self._worker.wait(3000)
+            self._worker.join(3)
         self._db.close()
-        event.accept()
+        self._root.destroy()
 
 
-# ── Summary card ──────────────────────────────────────────────────────────────
+# ── Summary card widget ───────────────────────────────────────────────────────
 
-class _SummaryCard(QFrame):
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
-        self.setObjectName("summaryCard")
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(10, 8, 10, 8)
-        lay.setSpacing(3)
+class _SummaryCard(ctk.CTkFrame):
+    def __init__(self, parent) -> None:
+        super().__init__(parent, fg_color=SURFACE, corner_radius=8, border_color=BORDER, border_width=1)
 
-        # Total — large prominent value
-        self._total_lbl = QLabel("—")
-        self._total_lbl.setObjectName("cardValue")
-        self._total_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(self._total_lbl)
+        self._total_lbl = ctk.CTkLabel(
+            self, text="—",
+            font=ctk.CTkFont(family="Inter", size=18, weight="bold"),
+            text_color=TEXT,
+        )
+        self._total_lbl.pack(pady=(8, 2))
 
-        # Count + Top Category side by side
-        mid_row = QWidget()
-        mid_lay = QHBoxLayout(mid_row)
-        mid_lay.setContentsMargins(0, 0, 0, 0)
-        mid_lay.setSpacing(4)
+        mid = ctk.CTkFrame(self, fg_color="transparent")
+        mid.pack(fill="x", padx=8, pady=(0, 2))
+        self._count_lbl = ctk.CTkLabel(
+            mid, text="—", anchor="w",
+            font=ctk.CTkFont(family="Inter", size=11), text_color=TEXT_DIM,
+        )
+        self._count_lbl.pack(side="left", fill="x", expand=True)
+        self._cat_lbl = ctk.CTkLabel(
+            mid, text="—", anchor="e",
+            font=ctk.CTkFont(family="Inter", size=11), text_color=TEXT_DIM,
+        )
+        self._cat_lbl.pack(side="right", fill="x", expand=True)
 
-        self._count_lbl = QLabel("—")
-        self._count_lbl.setObjectName("statusLabel")
-        self._count_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self._cat_lbl = QLabel("—")
-        self._cat_lbl.setObjectName("statusLabel")
-        self._cat_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self._cat_lbl.setWordWrap(False)
+        self._delta_lbl = ctk.CTkLabel(
+            self, text="",
+            font=ctk.CTkFont(family="Inter", size=10), text_color=TEXT_DIM,
+        )
+        self._delta_lbl.pack(pady=(0, 8))
 
-        mid_lay.addWidget(self._count_lbl, stretch=1)
-        mid_lay.addWidget(self._cat_lbl,   stretch=1)
-        lay.addWidget(mid_row)
-
-        # MoM delta
-        self._delta_lbl = QLabel("")
-        self._delta_lbl.setObjectName("statusLabel")
-        self._delta_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._delta_lbl.setVisible(False)
-        lay.addWidget(self._delta_lbl)
-
-    def update(self, total: str, count: str, top_cat: str, delta: str = "") -> None:
-        self._total_lbl.setText(total)
-        self._count_lbl.setText(f"📦 {count}")
-        self._cat_lbl.setText(f"🏆 {top_cat}")
-        if delta:
-            color = WARNING if delta.startswith("↑") else SUCCESS
-            self._delta_lbl.setText(delta)
-            self._delta_lbl.setStyleSheet(f"font-size: 11px; font-weight:600; color: {color};")
-            self._delta_lbl.setVisible(True)
-        else:
-            self._delta_lbl.setVisible(False)
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _sep() -> QFrame:
-    line = QFrame()
-    line.setFrameShape(QFrame.Shape.HLine)
-    line.setObjectName("separator")
-    return line
-
-
-def _section_label(text: str) -> QLabel:
-    lbl = QLabel(text)
-    lbl.setObjectName("sectionLabel")
-    return lbl
-
-
-def _load_config(data_dir: Path) -> dict:
-    config_path = data_dir / "config.json"
-    if config_path.exists():
-        try:
-            return json.loads(config_path.read_text())
-        except Exception:
-            pass
-    return {"custom_rules": []}
-
-
-def _save_bootstrap_path(path: Path) -> None:
-    bootstrap = Path.home() / ".expense-tracker-path"
-    try:
-        bootstrap.write_text(str(path))
-    except OSError as exc:
-        logger.error("Could not save bootstrap: %s", exc)
+    def update(self, total: str, count: str, top_cat: str, delta: str) -> None:
+        self._total_lbl.configure(text=total)
+        self._count_lbl.configure(text=count)
+        self._cat_lbl.configure(text=top_cat)
+        self._delta_lbl.configure(text=delta)

@@ -231,3 +231,37 @@ class Database:
             (category, amount),
         )
         self.conn.commit()
+
+    # ── Review-queue helpers ──────────────────────────────────────────────────
+
+    def set_expense_status(self, msg_id: str, status: str) -> None:
+        """Update the status field for an expense row."""
+        self.conn.execute(
+            "UPDATE expenses SET status=? WHERE id=?", (status, msg_id)
+        )
+        self.conn.commit()
+
+    def set_expense_category(self, msg_id: str, category: str) -> None:
+        """Update the category_edited field for an expense row."""
+        self.conn.execute(
+            "UPDATE expenses SET category_edited=? WHERE id=?", (category, msg_id)
+        )
+        self.conn.commit()
+
+    def upsert_human_correction(
+        self, msg_id: str, subject: str, sender: str,
+        true_label: str, true_category: Optional[str] = None,
+    ) -> None:
+        """Record a human correction to data/feedback.csv for retraining."""
+        feedback_path = self.db_path.parent / "feedback.csv"
+        file_exists = feedback_path.exists()
+        try:
+            import csv
+            with open(feedback_path, "a", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                if not file_exists:
+                    writer.writerow(["subject", "body", "sender", "label"])
+                writer.writerow([subject, "", sender, true_label])
+            logger.info("Recorded human correction for %s → %s", msg_id, true_label)
+        except OSError as exc:
+            logger.warning("Failed to write feedback.csv: %s", exc)
