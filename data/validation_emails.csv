@@ -1,0 +1,124 @@
+subject,body,sender,label
+Medical store,Pharmacy bill ₹580 paid at local chemist.,billing@chemist.com,EXPENSE
+Legal software,DocuSign subscription ₹2800/month charged.,billing@docusign.com,EXPENSE
+Axis card payment due,Axis Bank credit card: ₹25800 due on April 12. Minimum due: ₹2580.,payments@axisbank.com,EXPENSE
+Postage charges for courier,India Post speed post charges of ₹120 debited for consignment EE123456789IN.,noreply@indiapost.gov.in,EXPENSE
+API service,OpenAI API usage $48.00 for March.,billing@openai.com,EXPENSE
+Axis card bill,Axis Bank credit card bill for March: ₹24500. Payment due: April 8. Avoid late fees.,bills@axisbank.com,EXPENSE
+Transaction alert,ICICI Bank Credit Card used for ₹1200 at online merchant.,credit_cards@icicibank.com,EXPENSE
+Firewall,Check Point subscription ₹55000/month.,billing@checkpoint.com,EXPENSE
+New credit card bill,Your Kotak811 credit card bill for March is ready. Total outstanding: ₹18900. Minimum due: ₹1890.,bills@kotak.com,EXPENSE
+Office supplies,Your order for office supplies from Amazon Business is confirmed. Total: ₹1800.,business@amazon.in,EXPENSE
+Security scan,Snyk subscription ₹3500/month charged.,billing@snyk.io,EXPENSE
+Payment of INR 10.00 successful,Your UPI payment of INR 10.00 to merchant was successful. UPI Ref: 123456789.,no-reply@kotak.com,EXPENSE
+Vehicle insurance,United India vehicle insurance ₹6800 paid. Policy: VL-2024-901.,insurance@uiic.co.in,EXPENSE
+Music streaming,YouTube Music Premium ₹149/month charged.,billing@youtube.com,EXPENSE
+Credit card statement,Your HDFC credit card bill of ₹15432 is due on 10th. Minimum due: ₹775.,statement@hdfc.com,EXPENSE
+Flipkart Pay Later bill,Your Flipkart Pay Later bill of ₹2100 for February is due. Pay by March 15.,billing@flipkart.com,EXPENSE
+Term life insurance,HDFC Life term insurance premium ₹22000 auto-debited. Policy: TL-2024-234.,premium@hdfclife.com,EXPENSE
+Penetration testing,Bugcrowd subscription ₹22000/month.,billing@bugcrowd.com,EXPENSE
+Credit card bill generated,Your HDFC credit card bill for the period Feb 15 - Mar 15 has been generated. Total due: ₹24500. Payment due: March 25.,statements@hdfcbank.com,EXPENSE
+Performance,WebPageTest subscription ₹1050/month.,billing@webpagetest.org,EXPENSE
+ICICI Bank locker rental,Annual locker rental charge of ₹3500 debited from your ICICI Bank account.,charges@icicibank.com,EXPENSE
+Yes Bank card dues,Yes Bank credit card outstanding: ₹18900. Last date to pay: April 18.,yescreditcards@yesbank.in,EXPENSE
+PNB card dues,PNB credit card dues: ₹20300. Due: April 18. Minimum: ₹2030.,cards@pnb.co.in,EXPENSE
+Landing pages,Unbounce subscription ₹1200/month charged.,billing@unbounce.com,EXPENSE
+CDN AWS,AWS CloudFront bill $8.50 for March bandwidth.,billing@aws.amazon.com,EXPENSE
+Development tool,GitHub Copilot subscription ₹750/month charged.,billing@github.com,EXPENSE
+Amazon Pay recharge done,Amazon Pay wallet recharged with ₹500 from your bank account.,amazonpay@amazon.in,EXPENSE
+ICICI locker,Annual locker rental ₹4000 debited from ICICI account.,charges@icicibank.com,EXPENSE
+IDE,Replit subscription ₹850/month.,billing@replit.com,EXPENSE
+Angel One,Brokerage ₹25 charged for F&O trade. Contract note attached.,trades@angelone.in,EXPENSE
+DLP,Symantec DLP subscription ₹45000/month.,billing@symantec.com,EXPENSE
+Canva Pro,Canva Pro subscription ₹599 charged to card. Monthly plan active.,billing@canva.com,EXPENSE
+DNS,AWS Route 53 bill $8.50 for March.,billing@aws.amazon.com,EXPENSE
+Database,PlanetScale subscription $29/month.,billing@planetscale.com,EXPENSE
+PaaS,Heroku subscription ₹4500/month for dyno usage.,billing@heroku.com,EXPENSE
+VPN,Surfshark Business subscription ₹950/user/month.,billing@surfshark.com,EXPENSE
+Antivirus,Kaspersky Enterprise subscription ₹18000/month.,billing@kaspersky.com,EXPENSE
+RBL card bill,RBL Bank credit card bill generated: ₹15600. Minimum due: ₹1560. Due: April 8.,bills@rblbank.com,EXPENSE
+Airtel bill,Airtel postpaid bill ₹699 paid via autopay.,billing@airtel.in,EXPENSE
+1Password,1Password Families subscription ₹280 charged. Monthly plan active.,billing@1password.com,EXPENSE
+Personalization,Dynamic Yield subscription ₹18000/month.,billing@dynamicyield.com,EXPENSE
+Content,BuzzStream subscription ₹2500/month charged.,billing@buzzstream.com,EXPENSE
+Metro water bill,Chennai Metro Water bill: ₹520. Due: April 5. Consumer: CMW123456.,payments@cmwssb.tn.gov.in,EXPENSE
+Tax,TurboTax subscription ₹650/season charged.,billing@turbotax.com,EXPENSE
+Myntra order,"Myntra order confirmed. 3 items, total ₹2400 via credit card.",orders@myntra.com,EXPENSE
+India Post,Speed post charges ₹95 for consignment EE987654321IN.,noreply@indiapost.gov.in,EXPENSE
+FreshToHome order,Your FreshToHome seafood order worth ₹780 has been shipped. Delivery by tomorrow.,orders@freshtohome.com,EXPENSE
+Late payment fee added,A late payment fee of ₹100 has been added to your credit card account.,cards@bank.com,EXPENSE
+Service mesh,Istio subscription ₹12000/month.,billing@istio.io,EXPENSE
+Newspaper digital subscription,Your Hindu e-paper annual subscription of ₹999 has been activated.,subscription@thehindu.com,EXPENSE
+Amazon Subscribe and Save,Your Subscribe and Save order has been placed. 5 items totaling ₹1890. Next delivery April 15.,subscribe@amazon.in,EXPENSE
+Social media,Buffer subscription ₹950/month charged.,billing@buffer.com,EXPENSE
+Passport fee,Passport application fee ₹1500 paid online. ID: PA-2026-890.,receipts@passportindia.gov.in,EXPENSE
+Recruitment,Greenhouse subscription ₹8500/month charged.,billing@greenhouse.io,EXPENSE
+NoBroker stamp duty,Stamp duty ₹450 for rental agreement via NoBroker.,charges@nobroker.in,EXPENSE
+Electricity bill generated,Your BSES electricity bill for March is generated. Amount: ₹2450. Due date: April 10.,bills@bsesdelhi.com,EXPENSE
+Online transaction,INR 890 successful on Kotak debit card at online merchant.,alerts@kotak.com,EXPENSE
+Apple subscription,iCloud+ 50GB plan renewed. ₹75 charged to card.,no-reply@email.apple.com,EXPENSE
+Version control,GitHub Enterprise subscription $28/user/month.,billing@github.com,EXPENSE
+Credit card dues notification,Your AU Small Finance Bank credit card dues: ₹14200. Payment due: March 29. Minimum due: ₹1420.,reminders@aubank.com,EXPENSE
+Dunzo daily delivery,Your Dunzo Daily order has been delivered. Total: ₹180. Charged to wallet.,noreply@dunzo.com,EXPENSE
+Forms,Typeform subscription ₹950/month charged.,billing@typeform.com,EXPENSE
+Email security,Proofpoint subscription ₹35000/month.,billing@proofpoint.com,EXPENSE
+Kotak debit,Kotak account debited ₹5000. Transaction ID: TXN2026032501.,alerts@kotak.com,EXPENSE
+Buffer,Buffer Pro subscription ₹950 charged. Monthly plan renewed.,billing@buffer.com,EXPENSE
+Google Play,Purchase of ₹89 on Google Play. Order: GPA.1234-5678.,payments-noreply@google.com,EXPENSE
+Decathlon,Decathlon sports shoes confirmed. ₹2499 via UPI.,orders@decathlon.in,EXPENSE
+Kotak card dues,Kotak811 credit card dues: ₹23400. Last date: April 10. Minimum: ₹2340.,yescreditcards@yesbank.in,EXPENSE
+CDN service,Cloudflare bill $12.00 for March usage.,billing@cloudflare.com,EXPENSE
+Noise smartwatch order,Your Noise ColorFit Pro 5 order confirmed. Amount: ₹3499. Paid via PhonePe.,orders@gonoise.com,EXPENSE
+Reviews,Yotpo subscription ₹3200/month charged.,billing@yotpo.com,EXPENSE
+Indeed Premium,Indeed Premium ₹1500 charged. Annual plan active.,billing@indeed.com,EXPENSE
+Paytm FASTag,Paytm FASTag charged ₹120 at toll plaza on NH-48.,fastag@paytm.com,EXPENSE
+Project mgmt,Monday.com subscription ₹650/user/month.,billing@monday.com,EXPENSE
+Observability,Prometheus subscription ₹2500/month.,billing@prometheus.io,EXPENSE
+ACT Fibernet,ACT Fibernet bill of ₹1199 for March paid. Due: April 15.,billing@actcorp.in,EXPENSE
+Email marketing,Mailchimp monthly plan ₹950 charged to card.,billing@mailchimp.com,EXPENSE
+Airtel broadband bill,Your Airtel broadband bill of ₹999 for March is paid. Due date: April 10.,billing@airtel.in,EXPENSE
+Electricity bill paid,Your electricity bill payment of Rs 1840 for account 123456 is confirmed.,bills@bsesdelhi.com,EXPENSE
+Interest credited,Quarterly interest of ₹1850 credited to your savings account.,interest@bank.com,NOT_EXPENSE
+Points redeemed,You redeemed 1000 reward points for ₹1000 discount.,rewards@loyalty.com,NOT_EXPENSE
+Quiz reward,Quiz reward: ₹100 for answering daily quiz correctly.,quiz@bank.com,NOT_EXPENSE
+Preference center,Update your email preferences and notification settings.,preferences@mailer.com,NOT_EXPENSE
+Your feedback helped improve us,"Thanks to your feedback, we've improved our service. Here's what's new.",product@company.com,NOT_EXPENSE
+E-mandate registration successful,Your e-mandate for SIP auto-debit has been registered successfully. No payment deducted yet.,noreply@bsestarmf.in,NOT_EXPENSE
+Weekly challenge: Collaboration,This week's challenge: Collaborate with another user.,challenges@platform.com,NOT_EXPENSE
+User feedback,Your recent feedback has helped us improve our platform. Thank you!,feedback@company.com,NOT_EXPENSE
+Storage full warning,Your cloud storage is 90% full. Upgrade for more space.,storage@cloud.com,NOT_EXPENSE
+Monthly newsletter,"This month's newsletter: Product updates, new features, and user stories.",newsletter@company.com,NOT_EXPENSE
+Weekly challenge: Creative,This week's creative challenge: Design a logo. Submit your entry!,challenges@platform.com,NOT_EXPENSE
+You've earned a badge,You've earned the 'Community Helper' badge. Wear it with pride!,achievements@platform.com,NOT_EXPENSE
+Learning path: Specialist,New specialist learning path: Cloud Architecture.,learning@education.com,NOT_EXPENSE
+Weekly challenge,This week's challenge: Complete 5 tasks. Win rewards!,challenges@platform.com,NOT_EXPENSE
+Welcome to our platform,Welcome! Complete your profile to get started with our service.,welcome@platform.com,NOT_EXPENSE
+Fuel rewards,Fuel reward points: 450 points added. Value: ₹450.,fuel@rewards.com,NOT_EXPENSE
+Event recap,Here's a recap of last week's virtual meetup. Watch now!,events@community.com,NOT_EXPENSE
+Virtual meetup,Join our virtual meetup this Thursday. Topic: Industry Trends.,events@community.com,NOT_EXPENSE
+Weekly goals: Perfect,You've achieved a perfect 100% on your weekly goals!,goals@productivity.com,NOT_EXPENSE
+Password reset link,Someone requested a password reset for your account. Click here if this was you.,security@app.com,NOT_EXPENSE
+New research publication,Our research team published a paper on machine learning. Read now.,research@company.com,NOT_EXPENSE
+Weekly newsletter: Tech trends,"This week in technology: AI breakthroughs, new gadgets, and industry news. Read more on our blog.",newsletter@techweekly.com,NOT_EXPENSE
+Meeting scheduled,Your meeting with the sales team is scheduled for Tuesday at 2 PM.,calendar@company.com,NOT_EXPENSE
+Monthly summary,Your monthly activity summary is ready. View your progress.,summary@platform.com,NOT_EXPENSE
+Account statement is ready,Your ICICI Bank monthly account statement for February is ready. Download from netbanking.,statements@icicibank.com,NOT_EXPENSE
+Happy holidays from the team,Wishing you and your family a happy holiday season!,greetings@company.com,NOT_EXPENSE
+Invitation: Team event,You're invited to our team building event next Friday at 5 PM.,events@company.com,NOT_EXPENSE
+Thank you,Thank you for being a valued customer. Here's a special offer!,loyalty@company.com,NOT_EXPENSE
+New feature request received,Thank you for your feature request! We've added it to our roadmap.,feedback@company.com,NOT_EXPENSE
+Time-based reward,Time-based reward: ₹100 for first transaction of the day.,time@bank.com,NOT_EXPENSE
+New templates,We've added 5 new templates to help you work faster.,templates@productivity.com,NOT_EXPENSE
+Your wishlist has a price drop,An item in your wishlist is now 20% off. Limited time offer!,deals@shopping.com,NOT_EXPENSE
+Goals completed,Congratulations! You've completed all your weekly goals.,goals@productivity.com,NOT_EXPENSE
+Free trial extension,We've extended your free trial by 7 days. Enjoy!,promo@service.com,NOT_EXPENSE
+Your feedback made a difference,Your feedback led to 3 new features in our latest update.,product@company.com,NOT_EXPENSE
+Feature request implemented,The feature you requested is now live! Thank you for your input.,feedback@company.com,NOT_EXPENSE
+New badge: Leader,New badge available: Leader. Awarded for community leadership.,achievements@platform.com,NOT_EXPENSE
+You're invited: Beta program,Join our exclusive beta program and get early access to new features.,beta@product.com,NOT_EXPENSE
+Card swipe reward,Card swipe reward: ₹200 for 20 card swipes this month.,card@bank.com,NOT_EXPENSE
+Your data export is ready,Your data export request is complete. Download your file before it expires.,data@platform.com,NOT_EXPENSE
+Recommended posts,Our algorithm recommends checking out these trending posts.,recommendations@platform.com,NOT_EXPENSE
+Security alert,We detected a new login to your account from a new device.,security@platform.com,NOT_EXPENSE
+Your report is ready,The monthly analytics report you requested has been generated and is ready to view.,reports@analytics.com,NOT_EXPENSE
+New template available,We've added 5 new templates to help you work faster. Try them now!,templates@productivity.com,NOT_EXPENSE
