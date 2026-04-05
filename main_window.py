@@ -24,6 +24,7 @@ from tabs.charts_tab        import ChartsTab
 from tabs.trends_tab        import TrendsTab
 from tabs.review_queue_tab  import ReviewQueueTab
 from tabs.settings_tab      import SettingsTab
+from tabs.training_tab      import TrainingTab
 from workers.gmail_worker import GmailWorker, AuthOnlyWorker
 from core.db import Database
 from core.gmail_auth import is_authenticated, CREDENTIALS_PATH, revoke_credentials
@@ -164,10 +165,12 @@ class MainWindow(QMainWindow):
         self._trends_tab      = TrendsTab()
         self._review_tab      = ReviewQueueTab()
         self._settings_tab    = SettingsTab()
+        self._training_tab    = TrainingTab()
         self._tabs.addTab(self._expenses_tab, "📋 Expenses")
         self._tabs.addTab(self._charts_tab,   "📊 Charts")
         self._tabs.addTab(self._trends_tab,   "📈 Trends")
         self._tabs.addTab(self._review_tab,   "🔍 Review Queue")
+        self._tabs.addTab(self._training_tab, "🧠 Training")
         self._tabs.addTab(self._settings_tab, "⚙️ Settings")
         self._expenses_tab.field_changed.connect(self._on_field_changed)
         self._expenses_tab.exclude_requested.connect(self._on_exclude_requested)
@@ -193,6 +196,7 @@ class MainWindow(QMainWindow):
         self._settings_tab.set_db(self._db, self.data_dir, self._config)
         self._trends_tab.set_db(self._db, self.data_dir)
         self._review_tab.set_db(self._db, self.data_dir)
+        self._training_tab.set_data_dir(self.data_dir, self._db.db_path)
         self._update_stage3_label()
         self._update_review_badge()
         self._setup_tab_shortcuts()
@@ -410,6 +414,7 @@ class MainWindow(QMainWindow):
             (QKeySequence("Alt+3"), 2),
             (QKeySequence("Alt+4"), 3),
             (QKeySequence("Alt+5"), 4),
+            (QKeySequence("Alt+6"), 5),
         ]
         for key_seq, index in shortcuts:
             shortcut = self.create_shortcut(key_seq, self, lambda _checked, i=index: self._tabs.setCurrentIndex(i))
