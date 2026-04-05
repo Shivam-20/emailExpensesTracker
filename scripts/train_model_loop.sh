@@ -13,7 +13,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/train_loop.log"
 TRAIN_SCRIPT="$SCRIPT_DIR/train_classifier.sh"
-VALIDATION_CSV="$PROJECT_DIR/data/validation_emails.csv"
+VALIDATION_CSV="$(python3 -c "import sys; sys.path.insert(0, '.'); from classifier.config import VALIDATION_CSV; print(VALIDATION_CSV)")"
 
 MAX_CYCLES=24
 CYCLE_DURATION=60
@@ -80,7 +80,7 @@ total = len(df)
 accuracy = correct / total * 100 if total > 0 else 0
 print(f'Validation accuracy: {accuracy:.2f}% ({correct}/{total})')
 " 2>&1)
-        echo "$validation_output" | tee -a "$LOG_FILE"
+        log "$validation_output"
     else
         log "No validation data found at $VALIDATION_CSV, skipping validation"
     fi
@@ -99,6 +99,9 @@ run_cycle() {
     local cycle_success=true
 
     log "Training TF-IDF/NB model..."
+    if [ -d "$PROJECT_DIR/.venv" ]; then
+        source "$PROJECT_DIR/.venv/bin/activate"
+    fi
     if bash "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"; then
         log "✅ Model training completed"
     else
@@ -157,19 +160,6 @@ main() {
         fi
 
         run_cycle "$cycle" "$start_time"
-
-        if [ "$cycle" -ge "$MAX_CYCLES" ]; then
-            log "⏹️  Stopping: reached max cycles ($MAX_CYCLES)"
-            break
-        fi
-
-        current_time=$(date +%s)
-        elapsed=$((current_time - start_time))
-
-        if [ "$elapsed" -ge "$MAX_SECONDS" ]; then
-            log "⏹️  Stopping: reached max duration (${MAX_HOURS}h)"
-            break
-        fi
 
         local remaining_seconds=$((MAX_SECONDS - elapsed))
         if [ "$remaining_seconds" -lt "$CYCLE_DURATION" ]; then
