@@ -66,15 +66,14 @@ run_validation() {
         validation_output=$(python3 -c "
 import sys
 sys.path.insert(0, '.')
-from classifier.config import MODEL_PATH, VECTORIZER_PATH, VALIDATION_CSV
-from classifier.ml_model import load_model, load_vectorizer
+from classifier.config import MODEL_PATH, VALIDATION_CSV
+from classifier.ml_model import _load_pipeline
 import pandas as pd
 
-model = load_model(MODEL_PATH)
-vectorizer = load_vectorizer(VECTORIZER_PATH)
+pipeline = _load_pipeline()
 df = pd.read_csv(VALIDATION_CSV)
-X = vectorizer.transform(df['subject'].fillna('') + ' ' + df['body'].fillna(''))
-predictions = model.predict(X)
+X = df['subject'].fillna('') + ' ' + df['sender'].fillna('') + ' ' + df['body'].fillna('')
+predictions = pipeline.predict(X)
 correct = (predictions == df['label']).sum()
 total = len(df)
 accuracy = correct / total * 100 if total > 0 else 0
