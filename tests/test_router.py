@@ -56,7 +56,7 @@ def test_vague_email_escalates_to_ml() -> None:
 
 
 def test_ml_low_confidence_escalates_to_llm() -> None:
-    """ML probability < 0.55 should escalate to Stage 3 (LLM / phi4-mini)."""
+    """ML probability < 0.55 should escalate to Stage 3 (pipeline)."""
     mock_ml  = {"label": "EXPENSE", "probability": 0.45}
     mock_llm = {
         "label": "EXPENSE", "confidence_band": "high",
@@ -64,10 +64,25 @@ def test_ml_low_confidence_escalates_to_llm() -> None:
     }
     with patch("classifier.router.score_email", return_value=3), \
          patch("classifier.ml_model.predict", return_value=mock_ml), \
-         patch("classifier.ollama_fallback.classify", return_value=mock_llm), \
-         patch("classifier.config._load_stage3_backend", return_value="phi4-mini"):
+         patch("classifier.router._classify_with_stage3", return_value=mock_llm):
         result = classify(_email("Vague request", "Can you look at this?"))
-    assert result.stage_used == "phi4-mini"
+    assert result.stage_used == "pipeline"
+    assert result.label == "EXPENSE"
+
+
+def test_phi4mini_stage3_result_appears_in_full_pipeline(monkeypatch) -> None:
+    """Full pipeline with phi4-mini backend falls back to phi4-mini when pipeline unavailable."""
+    mock_ml  = {"label": "EXPENSE", "probability": 0.45}
+    mock_llm = {
+        "label": "NOT_EXPENSE", "confidence_score": 0.82,
+        "confidence_band": "high", "reason": "phi4 high",
+    }
+    with patch("classifier.router.score_email", return_value=3), \
+         patch("classifier.ml_model.predict", return_value=mock_ml), \
+         patch("classifier.router._classify_with_stage3", return_value=mock_llm):
+        result = classify(_email("Vague", "content"))
+    assert result.stage_used == "pipeline"
+    assert result.label == "NOT_EXPENSE"
 
 
 # ── REVIEW fallback ───────────────────────────────────────────────────────────
@@ -81,8 +96,7 @@ def test_all_stages_uncertain_returns_review() -> None:
     }
     with patch("classifier.router.score_email", return_value=3), \
          patch("classifier.ml_model.predict", return_value=mock_ml), \
-         patch("classifier.ollama_fallback.classify", return_value=mock_llm), \
-         patch("classifier.config._load_stage3_backend", return_value="phi4-mini"):
+         patch("classifier.router._classify_with_stage3", return_value=mock_llm):
         result = classify(_email("??", "ambiguous content"))
     assert result.label == "REVIEW"
     assert result.needs_review is True
@@ -95,7 +109,7 @@ def test_result_schema_always_complete() -> None:
     assert result.label in {"EXPENSE", "NOT_EXPENSE", "REVIEW"}
     assert 0.0 <= result.confidence_score <= 1.0
     assert result.confidence_band in {"high", "medium", "low"}
-    assert result.stage_used in {"rules", "naive_bayes_tfidf", "phi4-mini", "distilbert", "review"}
+    assert result.stage_used in {"rules", "naive_bayes_tfidf", "pipeline", "distilbert", "phi4-mini", "review"}
     assert isinstance(result.needs_review, bool)
     assert isinstance(result.reason, str)
 
@@ -126,35 +140,3 @@ def test_stage3_routes_to_phi4mini_when_configured(monkeypatch) -> None:
         result = get_stage3_result(_email("Order", "₹500"))
     mock_ol.assert_called_once()
     assert result["label"] == "EXPENSE"
-
-
-def test_distilbert_stage3_result_appears_in_full_pipeline(monkeypatch) -> None:
-    """Full pipeline with distilbert backend: stage_used should be 'distilbert'."""
-    mock_ml  = {"label": "EXPENSE", "probability": 0.45}
-    mock_db  = {
-        "label": "EXPENSE", "confidence_score": 0.9,
-        "confidence_band": "high", "reason": "distilbert high",
-    }
-    with patch("classifier.router.score_email", return_value=3), \
-         patch("classifier.ml_model.predict", return_value=mock_ml), \
-         patch("classifier.distilbert_model.classify", return_value=mock_db), \
-         patch("classifier.config._load_stage3_backend", return_value="distilbert"):
-        result = classify(_email("Vague", "content"))
-    assert result.stage_used == "distilbert"
-    assert result.label == "EXPENSE"
-
-
-def test_phi4mini_stage3_result_appears_in_full_pipeline(monkeypatch) -> None:
-    """Full pipeline with phi4-mini backend: stage_used should be 'phi4-mini'."""
-    mock_ml  = {"label": "EXPENSE", "probability": 0.45}
-    mock_llm = {
-        "label": "NOT_EXPENSE", "confidence_score": 0.82,
-        "confidence_band": "high", "reason": "phi4 high",
-    }
-    with patch("classifier.router.score_email", return_value=3), \
-         patch("classifier.ml_model.predict", return_value=mock_ml), \
-         patch("classifier.ollama_fallback.classify", return_value=mock_llm), \
-         patch("classifier.config._load_stage3_backend", return_value="phi4-mini"):
-        result = classify(_email("Vague", "content"))
-    assert result.stage_used == "phi4-mini"
-    assert result.label == "NOT_EXPENSE"

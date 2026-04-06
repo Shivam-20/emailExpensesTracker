@@ -4,12 +4,12 @@ classifier/router.py — Pipeline orchestrator.
 Runs stages in strict order per AGENTS.md:
   Stage 1 → rules.py        (always runs)
   Stage 2 → ml_model.py     (only if Stage 1 is uncertain)
-  Stage 3 → distilbert OR phi4-mini (only if Stage 2 is uncertain)
+  Stage 3 → pipeline (DistilBERT/phi4-mini) (only if Stage 2 is uncertain)
   Fallback → return REVIEW
 
 Never skip Stage 1.
 Never call Stage 3 unless Stage 1 and Stage 2 are both uncertain.
-Stage 3 backend is controlled by config.STAGE3_BACKEND ("distilbert" | "phi4-mini").
+Stage 3 uses pipeline with configurable mode and models.
 """
 
 import logging
@@ -22,11 +22,60 @@ from .config import (
     RULE_HIGH_THRESHOLD,
     RULE_ZERO_THRESHOLD,
 )
+from .pipeline import Pipeline, PipelineMode, load_pipeline_config
 from .rules import score_email
 from .schemas import ClassificationResult, EmailInput
 from .utils import band_from_score
 
 logger = logging.getLogger(__name__)
+
+
+def _classify_with_stage3(email: EmailInput) -> dict:
+    """
+    Use pipeline for Stage 3 classification.
+
+    Loads pipeline config, creates Pipeline object with config's mode and active models,
+    and uses pipeline.predict() for final classification.
+
+    Returns a dict with keys: label, confidence_score, confidence_band, reason.
+
+    Falls back to original DistilBERT/phi4-mini if pipeline config is empty or fails.
+    """
+    try:
+        config = load_pipeline_config()
+        if not config or not config.get("active_models"):
+            raise ValueError("Empty pipeline config")
+
+        mode_str = config.get("mode", "ensemble")
+        mode = PipelineMode.ENSEMBLE if mode_str == "ensemble" else PipelineMode.CASCADE
+
+        pipeline = Pipeline(
+            models=config["active_models"],
+            mode=mode,
+            cascade_threshold=config.get("cascade_threshold", 0.80),
+        )
+
+        result = pipeline.predict(
+            subject=email.subject,
+            sender=email.sender,
+            body=email.body,
+        )
+
+        confidence = result.get("confidence", 0.0)
+        label = result.get("label", "REVIEW")
+
+        band = band_from_score(confidence)
+
+        return {
+            "label": label,
+            "confidence_score": confidence,
+            "confidence_band": band,
+            "reason": f"pipeline ({mode_str}) classification",
+        }
+
+    except Exception as exc:
+        logger.warning("Pipeline classification failed: %s — falling back to DistilBERT", exc)
+        return get_stage3_result(email)
 
 
 def _review_result(reason: str) -> ClassificationResult:
@@ -122,15 +171,13 @@ def classify(email: EmailInput) -> ClassificationResult:
     except Exception as exc:
         logger.warning("ML stage failed: %s — escalating to Stage 3", exc)
 
-    # ── Stage 3: Configurable backend (DistilBERT or phi4-mini) ──────────────
-    from .config import _load_stage3_backend
-    backend = _load_stage3_backend()
+    # ── Stage 3: Pipeline classification ─────────────────────────────────────────
     try:
-        stage3_result = get_stage3_result(email)
+        stage3_result = _classify_with_stage3(email)
         band          = stage3_result.get("confidence_band", "low")
         s3_label      = stage3_result.get("label", "REVIEW")
         s3_score      = stage3_result.get("confidence_score", 0.0)
-        stage_name    = "distilbert" if backend == "distilbert" else "phi4-mini"
+        stage_name    = "pipeline"
         logger.debug("Stage3[%s] band=%s label=%s", stage_name, band, s3_label)
 
         if band in LLM_ACCEPT_BANDS:
@@ -139,7 +186,7 @@ def classify(email: EmailInput) -> ClassificationResult:
                 confidence_score=s3_score,
                 confidence_band=band,
                 stage_used=stage_name,
-                reason=stage3_result.get("reason", f"{stage_name} classification"),
+                reason=stage3_result.get("reason", "pipeline classification"),
                 needs_review=False,
             )
 
