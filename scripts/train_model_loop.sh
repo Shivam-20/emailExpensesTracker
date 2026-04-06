@@ -15,9 +15,9 @@ LOG_FILE="$LOG_DIR/train_loop.log"
 TRAIN_SCRIPT="$SCRIPT_DIR/train_classifier.sh"
 VALIDATION_CSV="$(python3 -c "import sys; sys.path.insert(0, '.'); from classifier.config import VALIDATION_CSV; print(VALIDATION_CSV)")"
 
-MAX_CYCLES=24
+MAX_CYCLES=0  # 0 = infinite
 CYCLE_DURATION=60
-MAX_HOURS=24
+MAX_HOURS=2
 MAX_SECONDS=$((MAX_HOURS * 3600))
 
 SINGLE_CYCLE=false
@@ -60,18 +60,18 @@ run_pytest() {
 }
 
 run_validation() {
-    if [ -f "$VALIDATION_CSV" ]; then
+    local val_csv="$VALIDATION_CSV"
+    if [ -f "$val_csv" ]; then
         log "Running validation set check..."
         local validation_output
         validation_output=$(python3 -c "
 import sys
-sys.path.insert(0, '.')
-from classifier.config import MODEL_PATH, VALIDATION_CSV
+sys.path.insert(0, '$PROJECT_DIR')
 from classifier.ml_model import _load_pipeline
 import pandas as pd
 
 pipeline = _load_pipeline()
-df = pd.read_csv(VALIDATION_CSV)
+df = pd.read_csv('$val_csv')
 X = df['subject'].fillna('') + ' ' + df['sender'].fillna('') + ' ' + df['body'].fillna('')
 predictions = pipeline.predict(X)
 correct = (predictions == df['label']).sum()
@@ -148,7 +148,7 @@ main() {
         local elapsed
         elapsed=$((current_time - start_time))
 
-        if [ "$cycle" -gt "$MAX_CYCLES" ]; then
+        if [ "$MAX_CYCLES" -gt 0 ] && [ "$cycle" -gt "$MAX_CYCLES" ]; then
             log "⏹️  Stopping: reached max cycles ($MAX_CYCLES)"
             break
         fi

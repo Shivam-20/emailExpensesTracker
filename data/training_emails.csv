@@ -42,7 +42,6 @@ Your credit card bill is due on Mar 20,Your credit card bill of ₹4339.85 is du
 Credit card bill due tomorrow!,Your Kotak credit card bill of ₹1445 is due tomorrow. Pay now to avoid late fees.,no-reply@kotak.com,NOT_EXPENSE
 Credit card bill due in 5 days!,Your Kotak811 credit card bill of ₹350 is due in 5 days. Minimum amount due: ₹35.,no-reply@kotak.com,NOT_EXPENSE
 Transaction alert for your ICICI Bank Credit Card,Your ICICI Bank Credit Card ending XX49 has been used for a transaction of INR 51.00 at UPI merchant.,credit_cards@icicibank.com,EXPENSE
-Transaction alert for your ICICI Bank Credit Card,Your ICICI Bank Credit Card ending XX49 has been used for INR 700.00 at an online merchant. If not done by you call 1800-XXX.,credit_cards@icicibank.com,EXPENSE
 Card transaction - successful,Your Kotak Bank Credit Card ••1949 was charged ₹210.00 at merchant. Available credit limit: ₹48500.,alerts@kotak.com,EXPENSE
 New credit card bill generated!,Your Kotak811 credit card bill for the period Feb 18 - Mar 17 has been generated. Total amount due: ₹1679.00.,no-reply@kotak.com,NOT_EXPENSE
 Transaction Successful,Your Kotak bank account has been debited for ₹10000.00. Transaction ID: TXN2026032219.,no-reply@kotak.com,EXPENSE
@@ -174,7 +173,6 @@ Update your preferences,Manage your email preferences. Choose which updates you 
 Happy holidays from the team,Wishing you and your family a happy holiday season!,greetings@company.com,NOT_EXPENSE
 You're invited: Beta program,Join our exclusive beta program and get early access to new features.,beta@product.com,NOT_EXPENSE
 Security alert: New login,We detected a new login to your account from a new device. Was this you?,security@platform.com,NOT_EXPENSE
-Your report is ready,Your monthly report is ready to download. Click the link below.,reports@analytics.com,NOT_EXPENSE
 Community guidelines updated,We've updated our community guidelines. Please review the changes.,policy@platform.com,NOT_EXPENSE
 New product announcement,Introducing our latest product! Learn more about its features.,launch@company.com,NOT_EXPENSE
 Meeting scheduled,Your meeting with the sales team is scheduled for Tuesday at 2 PM.,calendar@company.com,NOT_EXPENSE
@@ -417,7 +415,6 @@ Aquaguard,Aquaguard annual maintenance ₹2200 debited from account.,service@eur
 TDS,TDS of ₹1200 deducted on FD interest for Q4 FY26.,tds@sbi.co.in,EXPENSE
 Driving license,Driving license renewal fee ₹500 paid online. ID: DL-2026-890.,receipts@parivahan.gov.in,EXPENSE
 BookMyShow event,BookMyShow booking for concert. 2 tickets ₹2200 each. Total: ₹4400.,events@bookmyshow.com,EXPENSE
-Urban Company,Salon at home service payment ₹950 via Urban Company.,noreply@urbancompany.com,EXPENSE
 Property tax,Municipal corporation property tax ₹7200 for FY 2026-27 confirmed.,receipts@mcgm.gov.in,EXPENSE
 Bike service,Royal Enfield service center bill: ₹2800 for 10000km service.,service@royalenfield.com,EXPENSE
 Unacademy,Unacademy Plus subscription renewed. ₹999/month.,billing@unacademy.com,EXPENSE
@@ -623,7 +620,6 @@ DNS,Cloudflare DNS subscription ₹850/month.,billing@cloudflare.com,EXPENSE
 DNS,AWS Route 53 bill $8.50 for March.,billing@aws.amazon.com,EXPENSE
 Load balancer,AWS ALB bill $15.00 for March.,billing@aws.amazon.com,EXPENSE
 Load balancer,NGINX Ingress Controller subscription ₹2500/month.,billing@nginx.com,EXPENSE
-API gateway,Kong Cloud subscription ₹8500/month.,billing@konghq.com,EXPENSE
 Service mesh,Istio subscription ₹12000/month.,billing@istio.io,EXPENSE
 Observability,Grafana subscription ₹4500/month.,billing@grafana.com,EXPENSE
 Observability,Prometheus subscription ₹2500/month.,billing@prometheus.io,EXPENSE
@@ -631,7 +627,6 @@ Observability,Thanos subscription ₹4500/month.,billing@thanos.io,EXPENSE
 Observability,VictoriaMetrics subscription ₹2500/month.,billing@victoriametrics.com,EXPENSE
 Logging,ELK Stack subscription ₹8500/month.,billing@elastic.co,EXPENSE
 Logging,Splunk subscription ₹45000/month.,billing@splunk.com,EXPENSE
-Logging,Logstash subscription ₹2500/month.,billing@elastic.co,EXPENSE
 SIEM,CrowdStrike subscription ₹45000/month.,billing@crowdstrike.com,EXPENSE
 SIEM,Splunk SIEM subscription ₹65000/month.,billing@splunk.com,EXPENSE
 SIEM,LogRhythm subscription ₹35000/month.,billing@logrhythm.com,EXPENSE
@@ -671,13 +666,10 @@ Penetration testing,Cobalt subscription ₹18000/month.,billing@cobalt.io,EXPENS
 Penetration testing,HackerOne subscription ₹25000/month.,billing@hackerone.com,EXPENSE
 Penetration testing,Bugcrowd subscription ₹22000/month.,billing@bugcrowd.com,EXPENSE
 Weekly newsletter: AI trends,"This week in AI: New breakthroughs, research papers, and industry updates.",newsletter@aiweekly.com,NOT_EXPENSE
-Your order has shipped,Your Amazon order #345-678901 has been shipped. Track your package.,shipping@amazon.in,NOT_EXPENSE
 Welcome to our platform,Welcome! Complete your profile to get started with our service.,welcome@platform.com,NOT_EXPENSE
 Password reset request,Someone requested a password reset for your account. Was this you?,security@app.com,NOT_EXPENSE
 New feature launch,We've launched a new feature! Watch our video tutorial to learn more.,product@company.com,NOT_EXPENSE
-Survey invitation,Help us improve! Take our 2-minute survey about your experience.,survey@feedback.com,NOT_EXPENSE
 Webinar reminder tomorrow,Don't forget! Join our webinar tomorrow at 3 PM IST.,events@webinar.com,NOT_EXPENSE
-Your subscription is active,Your free subscription is active. Upgrade to premium for more features.,info@service.com,NOT_EXPENSE
 New blog post,New article: '10 Productivity Hacks' is now live. Read it now.,blog@company.com,NOT_EXPENSE
 Email verification needed,Please verify your email address to continue using our service.,verify@app.com,NOT_EXPENSE
 Job alert: 3 new matches,"Based on your profile, we found 3 job openings that match your skills.",jobs@careers.com,NOT_EXPENSE
@@ -687,32 +679,23 @@ Profile viewed,Your LinkedIn profile was viewed by 8 recruiters this week.,notif
 New follower,You have a new follower! Check out their profile.,notification@social.com,NOT_EXPENSE
 Weekly activity summary,Here's your weekly activity summary on our platform.,summary@service.com,NOT_EXPENSE
 Town hall invitation,Join us for the Q1 company town hall this Friday at 4 PM.,events@company.com,NOT_EXPENSE
-Free course available,Enroll in our free course: 'Introduction to AI'. Limited spots!,courses@learning.com,NOT_EXPENSE
 Thank you for feedback,Thank you for your feedback! We've incorporated your suggestions.,support@service.com,NOT_EXPENSE
-New podcast episode,New episode: 'The Future of Work' is now available.,podcast@studio.com,NOT_EXPENSE
 Update preferences,Manage your email preferences. Choose which updates you want.,preferences@mailer.com,NOT_EXPENSE
 Holiday greetings,Wishing you and your family a happy holiday season!,greetings@company.com,NOT_EXPENSE
 Beta program invite,Join our exclusive beta program and get early access to new features.,beta@product.com,NOT_EXPENSE
 Security alert,We detected a new login to your account from a new device.,security@platform.com,NOT_EXPENSE
 Monthly report ready,Your monthly report is ready to download.,reports@analytics.com,NOT_EXPENSE
 Guidelines updated,We've updated our community guidelines. Please review.,policy@platform.com,NOT_EXPENSE
-New product announcement,Introducing our latest product! Learn more about its features.,launch@company.com,NOT_EXPENSE
-Meeting scheduled,Your meeting with the sales team is scheduled for Tuesday at 2 PM.,calendar@company.com,NOT_EXPENSE
 Account expiration,Your account will expire in 30 days. Renew to continue.,billing@service.com,NOT_EXPENSE
 You were mentioned,Someone mentioned you in a comment. Click to view.,notification@platform.com,NOT_EXPENSE
-Weekly goals update,Here's your weekly goals progress. You're on track!,goals@productivity.com,NOT_EXPENSE
 Badge earned,Congratulations! You've earned the 'Early Adopter' badge.,achievements@platform.com,NOT_EXPENSE
-Support ticket resolved,Your support ticket #12345 has been resolved.,support@company.com,NOT_EXPENSE
 Team event invitation,You're invited to our team building event next Friday.,events@company.com,NOT_EXPENSE
 Data export ready,Your data export request is complete. Download before it expires.,data@platform.com,NOT_EXPENSE
 Dark mode available,Dark mode is now available! Update your settings.,product@company.com,NOT_EXPENSE
-Quarterly newsletter,Q1 Newsletter: Top highlights and updates from our team.,newsletter@company.com,NOT_EXPENSE
 Subscription expiring,Your subscription expires in 7 days. Renew to continue.,renewal@service.com,NOT_EXPENSE
 Weekly challenge,This week's challenge: Complete 5 tasks. Win rewards!,challenges@platform.com,NOT_EXPENSE
 API docs updated,We've updated our API documentation with new endpoints.,docs@developer.com,NOT_EXPENSE
 You're trending,Your post is trending! 500+ views in the last hour.,notification@platform.com,NOT_EXPENSE
-Learning path recommended,"Based on your interests, we recommend the 'Data Science' path.",recommendations@learning.com,NOT_EXPENSE
-Free trial extension,We've extended your free trial by 7 days. Enjoy!,promo@service.com,NOT_EXPENSE
 Forum answer,Your question on our forum has been answered by an expert.,forum@community.com,NOT_EXPENSE
 Connection request,You have a new connection request on our professional network.,network@platform.com,NOT_EXPENSE
 Weekly leaderboard,Check out this week's top performers. Are you on the list?,leaderboard@platform.com,NOT_EXPENSE
@@ -720,7 +703,6 @@ Price drop alert,An item in your wishlist is now 20% off. Limited time!,deals@sh
 Conference registration,Register for our annual conference. Early bird discounts available.,events@conference.com,NOT_EXPENSE
 Session saved,Your work session was automatically saved. No data lost.,system@productivity.com,NOT_EXPENSE
 New templates,We've added 5 new templates to help you work faster.,templates@productivity.com,NOT_EXPENSE
-Achievement unlocked,You've unlocked a new achievement: '100 Day Streak'!,achievements@platform.com,NOT_EXPENSE
 Monthly summary,Your monthly activity summary is ready. View your progress.,summary@platform.com,NOT_EXPENSE
 Featured content,Your work has been featured in our 'Spotlight' section.,editorial@platform.com,NOT_EXPENSE
 Collaboration tools,Explore our new collaboration features for teams.,product@company.com,NOT_EXPENSE
@@ -788,11 +770,9 @@ Event recap,Here's a recap of last week's virtual meetup. Watch now!,events@comm
 Integration guides,New integration guides available for Salesforce and HubSpot.,docs@developer.com,NOT_EXPENSE
 Weekly digest: Product,"Product updates, new features, and what's coming next.",digest@product.com,NOT_EXPENSE
 Beta access granted,You've been granted early access to our beta program. Start testing!,beta@product.com,NOT_EXPENSE
-Community guidelines,Please review our updated community guidelines before posting.,policy@community.com,NOT_EXPENSE
 Feature roadmap,See what's coming next on our product roadmap.,roadmap@company.com,NOT_EXPENSE
 User feedback,Your recent feedback has helped us improve our platform. Thank you!,feedback@company.com,NOT_EXPENSE
 Learning path updated,We've updated our 'Data Science' learning path with new content.,learning@education.com,NOT_EXPENSE
-Weekly challenge: Creative,This week's creative challenge: Share your workspace setup.,challenges@platform.com,NOT_EXPENSE
 New integration: Zapier,Connect our platform with Zapier to automate your workflows.,integrations@platform.com,NOT_EXPENSE
 Achievement leaderboard,Check the monthly achievement leaderboard. Are you on top?,leaderboard@platform.com,NOT_EXPENSE
 Security update,We've enhanced our security measures. Review your account settings.,security@platform.com,NOT_EXPENSE
@@ -806,7 +786,6 @@ Weekly goals tracker,Your weekly goals are on track. Keep up the great work!,goa
 Learning milestone,Congratulations on completing 10 courses this month!,achievements@platform.com,NOT_EXPENSE
 Integration success,You've successfully integrated with 5 new tools!,integrations@platform.com,NOT_EXPENSE
 Content recommendation,"Based on your interests, we recommend these articles.",recommendations@content.com,NOT_EXPENSE
-Weekly challenge winner,Congratulations to last week's challenge winner: @johndoe!,challenges@platform.com,NOT_EXPENSE
 Feature request implemented,The feature you requested is now live! Thank you for your input.,feedback@company.com,NOT_EXPENSE
 Community guidelines reminder,Friendly reminder: Please follow our community guidelines.,policy@community.com,NOT_EXPENSE
 Weekly insights,Here are your weekly insights and performance metrics.,analytics@platform.com,NOT_EXPENSE
@@ -821,7 +800,6 @@ User spotlight,This week's user spotlight: @janedoe and her amazing project.,dig
 Weekly challenge: Design,This week's design challenge: Create a stunning banner.,challenges@platform.com,NOT_EXPENSE
 New integration: Notion,We've added integration with Notion. Connect your workspace!,integrations@platform.com,NOT_EXPENSE
 Achievement unlocked: Mentor,You've unlocked the 'Mentor' achievement. Help 10 more users!,achievements@platform.com,NOT_EXPENSE
-Security best practices,New article: 5 security best practices for your account.,security@platform.com,NOT_EXPENSE
 Community poll results,Results from our latest poll: What's next for our platform?,poll@community.com,NOT_EXPENSE
 Weekly recap: Highlights,"Your weekly recap highlights: 5 tasks completed, 2 badges earned.",summary@platform.com,NOT_EXPENSE
 New templates: Design,We've added 15 new design templates to our library.,templates@productivity.com,NOT_EXPENSE
@@ -831,7 +809,6 @@ Product update: v2.7,Version 2.7 is live! See what's new and improved.,updates@c
 Weekly goals celebration,You've exceeded your weekly goals! Keep it up!,goals@productivity.com,NOT_EXPENSE
 Learning milestone: 50 courses,Congratulations on completing 50 courses! You're a learning champion!,achievements@platform.com,NOT_EXPENSE
 Integration milestone,You've integrated with 10+ tools. Impressive!,integrations@platform.com,NOT_EXPENSE
-Content recommendation,"Trending content this week: AI, Productivity, and Design.",recommendations@content.com,NOT_EXPENSE
 Weekly challenge leaderboard,Top 10 on this week's challenge leaderboard. Are you there?,challenges@platform.com,NOT_EXPENSE
 Feature request status,Your feature request is now 'In Progress'. We'll keep you updated!,feedback@company.com,NOT_EXPENSE
 Community guidelines FAQ,New FAQ section added to our community guidelines.,policy@community.com,NOT_EXPENSE
@@ -870,92 +847,6 @@ Integration guide: Mobile SDK,New guide: Using our Mobile SDK for iOS and Androi
 Weekly digest: Success stories,This week's success stories: How users are achieving their goals.,digest@success.com,NOT_EXPENSE
 Feature beta: Dark mode,Dark mode beta is now available for testing. Give it a try!,beta@product.com,NOT_EXPENSE
 User spotlight: Rising stars,This week's spotlight: Our rising stars in the community.,digest@community.com,NOT_EXPENSE
-Restaurant bill,Payment of ₹850 made at BBQ Nation via credit card.,payment@upi.com,EXPENSE
-Grocery store,DMart purchase of ₹1200 paid via debit card.,store@dmart.in,EXPENSE
-Petrol pump,Fuel purchase at IOCL pump: 15 litres ₹1650 via card.,receipt@iocl.com,EXPENSE
-Medical store,Pharmacy bill ₹580 paid at local chemist.,billing@chemist.com,EXPENSE
-Clothing store,H&M purchase ₹2100 paid via credit card.,orders@hm.com,EXPENSE
-Electronics store,Croma purchase ₹7800 for headphones via EMI.,orders@croma.com,EXPENSE
-Online course,Udemy course 'Advanced React' purchased for ₹1499.,noreply@udemy.com,EXPENSE
-Software license,Microsoft Office 365 annual subscription ₹6299 renewed.,billing@microsoft.com,EXPENSE
-Cloud storage,Google Cloud storage bill $18.50 for March.,billing@google.com,EXPENSE
-Web hosting,Bluehost hosting bill ₹550 for March due April 15.,billing@bluehost.com,EXPENSE
-Domain name,Domain myproject.com registered for ₹899 for 1 year.,billing@namecheap.com,EXPENSE
-SSL certificate,SSL certificate renewed for ₹1399/year.,billing@godaddy.com,EXPENSE
-Email marketing,Mailchimp monthly plan ₹1050 charged to card.,billing@mailchimp.com,EXPENSE
-Project management,Asana Premium subscription ₹520/month charged.,billing@asana.com,EXPENSE
-Video conferencing,Zoom Pro subscription ₹1350/month charged.,billing@zoom.us,EXPENSE
-Design tool,Canva Pro subscription ₹599/month charged.,billing@canva.com,EXPENSE
-Stock photos,Shutterstock subscription ₹999/month charged.,billing@shutterstock.com,EXPENSE
-Music streaming,YouTube Music Premium ₹149/month charged.,billing@youtube.com,EXPENSE
-Cloud backup,Backblaze backup subscription ₹650/month charged.,billing@backblaze.com,EXPENSE
-VPN service,NordVPN subscription ₹950/year charged.,billing@nordvpn.com,EXPENSE
-Password manager,1Password subscription ₹320/month charged.,billing@1password.com,EXPENSE
-Development tool,GitHub Copilot subscription ₹850/month charged.,billing@github.com,EXPENSE
-API service,OpenAI API usage $48.00 for March.,billing@openai.com,EXPENSE
-Database service,MongoDB Atlas bill $32.50 for March.,billing@mongodb.com,EXPENSE
-CDN service,Cloudflare bill $15.00 for March usage.,billing@cloudflare.com,EXPENSE
-Analytics tool,Google Analytics 360 subscription ₹18000/month.,billing@analytics.com,EXPENSE
-Marketing automation,HubSpot subscription ₹13500/month charged.,billing@hubspot.com,EXPENSE
-CRM software,Salesforce subscription ₹9500/month charged.,billing@salesforce.com,EXPENSE
-HR software,Zoho People subscription ₹3800/month charged.,billing@zoho.com,EXPENSE
-Accounting,QuickBooks subscription ₹2100/month charged.,billing@quickbooks.com,EXPENSE
-Legal software,DocuSign subscription ₹2800/month charged.,billing@docusign.com,EXPENSE
-Team communication,Slack subscription ₹880/month per user charged.,billing@slack.com,EXPENSE
-File storage,Dropbox Business subscription ₹1400/month charged.,billing@dropbox.com,EXPENSE
-Video editing,Adobe Premiere Pro subscription ₹2500/month charged.,billing@adobe.com,EXPENSE
-Photo editing,Adobe Lightroom subscription ₹1050/month charged.,billing@adobe.com,EXPENSE
-Graphic design,Adobe Illustrator subscription ₹1950/month charged.,billing@adobe.com,EXPENSE
-Prototyping tool,Figma Professional subscription ₹1350/month charged.,billing@figma.com,EXPENSE
-Wireframing,Balsamiq subscription ₹750/month.,billing@balsamiq.com,EXPENSE
-Diagram,Lucidchart subscription ₹1050/user/month.,billing@lucidchart.com,EXPENSE
-Mind mapping,MindMeister subscription ₹950/month.,billing@mindmeister.com,EXPENSE
-Code editor,JetBrains PhpStorm subscription ₹1650/month.,billing@jetbrains.com,EXPENSE
-Database tool,DataGrip subscription ₹1050/month.,billing@jetbrains.com,EXPENSE
-Version control,GitHub Enterprise subscription $28/user/month.,billing@github.com,EXPENSE
-CI/CD,GitLab Premium subscription $22/user/month.,billing@gitlab.com,EXPENSE
-Container registry,Docker Hub Pro subscription $6/month charged.,billing@docker.com,EXPENSE
-Kubernetes,AWS EKS bill $52.00 for March cluster usage.,billing@aws.amazon.com,EXPENSE
-Serverless,AWS Lambda bill $28.50 for March usage.,billing@aws.amazon.com,EXPENSE
-Database AWS,AWS RDS bill $42.00 for March.,billing@aws.amazon.com,EXPENSE
-Storage AWS,AWS S3 bill $22.00 for March storage.,billing@aws.amazon.com,EXPENSE
-CDN AWS,AWS CloudFront bill $12.50 for March bandwidth.,billing@aws.amazon.com,EXPENSE
-Monitoring,Datadog subscription ₹5200/month.,billing@datadoghq.com,EXPENSE
-Logging,Loggly subscription ₹3200/month.,billing@loggly.com,EXPENSE
-APM,New Relic subscription ₹7200/month.,billing@newrelic.com,EXPENSE
-Error tracking,Sentry subscription ₹2100/month.,billing@sentry.io,EXPENSE
-Security scan,Snyk subscription ₹3800/month.,billing@snyk.io,EXPENSE
-Code review,SonarCloud subscription ₹2500/month.,billing@sonarsource.com,EXPENSE
-Testing,BrowserStack subscription ₹4500/month.,billing@browserstack.com,EXPENSE
-Mobile testing,TestFairy subscription ₹2100/month.,billing@testfairy.com,EXPENSE
-Performance,WebPageTest subscription ₹1050/month.,billing@webpagetest.org,EXPENSE
-SEO tools,SEMrush subscription ₹9500/month.,billing@semrush.com,EXPENSE
-Email tools,Mailgun subscription ₹1400/month.,billing@mailgun.com,EXPENSE
-SMS,Twilio subscription ₹2800/month.,billing@twilio.com,EXPENSE
-Push notifications,OneSignal subscription ₹1050/month.,billing@onesignal.com,EXPENSE
-Chat widget,Intercom subscription ₹4800/month.,billing@intercom.com,EXPENSE
-Help desk,Zendesk subscription ₹4100/month.,billing@zendesk.com,EXPENSE
-Customer support,Freshdesk subscription ₹3500/month.,billing@freshdesk.com,EXPENSE
-Survey tool,Typeform subscription ₹1050/month.,billing@typeform.com,EXPENSE
-Spreadsheets,Google Sheets workspace subscription ₹1350/month.,billing@google.com,EXPENSE
-Documents,Google Docs workspace subscription ₹1350/month.,billing@google.com,EXPENSE
-Presentations,Google Slides workspace subscription ₹1350/month.,billing@google.com,EXPENSE
-Cloud office,Microsoft 365 Business Premium ₹950/user/month.,billing@microsoft.com,EXPENSE
-Email provider,Google Workspace Business ₹750/user/month.,billing@google.com,EXPENSE
-Cloud office,Zoho Workplace ₹420/user/month.,billing@zoho.com,EXPENSE
-HR,BambooHR subscription ₹5200/month.,billing@bamboohr.com,EXPENSE
-Recruitment,Greenhouse subscription ₹9500/month.,billing@greenhouse.io,EXPENSE
-Performance,Lattice subscription ₹3800/month.,billing@lattice.com,EXPENSE
-Training,Udemy Business subscription ₹2100/user/month.,billing@udemy.com,EXPENSE
-Learning,Coursera for Business ₹950/user/month.,billing@coursera.com,EXPENSE
-Development,Pluralsight subscription ₹1350/user/month.,billing@pluralsight.com,EXPENSE
-Design,Skillshare subscription ₹420/user/month.,billing@skillshare.com,EXPENSE
-Books,Scribd subscription ₹420/month.,billing@scribd.com,EXPENSE
-Audiobooks,Audible subscription ₹720/month.,billing@audible.com,EXPENSE
-Magazines,Readly subscription ₹520/month.,billing@readly.com,EXPENSE
-News,The New York Times subscription ₹750/month.,billing@nytimes.com,EXPENSE
-Finance app,YNAB subscription ₹520/month.,billing@ynab.com,EXPENSE
-Investment,Robinhood Gold subscription ₹420/month.,billing@robinhood.com,EXPENSE
 Monthly newsletter,"This month's newsletter: Product updates, new features, and user stories.",newsletter@company.com,NOT_EXPENSE
 Your order is out for delivery,Your Amazon order #456-789012 is out for delivery. ETA: 2 PM.,tracking@amazon.in,NOT_EXPENSE
 Welcome aboard,Welcome to our team! Complete your onboarding checklist.,onboarding@company.com,NOT_EXPENSE
@@ -975,7 +866,6 @@ Activity report,"Your weekly activity: 10 posts, 50 likes, 20 shares.",summary@s
 Town hall invite,Join us for Q2 town hall on Friday at 3 PM.,events@company.com,NOT_EXPENSE
 Free learning resource,Free e-book: 'The Future of Work' available for download.,resources@learning.com,NOT_EXPENSE
 Thank you,Thank you for being a valued customer. Here's a special offer!,loyalty@company.com,NOT_EXPENSE
-New podcast,Latest podcast: 'Leadership Lessons' is now streaming.,podcast@studio.com,NOT_EXPENSE
 Preference center,Update your email preferences and notification settings.,preferences@mailer.com,NOT_EXPENSE
 Seasonal greetings,Happy Spring! Here are some tips for the season.,greetings@company.com,NOT_EXPENSE
 Early access,Get early access to our new feature before public release.,beta@product.com,NOT_EXPENSE
@@ -989,16 +879,12 @@ Mentioned in post,Someone mentioned you in a post. See the conversation.,notific
 Goals progress,You've completed 80% of your weekly goals. Keep going!,goals@productivity.com,NOT_EXPENSE
 New badge,You've earned the 'Expert' badge. Congratulations!,achievements@platform.com,NOT_EXPENSE
 Ticket closed,Your support ticket #67890 has been closed. Rate our service.,support@company.com,NOT_EXPENSE
-Team building,Join our virtual team building event next Thursday.,events@company.com,NOT_EXPENSE
 Export complete,Your data export is complete. Download link valid for 7 days.,data@platform.com,NOT_EXPENSE
 New mode,Dark mode is now available for all users. Update now!,product@company.com,NOT_EXPENSE
 Newsletter: Q2,"Q2 Newsletter: What's new, what's coming, and more.",newsletter@company.com,NOT_EXPENSE
 Weekly digest: Community,"This week's community highlights: Top posts, active users, and trending topics.",digest@community.com,NOT_EXPENSE
 New integration: Calendly,We've added integration with Calendly for seamless scheduling.,integrations@platform.com,NOT_EXPENSE
 Achievement unlocked: Helper,You've unlocked the 'Community Helper' badge for 50 helpful posts.,achievements@platform.com,NOT_EXPENSE
-Product roadmap: Q3,Q3 product roadmap is now available. See what's coming next!,roadmap@company.com,NOT_EXPENSE
-User spotlight: Rising stars,This week's spotlight: Our fastest-growing community members.,digest@community.com,NOT_EXPENSE
-Weekly challenge: Collaboration,This week's challenge: Collaborate with 3 other users on a project.,challenges@platform.com,NOT_EXPENSE
 Credit card bill generated,Your HDFC credit card bill for the period Feb 15 - Mar 15 has been generated. Total due: ₹24500. Payment due: March 25.,statements@hdfcbank.com,EXPENSE
 Credit card statement ready,Your ICICI Bank credit card statement for March is now available. Login to net banking to view.,statements@icicibank.com,EXPENSE
 New credit card bill,Your Kotak811 credit card bill for March is ready. Total outstanding: ₹18900. Minimum due: ₹1890.,bills@kotak.com,EXPENSE
@@ -1077,7 +963,6 @@ Sewerage bill,Annual sewerage tax: ₹2800. Due: March 31. Pay online.,taxes@mun
 Solid waste bill,Waste management bill: ₹1200 for Q1. Due: April 10.,sanitation@corporation.gov.in,EXPENSE
 Street light tax,Annual street light tax: ₹450. Due: March 31.,taxes@municipality.gov.in,EXPENSE
 Home loan EMI deducted,Your HDFC home loan EMI of ₹35000 has been auto-debited from your account. Loan: HL-2024-789.,emi@hdfc.com,EXPENSE
-Personal loan EMI,Axis Bank personal loan EMI ₹18500 deducted for March. Loan: PL-2023-456.,emi@axisbank.com,EXPENSE
 Car loan EMI,ICICI Bank car loan EMI ₹22500 auto-debited. Loan: CL-2024-123.,loans@icicibank.com,EXPENSE
 Education loan EMI,SBI education loan EMI ₹12000 deducted. Loan: ED-2022-789.,emi@sbi.co.in,EXPENSE
 Two-wheeler loan EMI,Kotak two-wheeler loan EMI ₹3500 paid. Loan: TW-2024-234.,emi@kotak.com,EXPENSE
@@ -1121,11 +1006,9 @@ Amazon Prime renewal,Amazon Prime annual membership renewed. ₹1499 charged to 
 Spotify Premium,Spotify Premium subscription ₹119/month charged to card. Renewal date: April 2026.,no-reply@spotify.com,EXPENSE
 YouTube Premium,YouTube Music + Premium ₹129 charged to UPI. Subscription active until May 2026.,billing@youtube.com,EXPENSE
 Apple Music,Apple Music subscription ₹99 charged to Apple Pay. Renewed until April 2026.,no-reply@email.apple.com,EXPENSE
-Zomato Gold,Zomato Gold membership renewed for 3 months. ₹450 charged to card.,membership@zomato.com,EXPENSE
 Swiggy One,Swiggy One membership renewed. ₹199 for 1 month. Free deliveries activated.,membership@swiggy.com,EXPENSE
 Audible subscription,Audible audiobook subscription ₹749 charged to card. Monthly plan renewed.,noreply@audible.com,EXPENSE
 Kindle Unlimited,Kindle Unlimited subscription ₹169 charged to Amazon Pay. Monthly plan active.,kindle@amazon.com,EXPENSE
-Google One,Google One 200GB storage plan ₹130 charged to GPay. Storage upgraded.,payments-noreply@google.com,EXPENSE
 iCloud storage,iCloud+ 200GB plan ₹75 charged to card. Storage renewed until May 2026.,no-reply@email.apple.com,EXPENSE
 Dropbox Plus,Dropbox Plus 2TB subscription ₹950 charged to card. Monthly plan renewed.,billing@dropbox.com,EXPENSE
 OneDrive storage,Microsoft OneDrive 100GB ₹195 charged. Storage plan renewed.,billing@microsoft.com,EXPENSE
@@ -1232,3 +1115,19 @@ Consistent spender reward,Consistent spender reward: ₹400 for spending ₹2000
 Big spender reward,Big spender reward: ₹750 for spending ₹75000 in a single transaction.,big@bank.com,NOT_EXPENSE
 Multi-category reward,Multi-category reward: ₹200 for spending on 5 different categories.,multi@bank.com,NOT_EXPENSE
 Partner app reward,Partner app reward: ₹150 for completing transactions on partner app.,partner@bank.com,NOT_EXPENSE
+E-mandate registration successful,Your e-mandate for recurring payments has been registered. You will receive notifications for future deductions.,alerts@bank.com,NOT_EXPENSE
+E-mandate activation confirmed,E-mandate for your SIP investment has been activated. No payment deducted yet.,noreply@invest.com,NOT_EXPENSE
+Mandate request received,We have received your auto-debit mandate request. It will be processed within 2 business days.,support@bank.com,NOT_EXPENSE
+E-mandate setup completed,Your recurring payment mandate has been set up successfully. First deduction will be on the next billing date.,alerts@bank.com,NOT_EXPENSE
+Account statement is ready,Your monthly account statement for March 2026 is now available for download in your portal.,statements@bank.com,NOT_EXPENSE
+Your statement is ready,Download your latest account statement from the mobile app. View transaction history and balance.,no-reply@bank.com,NOT_EXPENSE
+Statement available,Your credit card statement for billing cycle ending 31st March is ready. Payment due by 15th April.,statements@card.com,NOT_EXPENSE
+Mini statement generated,Your mini statement for last 10 transactions is ready. Check your mobile banking app.,alerts@bank.com,NOT_EXPENSE
+Interest credited to your account,Interest amount of Rs. 250 has been credited to your savings account.,alerts@bank.com,NOT_EXPENSE
+FD matured,Your fixed deposit of Rs. 50000 has matured. Principal and interest credited to your account.,alerts@bank.com,NOT_EXPENSE
+Credit card limit increased,Your credit card limit has been increased to Rs. 100000 based on your good credit history.,noreply@card.com,NOT_EXPENSE
+Reward points credited,500 reward points have been credited to your credit card. Valid for next 12 months.,rewards@card.com,NOT_EXPENSE
+Cashback credited,Rs. 150 cashback has been credited to your account for your recent transaction.,offers@card.com,NOT_EXPENSE
+Salary credited,Salary of Rs. 50000 has been credited to your account. Available balance: Rs. 75000.,alerts@bank.com,NOT_EXPENSE
+Refund initiated,Refund of Rs. 599 has been initiated to your original payment method. Will reflect in 3-5 days.,support@shop.com,NOT_EXPENSE
+Bill payment reminder,Reminder: Your electricity bill of Rs. 1200 is due on 10th April. Pay now to avoid late fees.,billings@electricity.com,NOT_EXPENSE
