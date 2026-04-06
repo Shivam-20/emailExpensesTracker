@@ -15,6 +15,9 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 
+_MODEL_CACHE: dict[str, tuple[Any, Any]] = {}
+_PIPELINE_CACHE: dict[str, Any] = {}
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -38,7 +41,9 @@ except ImportError:
 
 try:
     import torch
+    from datasets import Dataset
     from transformers import (
+        AutoDataset,
         AutoModelForSequenceClassification,
         AutoTokenizer,
         Trainer,
@@ -46,8 +51,10 @@ try:
         pipeline,
     )
     _HAS_TRANSFORMERS = True
+    _HAS_DATASETS = True
 except ImportError:
     _HAS_TRANSFORMERS = False
+    _HAS_DATASETS = False
     logger.warning("transformers not installed — BERT models unavailable")
 
 MODEL_CONFIGS: dict[str, dict[str, Any]] = {
@@ -153,6 +160,10 @@ def _train_embedding_model(
 
     model_path = model_dir / "classifier.joblib"
     joblib.dump(clf, model_path)
+
+    if not model_path.exists():
+        raise RuntimeError(f"Failed to save classifier to {model_path}")
+
     logger.info("Classifier saved to %s", model_path)
 
 
@@ -163,7 +174,8 @@ def _train_classifier_model(
     if not _HAS_TRANSFORMERS:
         raise ImportError("transformers required for classifier models")
 
-    from transformers import AutoDataset
+    if not _HAS_DATASETS:
+        raise ImportError("datasets required for classifier training")
 
     logger.info("Loading tokenizer and model: %s", model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -179,8 +191,6 @@ def _train_classifier_model(
 
     encodings = tokenize_function(X)
     labels = [label2id[label] for label in y]
-
-    from datasets import Dataset
 
     dataset = Dataset.from_dict({"input_ids": encodings["input_ids"], "attention_mask": encodings["attention_mask"], "labels": labels})
 
@@ -218,13 +228,24 @@ def _train_classifier_model(
 
     model.save_pretrained(model_path.parent)
     tokenizer.save_pretrained(tokenizer_path)
+
+    if not model_path.parent.exists():
+        raise RuntimeError(f"Failed to save model to {model_path.parent}")
+
     logger.info("Model saved to %s", model_dir)
+
+    global _MODEL_CACHE
+    _MODEL_CACHE.clear()
 
 
 def load_model(model_type: str, model_dir: Path) -> tuple[Any, Any]:
     """Load a trained model for inference. Returns (embedding_model, classifier)."""
     if model_type not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model type: {model_type}")
+
+    cache_key = f"{model_type}:{model_dir}"
+    if cache_key in _MODEL_CACHE:
+        return _MODEL_CACHE[cache_key]
 
     model_dir = Path(model_dir) / model_type
 
@@ -233,39 +254,40 @@ def load_model(model_type: str, model_dir: Path) -> tuple[Any, Any]:
     if config["type"] == "embedding":
         embedding_model = SentenceTransformer(config["name"])
         classifier = joblib.load(model_dir / "classifier.joblib")
-        return embedding_model, classifier
+        result = (embedding_model, classifier)
     else:
         tokenizer = AutoTokenizer.from_pretrained(model_dir)
         model = AutoModelForSequenceClassification.from_pretrained(model_dir)
-        return model, tokenizer
+        result = (model, tokenizer)
+
+    _MODEL_CACHE[cache_key] = result
+    return result
 
 
-def predict(model_type: str, subject: str, sender: str, body: str) -> dict:
+def predict(model_type: str, subject: str, sender: str, body: str) -> dict[str, Any]:
     """Predict label and confidence for an email."""
     if model_type not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model type: {model_type}")
 
     from .config import LIGHTWEIGHT_MODEL_DIR
 
-    embedding_model, classifier = load_model(model_type, LIGHTWEIGHT_MODEL_DIR)
+    model_or_embedding, tokenizer_or_classifier = load_model(model_type, LIGHTWEIGHT_MODEL_DIR)
 
     text = f"{subject} {sender} {body}".lower().strip()
     config = MODEL_CONFIGS[model_type]
 
     if config["type"] == "embedding":
-        embedding = embedding_model.encode([text])
-        proba = classifier.predict_proba(embedding)[0]
+        embedding = model_or_embedding.encode([text])
+        proba = tokenizer_or_classifier.predict_proba(embedding)[0]
         pred_idx = int(proba.argmax())
-        label = classifier.classes_[pred_idx]
+        label = tokenizer_or_classifier.classes_[pred_idx]
         confidence = float(proba[pred_idx])
         probas = {"EXPENSE": float(proba[0]), "NOT_EXPENSE": float(proba[1])}
     else:
-        from transformers import pipeline
-
         classifier_pipe = pipeline(
             "text-classification",
-            model=embedding_model,
-            tokenizer=classifier,
+            model=model_or_embedding,
+            tokenizer=tokenizer_or_classifier,
         )
         result = classifier_pipe(text)[0]
         label = result["label"]
