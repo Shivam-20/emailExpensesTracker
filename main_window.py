@@ -179,6 +179,7 @@ class MainWindow(QMainWindow):
         self._settings_tab.clear_cache_requested.connect(self._on_clear_cache)
         self._settings_tab.data_dir_changed.connect(self._on_data_dir_changed)
         self._settings_tab.backend_changed.connect(self._on_backend_changed)
+        self._settings_tab.pipeline_changed.connect(self._on_pipeline_changed)
         lay.addWidget(self._tabs)
         return area
 
@@ -378,6 +379,9 @@ class MainWindow(QMainWindow):
 
     def _on_backend_changed(self, backend: str) -> None:
         self._update_stage3_label()
+
+    def _on_pipeline_changed(self, config: dict) -> None:
+        logger.info("Pipeline config changed: %s", config.get("mode", "unknown"))
 
     def _update_stage3_label(self) -> None:
         try:
