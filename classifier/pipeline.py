@@ -131,19 +131,33 @@ class Pipeline:
     Cascade: Use first model with confidence >= threshold, fallback to next
     """
 
-    def __init__(self, models: list[str], mode: PipelineMode) -> None:
+    def __init__(
+        self,
+        models: list[str],
+        mode: PipelineMode,
+        cascade_threshold: Optional[float] = None,
+    ) -> None:
         """
         Initialize pipeline with models and mode.
 
         Args:
             models: List of model identifiers
             mode: PipelineMode.ENSEMBLE or PipelineMode.CASCADE
+            cascade_threshold: Threshold for cascade mode (default: 0.80)
         """
+        if not models:
+            raise ValueError("models list cannot be empty")
+
+        valid_models = set(_MODEL_MAPPINGS.keys())
+        unknown = set(models) - valid_models
+        if unknown:
+            raise ValueError(f"Unknown model(s): {unknown}. Valid models: {valid_models}")
+
         _lazy_imports()
         self.models = models
         self.mode = mode
-        self.cascade_threshold = 0.80
-        logger.info("Pipeline initialized: mode=%s, models=%s", mode.value, models)
+        self.cascade_threshold = cascade_threshold if cascade_threshold is not None else 0.80
+        logger.info("Pipeline initialized: mode=%s, models=%s, threshold=%.2f", mode.value, models, self.cascade_threshold)
 
     def predict(
         self, subject: str, sender: str, body: str
