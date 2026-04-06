@@ -73,6 +73,9 @@ STAGE3_BACKEND = _load_stage3_backend()
 # ── DistilBERT settings ────────────────────────────────────────────────────────
 DISTILBERT_BASE_MODEL     = "distilbert-base-uncased"
 DISTILBERT_MODEL_DIR      = MODELS_DIR / "distilbert"
+
+# ── Lightweight models settings ────────────────────────────────────────────────
+LIGHTWEIGHT_MODEL_DIR     = MODELS_DIR / "lightweight"
 DISTILBERT_BASE_DIR       = MODELS_DIR / "distilbert_base"
 DISTILBERT_MAX_LENGTH     = 384
 DISTILBERT_BATCH_SIZE     = 8
