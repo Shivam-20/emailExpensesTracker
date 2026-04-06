@@ -56,6 +56,10 @@ def save_pipeline_config(config: dict[str, Any]) -> None:
 # ── Model name mapping ───────────────────────────────────────────────────────
 _MODEL_MAPPINGS: dict[str, str] = {
     "minilm-l6-v2": "minilm",
+    "tinybert": "tinybert",
+    "albert": "albert",
+    "mobilebert": "mobilebert",
+    "distilbert": "distilbert",
     "tfidf-nb": "tfidf-nb",
 }
 

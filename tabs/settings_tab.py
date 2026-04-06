@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from config.category_map import ALL_CATEGORIES
+from classifier import config, lightweight_models, pipeline
 from styles import (
     ACCENT, BORDER, ERROR, SUCCESS, SURFACE, SURFACE2, SURFACE3,
     TEXT, TEXT_DIM, WARNING,
@@ -32,12 +33,14 @@ class SettingsTab(QWidget):
     reauth_requested      = pyqtSignal()
     clear_cache_requested = pyqtSignal(str)   # month string or "" for all
     backend_changed       = pyqtSignal(str)   # "distilbert" | "phi4-mini"
+    pipeline_changed      = pyqtSignal(dict)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._db        = None
         self._data_dir: Optional[Path] = None
         self._config:   dict = {}
+        self._active_models: list[str] = []
         self._setup_ui()
 
     def set_db(self, db, data_dir: Path, config: dict) -> None:
@@ -61,6 +64,7 @@ class SettingsTab(QWidget):
         layout.addWidget(self._build_budgets_section())
         layout.addWidget(self._build_ignore_section())
         layout.addWidget(self._build_rules_section())
+        layout.addWidget(self._build_pipeline_section())
         layout.addWidget(self._build_ai_backend_section())
         layout.addWidget(self._build_data_section())
         layout.addStretch()
@@ -259,7 +263,183 @@ class SettingsTab(QWidget):
             self._save_config()
             self._load_rules()
 
-    # ── AI Backend section ────────────────────────────────────────────────────
+    # ── Model Pipeline section ──────────────────────────────────────────────────
+
+    def _build_pipeline_section(self) -> QGroupBox:
+        box = QGroupBox("🤖 Model Pipeline")
+        layout = QVBoxLayout(box)
+
+        mode_row = QWidget()
+        mode_l = QHBoxLayout(mode_row)
+        mode_l.setContentsMargins(0, 0, 0, 0)
+        mode_l.addWidget(QLabel("Pipeline Mode:"))
+        self._pipeline_mode_combo = QComboBox()
+        self._pipeline_mode_combo.addItems(["Ensemble Voting", "Cascade Fallback"])
+        self._pipeline_mode_combo.currentTextChanged.connect(self._on_pipeline_mode_changed)
+        mode_l.addWidget(self._pipeline_mode_combo)
+        mode_l.addStretch()
+        layout.addWidget(mode_row)
+
+        layout.addWidget(QLabel("Active Models:"))
+
+        self._pipeline_table = QTableWidget()
+        self._pipeline_table.setColumnCount(4)
+        self._pipeline_table.setHorizontalHeaderLabels(["", "Model Name", "Status", "Actions"])
+        self._pipeline_table.verticalHeader().setVisible(False)
+        hdr = self._pipeline_table.horizontalHeader()
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self._pipeline_table.setMaximumHeight(200)
+        layout.addWidget(self._pipeline_table)
+
+        btn_row = QWidget()
+        btn_l = QHBoxLayout(btn_row)
+        btn_l.setContentsMargins(0, 0, 0, 0)
+
+        self._add_model_combo = QComboBox()
+        self._populate_add_model_combo()
+        btn_l.addWidget(self._add_model_combo)
+
+        add_btn = QPushButton("+ Add Model")
+        add_btn.setObjectName("ghostBtn")
+        add_btn.clicked.connect(self._add_model_to_pipeline)
+        btn_l.addWidget(add_btn)
+
+        btn_l.addStretch()
+
+        save_btn = QPushButton("💾 Save Pipeline")
+        save_btn.clicked.connect(self._save_pipeline_config)
+        btn_l.addWidget(save_btn)
+
+        layout.addWidget(btn_row)
+
+        return box
+
+    def _populate_add_model_combo(self) -> None:
+        self._add_model_combo.clear()
+        self._add_model_combo.addItem("Select model...", None)
+        self._add_model_combo.addItem("TF-IDF/NB (always available)", "tfidf-nb")
+        for model_id, model_info in lightweight_models.MODEL_CONFIGS.items():
+            display = f"{model_info.get('name', model_id).split('/')[-1]} ({model_info.get('params', '')})"
+            self._add_model_combo.addItem(display, model_id)
+
+    def _load_pipeline_config(self) -> None:
+        try:
+            config = pipeline.load_pipeline_config()
+            mode = config.get("mode", "ensemble")
+            self._pipeline_mode_combo.setCurrentText(
+                "Ensemble Voting" if mode == "ensemble" else "Cascade Fallback"
+            )
+            active = config.get("active_models", [])
+            self._active_models = active.copy()
+        except Exception as e:
+            logger.warning("Failed to load pipeline config: %s", e)
+            self._active_models = ["minilm-l6-v2", "tfidf-nb"]
+
+    def _check_model_trained(self, model_name: str) -> bool:
+        model_dir = config.LIGHTWEIGHT_MODEL_DIR / model_name
+        if model_name == "tfidf-nb":
+            return config.MODEL_PATH.exists()
+        return model_dir.exists()
+
+    def _load_pipeline_table(self) -> None:
+        self._pipeline_table.setRowCount(0)
+        for row, model_name in enumerate(self._active_models):
+            is_trained = self._check_model_trained(model_name)
+            display_name = model_name.replace("-", " ").title()
+
+            checkbox = QTableWidgetItem()
+            checkbox.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+            checkbox.setCheckState(Qt.CheckState.Checked)
+            checkbox.setData(Qt.ItemDataRole.UserRole, model_name)
+            self._pipeline_table.setItem(row, 0, checkbox)
+
+            self._pipeline_table.setItem(row, 1, _item(display_name))
+
+            status_text = "✓ Trained" if is_trained else "✗ Not trained"
+            status_item = _item(status_text, center=True)
+            status_item.setForeground(SUCCESS if is_trained else ERROR)
+            self._pipeline_table.setItem(row, 2, status_item)
+
+            actions_widget = QWidget()
+            actions_l = QHBoxLayout(actions_widget)
+            actions_l.setContentsMargins(0, 0, 0, 0)
+            actions_l.setSpacing(4)
+
+            train_btn = QPushButton("Train")
+            train_btn.setObjectName("ghostBtn")
+            train_btn.clicked.connect(lambda _, m=model_name: self._train_model(m))
+            actions_l.addWidget(train_btn)
+
+            remove_btn = QPushButton("✕")
+            remove_btn.setObjectName("ghostBtn")
+            remove_btn.clicked.connect(lambda _, r=row: self._remove_model_from_pipeline(r))
+            actions_l.addWidget(remove_btn)
+
+            self._pipeline_table.setCellWidget(row, 3, actions_widget)
+
+    def _on_pipeline_mode_changed(self, text: str) -> None:
+        pass
+
+    def _add_model_to_pipeline(self) -> None:
+        model_id = self._add_model_combo.currentData()
+        if model_id is None:
+            return
+        if model_id == "minilm":
+            model_key = "minilm-l6-v2"
+        elif model_id == "tfidf-nb":
+            model_key = "tfidf-nb"
+        else:
+            model_key = model_id
+        if model_key not in self._active_models:
+            self._active_models.append(model_key)
+            self._load_pipeline_table()
+
+    def _remove_model_from_pipeline(self, row: int) -> None:
+        if 0 <= row < len(self._active_models):
+            self._active_models.pop(row)
+            self._load_pipeline_table()
+
+    def _train_model(self, model_name: str) -> None:
+        from classifier import lightweight_models
+        try:
+            csv_path = config.TRAINING_CSV
+            if not csv_path.exists():
+                QMessageBox.warning(
+                    self,
+                    "No Training Data",
+                    f"Training data not found at {csv_path}. Please add training data first.",
+                )
+                return
+
+            QMessageBox.information(
+                self,
+                "Train Model",
+                f"Training {model_name}...\n\nThis may take several minutes.",
+            )
+            lightweight_models.train_model(model_name, csv_path, config.LIGHTWEIGHT_MODEL_DIR)
+            QMessageBox.information(self, "Success", f"{model_name} trained successfully!")
+            self._load_pipeline_table()
+        except Exception as exc:
+            logger.exception("Failed to train model: %s", exc)
+            QMessageBox.critical(self, "Training Failed", f"Failed to train model: {exc}")
+
+    def _save_pipeline_config(self) -> None:
+        mode = "ensemble" if self._pipeline_mode_combo.currentText() == "Ensemble Voting" else "cascade"
+        config_data = {
+            "mode": mode,
+            "active_models": self._active_models,
+            "cascade_threshold": 0.80,
+        }
+        try:
+            pipeline.save_pipeline_config(config_data)
+            self.pipeline_changed.emit(config_data)
+            QMessageBox.information(self, "Saved", "Pipeline configuration saved!")
+        except Exception as exc:
+            logger.exception("Failed to save pipeline config: %s", exc)
+            QMessageBox.critical(self, "Error", f"Failed to save: {exc}")
 
     def _build_ai_backend_section(self) -> QGroupBox:
         box = QGroupBox("🤖 Stage 3 AI Backend")
@@ -377,6 +557,8 @@ class SettingsTab(QWidget):
         self._load_budgets()
         self._load_ignore_list()
         self._load_rules()
+        self._load_pipeline_config()
+        self._load_pipeline_table()
         self._load_ai_backend()
 
     def refresh(self) -> None:
