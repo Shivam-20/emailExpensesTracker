@@ -49,6 +49,15 @@ pip install --upgrade pip --quiet
 pip install -r requirements.txt --quiet
 echo "✅  Python dependencies installed"
 
+# ── Download pre-trained models ───────────────────────────────────────────────
+echo ""
+echo "📥  Downloading pre-trained models..."
+if bash "$SCRIPT_DIR/download_models.sh"; then
+    echo "✅  Models downloaded successfully"
+else
+    echo "⚠️  Model download skipped (no releases available yet)"
+fi
+
 # ── Required directories ──────────────────────────────────────────────────────
 echo ""
 echo "📁  Creating required directories..."

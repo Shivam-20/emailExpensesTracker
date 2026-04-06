@@ -15,6 +15,13 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 
+from classifier.config import (
+    LIGHTWEIGHT_MODEL_DIR,
+    check_model_exists,
+    check_for_model_updates,
+    download_model_from_release,
+)
+
 _MODEL_CACHE: dict[str, tuple[Any, Any]] = {}
 _PIPELINE_CACHE: dict[str, Any] = {}
 
@@ -43,7 +50,6 @@ try:
     import torch
     from datasets import Dataset
     from transformers import (
-        AutoDataset,
         AutoModelForSequenceClassification,
         AutoTokenizer,
         Trainer,
@@ -56,6 +62,14 @@ except ImportError:
     _HAS_TRANSFORMERS = False
     _HAS_DATASETS = False
     logger.warning("transformers not installed — BERT models unavailable")
+
+# Check for model updates on import
+try:
+    update_available, new_version = check_for_model_updates()
+    if update_available:
+        logger.info(f"Model update available: {new_version}")
+except Exception:
+    pass
 
 MODEL_CONFIGS: dict[str, dict[str, Any]] = {
     "minilm": {
@@ -203,7 +217,7 @@ def _train_classifier_model(
         num_train_epochs=3,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         logging_steps=50,
@@ -248,6 +262,14 @@ def load_model(model_type: str, model_dir: Path) -> tuple[Any, Any]:
         return _MODEL_CACHE[cache_key]
 
     model_dir = Path(model_dir) / model_type
+
+    if not model_dir.exists():
+        logger.info(f"Model {model_type} not found locally, attempting download...")
+        success = download_model_from_release(model_type, model_dir.parent)
+        if not success:
+            raise FileNotFoundError(
+                f"Model {model_type} not found locally and could not download"
+            )
 
     config = MODEL_CONFIGS[model_type]
 

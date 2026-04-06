@@ -1,0 +1,6 @@
+{
+  "version": "v1.0",
+  "release_date": "2026-04-06",
+  "models": ["minilm", "tfidf-nb"],
+  "description": "Initial model pack with MiniLM-L6-V2 and TF-IDF/NB classifier"
+}

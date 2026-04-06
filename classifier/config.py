@@ -6,6 +6,9 @@ Do NOT hardcode these values anywhere else; import from here.
 
 import json
 from pathlib import Path
+from typing import Optional
+
+import requests
 
 # ── Directory paths ───────────────────────────────────────────────────────────
 _HERE = Path(__file__).parent.parent          # gmail_expense_tracker/
@@ -82,3 +85,65 @@ DISTILBERT_BATCH_SIZE     = 8
 DISTILBERT_EPOCHS         = 3
 DISTILBERT_HIGH_THRESHOLD = 0.85
 DISTILBERT_LOW_THRESHOLD  = 0.65
+
+# ── Model download config ───────────────────────────────────────────────────────
+MODEL_RELEASE_OWNER = "Shivam-20"
+MODEL_RELEASE_REPO = "emailExpensesTracker"
+MODEL_RELEASE_API = f"https://api.github.com/repos/{MODEL_RELEASE_OWNER}/{MODEL_RELEASE_REPO}/releases/latest"
+MODEL_DOWNLOAD_BASE = f"https://github.com/{MODEL_RELEASE_OWNER}/{MODEL_RELEASE_REPO}/releases/download/latest"
+CURRENT_MODEL_VERSION = "v1.0"
+
+# Version file
+MODEL_VERSION_FILE = DATA_DIR / "model_version.json"
+
+
+def check_model_exists(model_path: Path) -> bool:
+    """Check if model file/directory exists locally."""
+    return model_path.exists()
+
+
+def download_model_from_release(model_name: str, dest_dir: Path) -> bool:
+    """Download a model from GitHub release. Returns True if successful."""
+    try:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        download_url = f"{MODEL_DOWNLOAD_BASE}/{model_name}"
+        dest_path = dest_dir / model_name
+
+        response = requests.get(download_url, timeout=120)
+        response.raise_for_status()
+
+        dest_path.write_bytes(response.content)
+        return True
+    except Exception:
+        return False
+
+
+def check_for_model_updates() -> tuple[bool, str]:
+    """Check if newer models available. Returns (update_available, new_version)."""
+    try:
+        response = requests.get(MODEL_RELEASE_API, timeout=30)
+        response.raise_for_status()
+        release_data = response.json()
+        new_version = release_data.get("tag_name", "")
+
+        if not new_version:
+            return False, ""
+
+        local_version = get_local_model_version()
+        if local_version and new_version != local_version:
+            return True, new_version
+
+        return False, new_version
+    except Exception:
+        return False, ""
+
+
+def get_local_model_version() -> str:
+    """Get currently installed model version."""
+    try:
+        if MODEL_VERSION_FILE.exists():
+            data = json.loads(MODEL_VERSION_FILE.read_text())
+            return data.get("version", "")
+    except Exception:
+        pass
+    return ""

@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 from config.category_map import ALL_CATEGORIES
 from classifier import config, lightweight_models, pipeline
+from classifier.config import check_for_model_updates, get_local_model_version, MODEL_VERSION_FILE
 from styles import (
     ACCENT, BORDER, ERROR, SUCCESS, SURFACE, SURFACE2, SURFACE3,
     TEXT, TEXT_DIM, WARNING,
@@ -65,6 +66,7 @@ class SettingsTab(QWidget):
         layout.addWidget(self._build_ignore_section())
         layout.addWidget(self._build_rules_section())
         layout.addWidget(self._build_pipeline_section())
+        layout.addWidget(self._build_model_updates_section())
         layout.addWidget(self._build_ai_backend_section())
         layout.addWidget(self._build_data_section())
         layout.addStretch()
@@ -448,6 +450,107 @@ class SettingsTab(QWidget):
             logger.exception("Failed to save pipeline config: %s", exc)
             QMessageBox.critical(self, "Error", f"Failed to save: {exc}")
 
+    # ── Model Updates section ────────────────────────────────────────────────────
+
+    def _build_model_updates_section(self) -> QGroupBox:
+        box = QGroupBox("🤖 Model Updates")
+        layout = QVBoxLayout(box)
+
+        version_row = QWidget()
+        v_l = QHBoxLayout(version_row)
+        v_l.setContentsMargins(0, 0, 0, 0)
+
+        self._current_version_label = QLabel("Current Version: —")
+        v_l.addWidget(self._current_version_label)
+
+        v_l.addStretch()
+
+        self._update_badge = QLabel("⚠️ Update Available")
+        self._update_badge.setStyleSheet(f"QLabel {{ color: {WARNING}; font-weight: bold; }}")
+        self._update_badge.setVisible(False)
+        v_l.addWidget(self._update_badge)
+
+        layout.addWidget(version_row)
+
+        version_info = QWidget()
+        vi_l = QHBoxLayout(version_info)
+        vi_l.setContentsMargins(0, 0, 0, 0)
+
+        self._latest_version_label = QLabel("Latest Version: —")
+        self._latest_version_label.setObjectName("statusLabel")
+        vi_l.addWidget(self._latest_version_label)
+
+        vi_l.addStretch()
+
+        layout.addWidget(version_info)
+
+        btn_row = QWidget()
+        b_l = QHBoxLayout(btn_row)
+        b_l.setContentsMargins(0, 0, 0, 0)
+
+        self._download_updates_btn = QPushButton("📥 Download Updates")
+        self._download_updates_btn.clicked.connect(self._download_model_updates)
+        self._download_updates_btn.setVisible(False)
+        b_l.addWidget(self._download_updates_btn)
+
+        b_l.addStretch()
+
+        layout.addWidget(btn_row)
+
+        return box
+
+    def _check_model_updates(self) -> None:
+        try:
+            local_version = get_local_model_version() or config.CURRENT_MODEL_VERSION
+            self._current_version_label.setText(f"Current Version: {local_version}")
+
+            update_available, latest_version = check_for_model_updates()
+
+            if update_available and latest_version:
+                self._latest_version_label.setText(f"Latest Version: {latest_version}")
+                self._update_badge.setVisible(True)
+                self._download_updates_btn.setVisible(True)
+            else:
+                self._latest_version_label.setText(f"Latest Version: {local_version} (up to date)")
+                self._update_badge.setVisible(False)
+                self._download_updates_btn.setVisible(False)
+        except Exception as e:
+            logger.warning("Failed to check for model updates: %s", e)
+            self._current_version_label.setText("Current Version: —")
+            self._latest_version_label.setText("Latest Version: —")
+
+    def _download_model_updates(self) -> None:
+        script_path = Path(__file__).parent.parent / "scripts" / "download_models.sh"
+        if not script_path.exists():
+            QMessageBox.critical(self, "Error", "download_models.sh not found")
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Download Updates",
+            "This will download the latest models. Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["bash", str(script_path)],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            if result.returncode == 0:
+                QMessageBox.information(self, "Success", "Models downloaded successfully!")
+                self._check_model_updates()
+            else:
+                QMessageBox.critical(self, "Error", f"Download failed: {result.stderr}")
+        except Exception as exc:
+            logger.exception("Failed to download models: %s", exc)
+            QMessageBox.critical(self, "Error", f"Download failed: {exc}")
+
     def _build_ai_backend_section(self) -> QGroupBox:
         box = QGroupBox("🤖 Stage 3 AI Backend")
         layout = QVBoxLayout(box)
@@ -567,6 +670,7 @@ class SettingsTab(QWidget):
         self._load_pipeline_config()
         self._load_pipeline_table()
         self._load_ai_backend()
+        self._check_model_updates()
 
     def refresh(self) -> None:
         """Called after a new fetch to refresh budget actuals."""
