@@ -285,6 +285,7 @@ class SettingsTab(QWidget):
         self._pipeline_table = QTableWidget()
         self._pipeline_table.setColumnCount(4)
         self._pipeline_table.setHorizontalHeaderLabels(["", "Model Name", "Status", "Actions"])
+        self._pipeline_table.setColumnHidden(0, True)
         self._pipeline_table.verticalHeader().setVisible(False)
         hdr = self._pipeline_table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -381,7 +382,13 @@ class SettingsTab(QWidget):
             self._pipeline_table.setCellWidget(row, 3, actions_widget)
 
     def _on_pipeline_mode_changed(self, text: str) -> None:
-        pass
+        mode = "ensemble" if text == "Ensemble Voting" else "cascade"
+        config_data = {
+            "mode": mode,
+            "active_models": self._active_models,
+            "cascade_threshold": 0.80,
+        }
+        self.pipeline_changed.emit(config_data)
 
     def _add_model_to_pipeline(self) -> None:
         model_id = self._add_model_combo.currentData()
