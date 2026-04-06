@@ -1,5 +1,8 @@
 {
   "mode": "ensemble",
-  "active_models": ["minilm-l6-v2", "tfidf-nb"],
+  "active_models": [
+    "minilm-l6-v2",
+    "tfidf-nb"
+  ],
   "cascade_threshold": 0.8
 }
