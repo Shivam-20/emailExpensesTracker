@@ -74,6 +74,21 @@ CATEGORY_COLORS: dict[str, str] = {
     "Other":         "#6c7086",
 }
 
+EMAIL_CATEGORY_COLORS: dict[str, str] = {
+    "EXPENSE":       "#a6e3a1",
+    "INCOME":        "#f9e2af",
+    "INVESTMENT":    "#cba6f7",
+    "BILLS":         "#fab387",
+    "JOB":           "#89dceb",
+    "NEWS":          "#94e2d5",
+    "SOCIAL":        "#f38ba8",
+    "IMPORTANT":     "#89b4fa",
+    "PROMOTIONS":    "#eba0ac",
+    "PERSONAL":      "#b4befe",
+    "ORDERS":        "#a6e3a1",
+    "ACCOUNT":       "#74c7ec",
+}
+
 # ── Confidence Colors & Badges ────────────────────────────────────────────────
 CONFIDENCE_COLORS = {
     "HIGH":   SUCCESS,

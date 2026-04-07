@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS expenses (
     payment_method        TEXT DEFAULT 'Unknown',
     category              TEXT DEFAULT 'Other',
     category_edited       TEXT,
+    email_category        TEXT,
     tags                  TEXT DEFAULT '[]',
     confidence            TEXT DEFAULT 'LOW',
     status                TEXT DEFAULT 'active',
@@ -79,6 +80,7 @@ class Database:
         additions = {
             "classification_source": "TEXT DEFAULT 'rules'",
             "needs_review":          "INTEGER DEFAULT 0",
+            "email_category":       "TEXT",
         }
         for col, definition in additions.items():
             if col not in existing:
@@ -120,9 +122,10 @@ class Database:
             # Ensure new classifier fields have defaults
             row.setdefault("classification_source", "rules")
             row.setdefault("needs_review", 0)
+            row.setdefault("email_category", None)
 
             existing = self.conn.execute(
-                "SELECT amount_edited, category_edited, tags, status, notes "
+                "SELECT amount_edited, category_edited, tags, status, notes, email_category "
                 "FROM expenses WHERE id=?", (row["id"],)
             ).fetchone()
 
@@ -133,6 +136,8 @@ class Database:
                 row["tags"]            = existing["tags"]
                 row["status"]          = existing["status"]
                 row["notes"]           = existing["notes"]
+                if existing["email_category"]:
+                    row["email_category"] = existing["email_category"]
             else:
                 inserted += 1
 
@@ -140,12 +145,12 @@ class Database:
                 INSERT OR REPLACE INTO expenses
                     (id, fetch_date, email_date, month, sender, sender_email, subject,
                      amount, amount_edited, currency, payment_method,
-                     category, category_edited, tags, confidence, status, snippet, notes,
+                     category, category_edited, email_category, tags, confidence, status, snippet, notes,
                      classification_source, needs_review)
                 VALUES
                     (:id, :fetch_date, :email_date, :month, :sender, :sender_email, :subject,
                      :amount, :amount_edited, :currency, :payment_method,
-                     :category, :category_edited, :tags, :confidence, :status, :snippet, :notes,
+                     :category, :category_edited, :email_category, :tags, :confidence, :status, :snippet, :notes,
                      :classification_source, :needs_review)
             """, row)
 
@@ -231,3 +236,11 @@ class Database:
             (category, amount),
         )
         self.conn.commit()
+
+    # ── Email category analytics ───────────────────────────────────────────────
+
+    def get_all_expenses(self) -> list[sqlite3.Row]:
+        """Return all non-excluded expenses."""
+        return self.conn.execute(
+            "SELECT * FROM expenses WHERE status != 'excluded' ORDER BY email_date DESC"
+        ).fetchall()

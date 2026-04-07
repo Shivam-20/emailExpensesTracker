@@ -481,6 +481,7 @@ class ExpensesTab(QWidget):
                 exp = next((r for r in self._visible_rows if r.get("id") == mid), None)
                 if exp:
                     dlg = _ExpenseDetailDialog(exp, self)
+                    dlg.field_changed.connect(self.field_changed.emit)
                     dlg.exec()
 
     def _start_amount_edit(self, row: int) -> None:
@@ -670,7 +671,9 @@ class _ExpenseDetailDialog(QDialog):
     def __init__(self, exp: dict, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Expense Detail")
-        self.setMinimumSize(520, 400)
+        self.setMinimumSize(520, 440)
+        self._exp = exp
+        self._category_combo: Optional[QComboBox] = None
         layout = QVBoxLayout(self)
 
         title = QLabel(f"<b>{exp.get('subject','')}</b>")
@@ -688,7 +691,29 @@ class _ExpenseDetailDialog(QDialog):
             ("From",     f"{exp.get('sender','')} &lt;{exp.get('sender_email','')}&gt;"),
             ("Amount",   f"<b>{sym}{amt:,.2f}  {exp.get('currency','INR')}</b>"),
             ("Payment",  exp.get("payment_method","Unknown")),
-            ("Category", f"<span style='color:{color};font-weight:bold'>{cat}</span>"),
+        ]:
+            row_w = QFrame()
+            rl = QHBoxLayout(row_w); rl.setContentsMargins(0,0,0,0)
+            lbl = QLabel(f"<span style='color:{TEXT_DIM}'>{label}:</span>")
+            lbl.setFixedWidth(90)
+            val = QLabel(value); val.setWordWrap(True)
+            val.setTextFormat(Qt.TextFormat.RichText)
+            rl.addWidget(lbl); rl.addWidget(val, stretch=1)
+            layout.addWidget(row_w)
+
+        cat_row = QFrame()
+        cat_layout = QHBoxLayout(cat_row); cat_layout.setContentsMargins(0,0,0,0)
+        cat_lbl = QLabel(f"<span style='color:{TEXT_DIM}'>Category:</span>")
+        cat_lbl.setFixedWidth(90)
+        self._category_combo = QComboBox()
+        for c in ALL_CATEGORIES:
+            self._category_combo.addItem(c)
+        self._category_combo.setCurrentText(cat)
+        cat_layout.addWidget(cat_lbl)
+        cat_layout.addWidget(self._category_combo, stretch=1)
+        layout.addWidget(cat_row)
+
+        for label, value in [
             ("Confidence", exp.get("confidence","")),
             ("Snippet",  exp.get("snippet","—")),
         ]:
@@ -701,9 +726,21 @@ class _ExpenseDetailDialog(QDialog):
             rl.addWidget(lbl); rl.addWidget(val, stretch=1)
             layout.addWidget(row_w)
 
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        btns = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
+        btns.accepted.connect(self._on_save)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)
+
+    def _on_save(self) -> None:
+        new_cat = self._category_combo.currentText()
+        self._exp["category_edited"] = new_cat
+        self.field_changed.emit(self._exp["id"], "category_edited", new_cat)
+        self.accept()
+
+    def get_category(self) -> str:
+        return self._category_combo.currentText()
 
 
 class _TagEditorDialog(QDialog):

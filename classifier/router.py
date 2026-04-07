@@ -13,7 +13,9 @@ Stage 3 uses pipeline with configurable mode and models.
 """
 
 import logging
+from typing import Optional
 
+from .category_classifier import predict_category
 from .config import (
     LLM_ACCEPT_BANDS,
     LLM_REVIEW_BAND,
@@ -200,3 +202,46 @@ def classify(email: EmailInput) -> ClassificationResult:
 
     # ── Fallback ──────────────────────────────────────────────────────────────
     return _review_result("All stages uncertain — defaulting to REVIEW")
+
+
+def classify_with_category(email: EmailInput) -> dict:
+    """
+    Classify email for expense/not-expense AND category.
+
+    First runs the main classify() pipeline, then classifies category using
+    category_classifier if the result is EXPENSE.
+
+    Returns:
+        {
+            "label": "EXPENSE" | "NOT_EXPENSE" | "REVIEW",
+            "confidence": float,
+            "confidence_band": str,
+            "category": str | None,
+            "category_confidence": float | None,
+            "needs_review": bool,
+        }
+    """
+    result = classify(email)
+    category: Optional[str] = None
+    category_confidence: Optional[float] = None
+
+    if result.label == "EXPENSE" and not result.needs_review:
+        try:
+            cat_result = predict_category(
+                subject=email.subject,
+                body=email.body,
+                sender=email.sender,
+            )
+            category = cat_result.get("label")
+            category_confidence = cat_result.get("confidence")
+        except Exception as exc:
+            logger.warning("Category classification failed: %s", exc)
+
+    return {
+        "label": result.label,
+        "confidence": result.confidence_score,
+        "confidence_band": result.confidence_band,
+        "category": category,
+        "category_confidence": category_confidence,
+        "needs_review": result.needs_review,
+    }

@@ -1,0 +1,827 @@
+subject,body,sender,category
+Your Amazon order is confirmed,Order #123-4567890-7890123 for Rs.2499 has been confirmed. Delivery expected in 3-5 days.,order-update@amazon.in,EXPENSE
+Swiggy order placed,Your order from Domino's Pizza for Rs.850 has been placed. Estimated delivery 35 mins.,orders@swiggy.com,EXPENSE
+Payment successful for Netflix,Your payment of Rs.499 for Netflix monthly subscription was successful.,billing@netflix.com,EXPENSE
+Uber ride completed,Fare Rs.245 for your ride from MG Road to Sector 62. Paid via UPI.,receipt@uber.com,EXPENSE
+BigBasket order delivered,Your order #BB567890 has been delivered. Total paid Rs.1890.,delivery@bigbasket.com,EXPENSE
+BookMyShow ticket booked,Movie tickets for Avengers Endgame booked. 2 tickets Rs.900. Show time 7:30 PM.,bookings@bookmyshow.com,EXPENSE
+Mobile recharge successful,Rs.399 recharge successful for 9876543210. Valid for 28 days.,recharge@jio.com,EXPENSE
+Zomato order delivered,Your order from KFC delivered. Total Rs.620 paid via Wallet.,noreply@zomato.com,EXPENSE
+Flipkart order shipped,Your order #FK789012345 shipped. Expected delivery by April 10.,shipping@flipkart.com,EXPENSE
+Myntra order confirmed,Order #MN345678 for Rs.1599 confirmed. COD payment.,orders@myntra.com,EXPENSE
+Spotify premium activated,Welcome to Spotify Premium. Your Rs.119 per month subscription is active.,no-reply@spotify.com,EXPENSE
+Petrol pump transaction,HPCL fuel filled: 12.5 litres. Total Rs.1375 paid via card.,transaction@hpcl.com,EXPENSE
+Swiggy Instamart order,Your grocery order delivered. Total Rs.890 paid via UPI.,noreply@swiggy.com,EXPENSE
+Electricity bill paid,Bill payment of Rs.1840 for AC No. 12345678 successful.,billpay@bsesdelhi.com,EXPENSE
+DTH recharge done,Rs.499 recharge successful for Tata Play. Validity extended to June 2024.,recharge@tataplay.com,EXPENSE
+Food delivery order placed,Order from Biryani by KFC for Rs.750 placed. ETA 30 mins.,orders@foodpanda.com,EXPENSE
+Amazon Prime subscription,Your Prime membership renewed. Rs.999 per year.,no-reply@amazon.in,EXPENSE
+Metro card recharge,Your Delhi Metro card recharged with Rs.500. New balance Rs.750.,recharge@delhimetrorail.com,EXPENSE
+OTT subscription renewal,Disney+ Hotstar subscription renewed for Rs.899.,billing@hotstar.com,EXPENSE
+Grocery shopping done,Shopping at Star Bazaar: Rs.2340. Paid via debit card.,transactions@starbazaar.com,EXPENSE
+Pharmacy medicine purchase,Apollo Pharmacy purchase: Rs.560. Medicines ready for pickup.,pharmacy@apollo.com,EXPENSE
+Online course fee paid,Udemy course purchase: Rs.499. Access granted.,payment@udemy.com,EXPENSE
+Insurance premium paid,Term insurance premium Rs.5500 deducted for policy #TB123456.,premium@licindia.com,EXPENSE
+Train ticket booked,IRCTC ticket for Delhi to Mumbai booked. Fare Rs.1250.,bookings@irctc.co.in,EXPENSE
+Flight ticket purchased,Air India flight Delhi to Bangalore: Rs.4500 booked.,bookings@airindia.com,EXPENSE
+Gas cylinder booking,LP Gas cylinder booked. Delivery charges Rs.50. Payment Rs.1150.,booking@indiangas.com,EXPENSE
+Hospital bill payment,Apollo Hospitals bill of Rs.4500 paid successfully.,billing@apollohospitals.com,EXPENSE
+School fee payment,DPS school fee Rs.4500 paid for April 2024.,fees@dps.edu,EXPENSE
+Club membership renewal,Club membership renewed for Rs.25000.,fees@club.com,EXPENSE
+Maintenance payment,Society maintenance Rs.3500 paid for April.,maintenance@society.com,EXPENSE
+Petrol pump payment,HP Petrol pump payment Rs.1620 for 15 litres.,transaction@hpcl.com,EXPENSE
+Coffee shop purchase,Coffee at Cafe Coffee Day: Rs.180. Paid via UPI.,payment@ccdcafe.com,EXPENSE
+Fast food order,McDonald's order Rs.450 delivered. Paid via Swiggy.,orders@swiggy.com,EXPENSE
+Clothing purchase,Myntra order for shirts: Rs.2999. Free delivery.,orders@myntra.com,EXPENSE
+Gym membership renewal,Annual gym membership Rs.6000 renewed.,payment@fitnessfirst.com,EXPENSE
+Mobile purchase,OnePlus mobile Rs.35000 purchased from Amazon.,order-update@amazon.in,EXPENSE
+Kitchen appliances,Prestige cookware set Rs.4500 ordered.,orders@snapdeal.com,EXPENSE
+Footwear purchase,Sports shoes Nike Rs.5500 from Flipkart.,order@flipkart.com,EXPENSE
+Watch purchase,Fossil watch Rs.8500 bought from Amazon.,order@amazon.in,EXPENSE
+Furniture purchase,Sofa set Rs.25000 from Pepperfry.,orders@pepperfry.com,EXPENSE
+Air purifier bought,Air purifier Rs.12000 from Flipkart.,order@flipkart.com,EXPENSE
+Laptop purchase,Dell laptop Rs.55000 from Amazon.,order@amazon.in,EXPENSE
+Surgical items bought,Medical supplies Rs.1200 from Apollo Pharmacy.,pharmacy@apollo.com,EXPENSE
+Diagnostic test,Lab test at Dr. Lal PathLabs: Rs.1500.,billing@lalpathlabs.com,EXPENSE
+Eye checkup,Eye test at Appasamy Eye Hospital: Rs.800.,appointment@appasamy.com,EXPENSE
+Dental treatment,Dental cleaning Rs.1500 at Apollo Dental.,billing@apollohospitals.com,EXPENSE
+Vaccination dose,COVID vaccination Rs.500 at civic center.,health@ govt.in,EXPENSE
+Salon appointment,Haircut and spa at Jawed Habib: Rs.1200.,booking@jawedhabib.com,EXPENSE
+Dry cleaning,Cloth cleaning at Monday: Rs.450.,service@monday.in,EXPENSE
+Newspaper subscription,Daily newspaper subscription Rs.600 per month.,subscription@timesgroup.com,EXPENSE
+Magazine subscription,India Today magazine Rs.2500 yearly.,subscription@intoday.com,EXPENSE
+Digital subscription,The Hindu digital access Rs.1200 per year.,digital@thehindu.com,EXPENSE
+Salary credited to your account,Salary transfer of Rs.55000 credited to your HDFC account.,salary@hdfc.com,INCOME
+Refund processed for order,Refund of Rs.1299 initiated for order #123. Will reflect in 3-5 days.,refunds@amazon.in,INCOME
+Interest earned on FD,Your fixed deposit has earned interest Rs.4500. Current FD value Rs.1.45 lakh.,interest@icicibank.com,INCOME
+Dividend received,Dividend of Rs.2500 credited for 50 shares of TCS held.,dividend@linkintime.co.in,INCOME
+Freelance payment received,Payment Rs.15000 received from Client ABC for project services.,payment@upwork.com,INCOME
+Tax refund credited,Income tax refund of Rs.12500 credited to your account.,refund@incometax.gov.in,INCOME
+Rent deposit returned,Your rent deposit Rs.50000 returned to your account.,landlord@example.com,INCOME
+Pension credited,Monthly pension Rs.12000 credited to your account.,pension@psu.com,INCOME
+Commission earned,Commission of Rs.3500 earned on referral. Credited to wallet.,rewards@paytm.com,INCOME
+Sales commission paid,Sales commission Rs.8000 for March 2024 credited.,payroll@company.com,INCOME
+Refund from utility,Electricity bill overcharge refund Rs.340 credited.,refund@bsesdelhi.com,INCOME
+Rental income credited,Rent Rs.25000 received for April property.,tenant@example.com,INCOME
+Bonus credited,Performance bonus Rs.15000 credited to your account.,payroll@company.com,INCOME
+Stipend received,Internship stipend Rs.10000 credited for March 2024.,hr@startup.com,INCOME
+Reimbursement processed,Medical reimbursement Rs.8500 credited to account.,reimbursement@company.com,INCOME
+Gift card balance added,Amazon Gift Card Rs.500 added to your account.,gifts@amazon.in,INCOME
+Cashback credited,Cashback of Rs.125 credited to your Paytm wallet.,cashback@paytm.com,INCOME
+Winning amount credited,Contest winning Rs.5000 credited to your account.,prizes@samsung.com,INCOME
+Insurance claim credited,Health insurance claim Rs.25000 processed and credited.,claims@icicilombard.com,INCOME
+Dividend from mutual fund,Dividend Rs.1800 credited for SIP investment in HDFC Balanced Fund.,mf@camsexecute.com,INCOME
+Pension received,Monthly pension of Rs.15000 credited to your account.,pension@licindia.com,INCOME
+Gift received,Gift of Rs.10000 received from uncle.,gifts@email.com,INCOME
+Quarterly bonus,Quarterly performance bonus Rs.25000 credited.,payroll@company.com,INCOME
+Incentive payment,Sales incentive Rs.12000 credited to account.,incentive@company.com,INCOME
+Referral bonus,Referral bonus Rs.5000 for new customer signup.,bonus@bank.com,INCOME
+Rental advance returned,Rental advance Rs.25000 returned by tenant.,landlord@example.com,INCOME
+Child support credited,Monthly child support Rs.8000 credited.,support@familycourt.gov.in,INCOME
+Alimony received,Alimony payment Rs.15000 credited to account.,payments@legal.com,INCOME
+Scholarship amount,Academic scholarship Rs.50000 credited.,scholarship@edu.gov.in,INCOME
+Research grant,Research grant Rs.100000 received for project.,grant@ugc.ac.in,INCOME
+Stock purchase confirmation,You purchased 10 shares of RELIANCE at Rs.2800. Total Rs.28000.,broker@zerodha.com,INVESTMENT
+FD matured,Your FD of Rs.100000 has matured. Interest Rs.8500 credited.,maturity@sbibnk.com,INVESTMENT
+Mutual fund redemption,Redemption of Rs.50000 from Nippon India Small Cap Fund processed.,redemption@karvy.com,INVESTMENT
+SIP investment confirmed,Monthly SIP of Rs.5000 in ICICI Prudential Bluechip Fund activated.,sip@camsexecute.com,INVESTMENT
+Stock dividend received,Dividend of Rs.2000 received for 100 shares of HDFC Bank.,dividend@linkintime.co.in,INVESTMENT
+NPS contribution credited,Rs.5000 contributed to NPS. Tax benefit claimed.,contribution@npscns.nic.in,INVESTMENT
+Gold bond purchased,Sovereign Gold Bond purchased: 2 grams at Rs.6200 per gram.,gbond@sbibnk.com,INVESTMENT
+Stock sell confirmation,50 shares of INFY sold at Rs.1800. Proceeds Rs.90000.,trading@upstox.com,INVESTMENT
+ELSS investment proof,Investment of Rs.50000 in Axis ELSS Fund for tax saving.,confirmation@camsexecute.com,INVESTMENT
+PPF interest credited,Interest of Rs.12400 credited to your PPF account.,interest@postoffice.gov.in,INVESTMENT
+Cryptocurrency transaction,0.05 BTC purchased at Rs.2800000. Transaction successful.,wallet@wazirx.com,INVESTMENT
+REIT investment confirmed,Invested Rs.25000 in Embassy Office Parks REIT.,investment@linkintime.co.in,INVESTMENT
+SGB redemption processed,Sovereign Gold Bond redeemed. Proceeds Rs.45000 credited.,redemption@sbibnk.com,INVESTMENT
+Insurance maturity claim,Maturity claim of Rs.250000 paid for your endowment policy.,claim@licindia.com,INVESTMENT
+Portfolio update,Your investment portfolio value updated: Rs.550000 plus 5.2 percent this month.,portfolio@moneyspring.com,INVESTMENT
+Monthly statement ULIP,Your ULIP policy value is now Rs.320000 after 24 months.,statement@hdfclife.com,INVESTMENT
+Stocks traded,You bought 20 shares of TATASTEEL at Rs.1500. Total Rs.30000.,trading@zerodha.com,INVESTMENT
+New FCNR deposit,Fixed deposit of Rs.2 lakh opened in FCNR account.,deposit@icicibank.com,INVESTMENT
+RD maturity,Recurring deposit of Rs.100000 matured with interest.,maturity@sbibnk.com,INVESTMENT
+Bonds purchased,Government bonds worth Rs.50000 purchased.,investment@rbi.org.in,INVESTMENT
+Index fund purchase,Nifty 50 index fund Rs.25000 invested.,investment@camsexecute.com,INVESTMENT
+PMS investment,Portfolio management service Rs.500000 invested.,investment@pms.com,INVESTMENT
+AIF investment,Alternative Investment Fund Rs.1000000 invested.,fund@aif.com,INVESTMENT
+NPS partial withdrawal,Partial withdrawal of Rs.50000 from NPS processed.,withdrawal@npscns.nic.in,INVESTMENT
+EPF interest credit,EPF account credited with interest Rs.45000.,epf@epfindia.gov.in,INVESTMENT
+Provident fund withdrawal,EPF withdrawal Rs.250000 processed.,withdrawal@epfindia.gov.in,INVESTMENT
+Electricity bill for April,Your BSES electricity bill: Rs.2450. Due date: April 25.,bill@bsesdelhi.com,BILLS
+Credit card payment due,Your HDFC credit card bill: Rs.18450. Minimum due: Rs.925. Due April 10.,statement@hdfc.com,BILLS
+Loan EMI debited,Home loan EMI Rs.32000 debited from your account.,emi@hdfc.com,BILLS
+Water bill notification,Delhi Jal Board water bill: Rs.450. Pay before April 30.,bill@djb.gov.in,BILLS
+Mobile bill generated,Airtel postpaid bill: Rs.799. Due April 15.,bill@airtel.com,BILLS
+Broadband bill due,ACT Fibernet bill Rs.1200 due for payment.,billing@actfibernet.com,BILLS
+Insurance premium due,Term insurance premium Rs.5500 due. Auto-debit scheduled.,premium@licindia.com,BILLS
+Credit card annual fee,Annual fee of Rs.500 charged for your credit card.,fee@hdfc.com,BILLS
+Property tax due,Property tax Rs.12000 due for Q1 2024.,tax@mdda.gov.in,BILLS
+School fee installment,Quarterly school fee Rs.15000 due for your child.,fees@dps.edu,BILLS
+Hospital bill pending,IP bill of Rs.45000 pending. Please clear within 7 days.,billing@apollohospitals.com,BILLS
+Temple donation receipt,Donation Rs.5000 received. Tax benefit applicable.,donation@temple.org,BILLS
+Maintenance charge due,Society maintenance Rs.3500 for April due.,maintenance@society.com,BILLS
+Legal notice for dues,Reminder: Outstanding amount Rs.25000 due for payment.,legal@creditor.com,BILLS
+Rent due this month,Monthly rent Rs.25000 due. Please transfer to account.,landlord@example.com,BILLS
+Tiffin service bill,Monthly tiffin service bill Rs.2000 for April.,billing@tiffin.com,BILLS
+Gas bill due,PNG bill Rs.800 due for payment.,bill@mahanagargas.com,BILLS
+DTH subscription due,Sky TV subscription Rs.550 due for April.,billing@dishtv.com,BILLS
+Phone landline bill,MTNL phone bill Rs.450 due.,bill@mtnl.in,BILLS
+Clubhouse charges,Monthly clubhouse charges Rs.2000 due.,billing@club.com,BILLS
+Parking fee due,Monthly parking fee Rs.1000 for apartment.,parking@society.com,BILLS
+Electricity bill for May,BSES electricity bill Rs.2800. Due June 5.,bill@bsesdelhi.com,BILLS
+Credit card minimum due,Your credit card minimum payment Rs.1500 due.,statement@axisbank.com,BILLS
+Car loan EMI,Car loan EMI Rs.18000 debited from account.,emi@icicibank.com,BILLS
+Personal loan EMI,Personal loan EMI Rs.12000 debited.,loan@bank.com,BILLS
+New job opening Python Developer,We are hiring Python Developer with 2-3 years experience. Apply now.,jobs@techcorp.com,JOB
+Application received,Your application for Software Engineer position has been received.,careers@infosys.com,JOB
+Interview scheduled,Technical interview scheduled for April 15 at 10 AM.,recruitment@tcs.com,JOB
+Job offer letter,Congratulations! Offer letter for Associate role attached. Salary: 8 LPA.,hr@company.com,JOB
+Interview result,You have been selected! Offer letter will be sent by Monday.,hiring@wipro.com,JOB
+Resume shortlisted,Your resume has been shortlisted for Data Analyst role.,jobs@naukri.com,JOB
+Career fair invitation,Join us at the Tech Career Fair on April 20. 50 plus companies participating.,events@shiksha.com,JOB
+Job alert UI UX Designer,New opening for UI UX Designer in Bangalore. Salary up to 12 LPA.,alerts@indeed.com,JOB
+Internship opportunity,Summer internship for B.Tech students. Stipend Rs.15000 per month.,careers@startup.io,JOB
+Referral bonus earned,Referral bonus Rs.5000 credited for successfully referring a candidate.,bonus@company.com,JOB
+Job rejection letter,Thank you for applying. We have selected other candidates.,recruitment@company.com,JOB
+Promotion announced,Congratulations on your promotion to Senior Manager!,announcement@company.com,JOB
+Job market insights,Latest job market report: Tech jobs up 15 percent in Q1 2024.,insights@linkedin.com,JOB
+Employee referral program,Refer a friend and earn Rs.10000 bonus.,hr@company.com,JOB
+Work from home policy,New WFH policy: 3 days per week allowed.,policy@company.com,JOB
+Resume submitted,Your resume submitted successfully for the position of QA Engineer.,jobs@indeed.com,JOB
+Job alert for data scientist,Data Scientist opening in Chennai. Salary 15 LPA. Apply now.,jobs@shine.com,JOB
+Campus placement drive,Google campus placement drive on April 25. Register now.,placements@college.edu,JOB
+Certificate verification,Your employment certificate is ready for download.,hr@company.com,JOB
+Salary revision letter,Your salary revised to Rs.75000 per month effective April.,payroll@company.com,JOB
+Relocation allowance,Relocation allowance Rs.50000 approved.,finance@company.com,JOB
+Training completion,Congratulations on completing your training program.,training@company.com,JOB
+Exit interview scheduled,Exit interview scheduled for April 30 at 2 PM.,hr@company.com,JOB
+Background verification,Your background verification completed successfully.,verification@checkr.com,JOB
+Offer letter pending,Please sign and return the offer letter by tomorrow.,hr@company.com,JOB
+Weekly tech news digest,Top 10 tech stories this week: AI developments and new launches.,digest@technews.com,NEWS
+Newsletter Startup updates,This weeks startup funding: 5 Indian startups raised Rs.500 Crore.,newsletter@inc42.com,NEWS
+Daily news summary,Top headlines: IPL results and stock market updates.,news@indiatoday.com,NEWS
+App update notification,New version 3.0 released with improved features. Update now.,updates@app.com,NEWS
+YouTube notification,New video uploaded: Python Tutorial for Beginners.,notifications@youtube.com,NEWS
+Calendar invite Team meeting,Team sync scheduled for April 12 at 3 PM. Agenda: Weekly review.,calendar@google.com,NEWS
+RSS feed update,New article: Future of Remote Work in India.,feed@medium.com,NEWS
+Weather alert today,Heatwave warning: Temperature may reach 45 degree Celsius in Delhi.,alert@imd.gov.in,NEWS
+Sports score update,IPL: RCB vs CSK - RCB won by 8 wickets.,scores@cricinfo.com,NEWS
+Breaking news alert,Breaking: RBI keeps repo rate unchanged at 6.5 percent.,news@ndtv.com,NEWS
+GitHub notification,New pull request in repository: feature login page.,notifications@github.com,NEWS
+Stack Overflow digest,Top questions this week in Python and JavaScript.,digest@stackoverflow.com,NEWS
+Medium daily read,Recommended article: Building Scalable Apps with React.,notifications@medium.com,NEWS
+Reddit top posts,Trending today: r India discussions on job market.,notifications@reddit.com,NEWS
+Podcast new episode,New episode: Interview with startup founders.,podcasts@spotify.com,NEWS
+Code commit notification,Code committed to main branch by developer.,vcs@github.com,NEWS
+CI CD pipeline success,Pipeline run 123 passed successfully.,ci@jenkins.com,NEWS
+Code review request,Code review requested for PR #456.,review@github.com,NEWS
+Stack trace error,Production error: NullPointerException in OrderService.,alerts@sentry.io,NEWS
+Server health check,All systems operational. No issues detected.,monitoring@datadog.com,NEWS
+New follower on LinkedIn,Recruiter from Microsoft viewed your profile.,notifications@linkedin.com,NEWS
+Trending topic alert,Trending: Artificial Intelligence in India.,trends@twitter.com,NEWS
+News article shared,Article shared by colleague: Tech Industry Outlook 2024.,share@linkedin.com,NEWS
+New blog post,New blog post: How to Ace Your Next Interview.,notifications@medium.com,NEWS
+WhatsApp group invite,You have been added to College Batch 2018 group.,invite@whatsapp.com,SOCIAL
+Instagram new follower,New follower: user123 started following you.,notification@instagram.com,SOCIAL
+Facebook friend request,John Doe sent you a friend request.,notifications@facebook.com,SOCIAL
+LinkedIn connection request,Software Engineer from Google wants to connect.,invites@linkedin.com,SOCIAL
+Twitter new mention,At techguru mentioned you in a tweet.,notification@twitter.com,SOCIAL
+Telegram group update,New message in Family Group: 5 unread messages.,telegram@web.telegram.org,SOCIAL
+Birthday reminder,Your friend Rahuls birthday is tomorrow. Send wishes!,reminders@facebook.com,SOCIAL
+WhatsApp status update,Rahul updated status: Happy birthday!,status@whatsapp.com,SOCIAL
+Snapchat friend added,New friend added: Priya follows you back.,notifications@snapchat.com,SOCIAL
+Discord server invite,You have been invited to join Gaming Community.,invites@discord.com,SOCIAL
+TikTok new follower,New follower: at dancequeen started following you.,notification@tiktok.com,SOCIAL
+WhatsApp video call missed,Missed video call from Mom 2 mins ago.,call@whatsapp.com,SOCIAL
+Instagram story reply,Someone replied to your story: Looks amazing!,notification@instagram.com,SOCIAL
+LinkedIn profile view,Your profile was viewed by recruiter at Google.,insights@linkedin.com,SOCIAL
+Facebook event invite,You are invited to Rahuls birthday party on April 20.,events@facebook.com,SOCIAL
+WhatsApp voice call,Voice call from Bestie 5 minutes.,call@whatsapp.com,SOCIAL
+Photo tag on Facebook,You were tagged in a photo by Friend.,tags@facebook.com,SOCIAL
+Tweet liked,Your tweet was liked by 50 people.,notifications@twitter.com,SOCIAL
+Instagram post shared,Your Instagram post reached 1000 views.,insights@instagram.com,SOCIAL
+WhatsApp group admin,You have been made admin of Family Group.,admin@whatsapp.com,SOCIAL
+Discord direct message,New DM from GamingServer: Ready to play?,messages@discord.com,SOCIAL
+LinkedIn endorsement,Your skills endorsed by colleague.,endorsement@linkedin.com,SOCIAL
+Birthday post on timeline,Happy birthday post on your timeline.,timeline@facebook.com,SOCIAL
+YouTube comment reply,Someone replied to your comment.,notifications@youtube.com,SOCIAL
+Urgent Server down,CRITICAL: Production server is down. Immediate attention required.,alert@ops.com,IMPORTANT
+Payment failed action needed,Your payment of Rs.5000 failed. Please retry immediately.,alerts@paytm.com,IMPORTANT
+Account blocked for security,Your account has been temporarily blocked. Verify identity now.,security@bank.com,IMPORTANT
+Emergency Data breach alert,Security alert: Unusual login detected from new device.,security@google.com,IMPORTANT
+Invoice overdue reminder,Payment overdue: Invoice #12345 Rs.50000 due 3 days ago.,collections@vendor.com,IMPORTANT
+Critical system alert,Server CPU usage at 95 percent. Auto-scaling triggered.,monitoring@aws.com,IMPORTANT
+Deadline tomorrow Tax filing,Last date for income tax filing is tomorrow. Submit now.,alert@incometax.gov.in,IMPORTANT
+Urgent Document required,Please submit Aadhaar card for KYC verification by tomorrow.,kyc@bank.com,IMPORTANT
+Immediate attention needed,Your loan application requires clarification. Call now.,urgent@bank.com,IMPORTANT
+Medical emergency Appointment,Dr. Sharma available tomorrow for consultation. Call to confirm.,appointment@hospital.com,IMPORTANT
+Flight cancellation alert,Your flight AI205 Delhi-Mumbai cancelled. Rebook immediately.,alerts@airindia.com,IMPORTANT
+Police verification urgent,Police verification required for passport. Visit nearest station.,alert@police.gov.in,IMPORTANT
+Blood donation request,Blood needed for emergency surgery at Apollo. Type O plus required.,request@redcross.org,IMPORTANT
+Exam result declared,Board exam results to be declared tomorrow at 10 AM.,alerts@cbse.nic.in,IMPORTANT
+Loan approval documents ready,Your loan documents are ready for signing. Visit branch.,urgent@hdfc.com,IMPORTANT
+Legal court notice,You have been served a legal notice. Respond within 7 days.,legal@court.gov.in,IMPORTANT
+Vehicle accident report,Accident reported involving your vehicle. Contact insurance.,accident@insurance.com,IMPORTANT
+FIR filed complaint,FIR filed against unknown person. Case number generated.,police@delhipolice.gov.in,IMPORTANT
+Hospitalization alert,Your relative admitted to ICU. Emergency contact required.,emergency@hospital.com,IMPORTANT
+Fire safety alert,Fire alarm triggered in your building. Evacuate immediately.,safety@society.com,IMPORTANT
+Gas leak warning,Gas leak detected in your area. Move to safe zone.,alert@pgas.gov.in,IMPORTANT
+Earthquake alert,Earthquake of magnitude 5.8 detected. Take shelter.,alert@ndma.gov.in,IMPORTANT
+Flood warning,Flood warning issued for your area. Move to higher ground.,alert@imd.gov.in,IMPORTANT
+Ambulance needed,Ambulance dispatched to your location. ETA 10 mins.,emergency@108.in,IMPORTANT
+Offer 50 percent off on electronics,Grand Sale! 50 percent off on all electronics. Limited time offer.,offers@flipkart.com,PROMOTIONS
+Buy 1 Get 1 free,Special offer: Buy any pizza and get one free this weekend.,offers@dominos.com,PROMOTIONS
+Free delivery on orders,Free delivery on orders above Rs.299. Valid only today.,promo@swiggy.com,PROMOTIONS
+Bank offer 10 percent cashback,10 percent cashback on Amazon purchases using HDFC debit card.,offers@hdfc.com,PROMOTIONS
+New user discount,Sign up now and get Rs.200 off on first order.,discount@zomato.com,PROMOTIONS
+Limited period offer,Get 30 percent off on all rides this month. Use code: RIDE30.,offers@uber.com,PROMOTIONS
+Festival sale announced,Diwali Sale: Up to 70 percent off on all categories.,promo@myntra.com,PROMOTIONS
+Cashback offer Paytm,Get 5 percent cashback on mobile recharges via Paytm.,cashback@paytm.com,PROMOTIONS
+Credit card deals,40 percent off at Dominos with your credit card.,deals@hdfc.com,PROMOTIONS
+Groupon deal alert,60 percent off on spa and massage packages in your area.,deals@groupon.in,PROMOTIONS
+Hotel booking discount,30 percent off on hotel bookings in Goa. Book now!,offers@oyo.com,PROMOTIONS
+Amazon Great Indian Festival,Biggest sale of the year starts tomorrow. Save big!,promo@amazon.in,PROMOTIONS
+Mobile exchange offer,Get up to Rs.15000 exchange value for old phone.,exchange@flipkart.com,PROMOTIONS
+Free trial extended,Your free trial extended by 30 days. Subscribe now!,trial@netflix.com,PROMOTIONS
+Grocery cashback,5 percent cashback on groceries this week.,offers@bigbasket.com,PROMOTIONS
+Insurance promo,Get term insurance at 30 percent discount. Limited time.,promo@policybazaar.com,PROMOTIONS
+Dining offers,50 percent off at 100 plus restaurants this weekend.,offers@zomato.com,PROMOTIONS
+Flight booking promo,Flat Rs.500 off on flight tickets. Use FLIGHT500.,deals@makeyourtrip.com,PROMOTIONS
+Yoga class discount,First month yoga classes at Rs.499 only.,offer@yogastudio.com,PROMOTIONS
+Amazon prime day sale,Amazon Prime Day: Deals on electronics and more.,promo@amazon.in,PROMOTIONS
+Flipkart big billion days,Big Billion Days sale starts. Up to 80 percent off.,promo@flipkart.com,PROMOTIONS
+Myntra end of season sale,End of season sale: 60 percent off on all items.,sale@myntra.com,PROMOTIONS
+Croma tech sale,Electronics sale at Croma: Up to 40 percent off.,offers@croma.com,PROMOTIONS
+Tanishq jewelry offer,Gold jewelry: Flat 20 percent off on making charges.,offers@tanishq.com,PROMOTIONS
+Reliance digital sale,Smartphone sale: Up to 30 percent off.,sale@reliancedigital.com,PROMOTIONS
+Ajio fashion sale,Fashion sale: 50 percent off on premium brands.,offers@ajio.com,PROMOTIONS
+From Mom,Can you call me when you get free? Need to discuss something.,mom@gmail.com,PERSONAL
+Re Weekend plans,Are you free on Saturday? Lets catch up for lunch.,friend@gmail.com,PERSONAL
+Your friend sent a photo,Check out this photo from the trip!,photo-sharing@email.com,PERSONAL
+Recipe shared,Here is the recipe for the dish you asked about.,cousin@gmail.com,PERSONAL
+Wedding invitation,You are invited to the wedding of our son on April 25.,family@example.com,PERSONAL
+Thank you note,Thank you for the birthday gift! Really appreciate it.,friend@gmail.com,PERSONAL
+Reunion planning,Lets plan a college reunion next month. Please share your availability.,classmate@gmail.com,PERSONAL
+Recipe for Biryani,Found this great Biryani recipe. Try it and let me know!,auntie@gmail.com,PERSONAL
+Sick leave update,Im feeling better now. Will join office from Monday.,colleague@company.com,PERSONAL
+Gifting ideas needed,Need suggestions for anniversary gift. Help!,spouse@gmail.com,PERSONAL
+Car pooling tomorrow,Anyone interested in car pooling to office tomorrow?,colleague@company.com,PERSONAL
+Birthday party details,Party at my place on Saturday 7 PM. Dont miss it!,friend@gmail.com,PERSONAL
+School project help,Can you help my son with his science project?,sibling@gmail.com,PERSONAL
+Recipe from grandmother,Here is the traditional halwa recipe.,grandma@gmail.com,PERSONAL
+Job reference request,Can you please be my reference for the new job?,friend@company.com,PERSONAL
+Trip photos shared,Photos from Manali trip uploaded. Check them!,travel@email.com,PERSONAL
+Diet plan request,Can you share your diet and workout plan?,gymfriend@gmail.com,PERSONAL
+Moving to new city,Moving to Bangalore next month. Any apartment recommendations?,cousin@gmail.com,PERSONAL
+Recipe share,Your recipe for Dal Makhani turned out great!,friend@gmail.com,PERSONAL
+Call me please,Please call me when you are free. Urgent.,mom@gmail.com,PERSONAL
+House warming invite,House warming ceremony on April 30. Please attend!,friend@gmail.com,PERSONAL
+New baby born,Baby girl born at Apollo Hospital. Both healthy.,family@example.com,PERSONAL
+Condolence message,Sorry to hear about your loss. My condolences to family.,friend@gmail.com,PERSONAL
+Anniversary wish,Happy anniversary! Wishing you both lots of love.,wishes@email.com,PERSONAL
+Exam results support,All the best for your exams tomorrow!,support@family.com,PERSONAL
+Job success celebration,Congratulations on the new job! Lets celebrate.,friend@gmail.com,PERSONAL
+Moving help request,Need help moving to new apartment this weekend.,help@friend.com,PERSONAL
+Amazon order shipped,Your order #123-4567890 shipped. Delivery expected by April 12.,ship@amazon.in,ORDERS
+Flipkart order confirmed,Order #FK7890123 confirmed. Payment: Rs.2499 via UPI.,confirmation@flipkart.com,ORDERS
+Order out for delivery,Your Swiggy order is out for delivery. ETA 20 mins.,tracking@swiggy.com,ORDERS
+Order delivered successfully,Your order from Zomato delivered. Enjoy your meal!,delivery@zomato.com,ORDERS
+Tracking link for order,Track your package here: https://track.shiprocket.in/12345,ship@delhivery.com,ORDERS
+Order cancelled,Your order #123 cancelled. Refund initiated.,cancel@amazon.in,ORDERS
+Myntra order return initiated,Return pickup scheduled for April 15.,returns@myntra.com,ORDERS
+Order delayed notification,Your order is delayed by 2 days. We apologize for inconvenience.,support@flipkart.com,ORDERS
+Shipment arrived at hub,Your package has arrived at Delhi distribution hub.,tracking@bluedart.com,ORDERS
+Customs clearance update,Your international package pending customs clearance.,customs@fedex.com,ORDERS
+Order replacement confirmed,Replacement order #REPL123 shipped.,replacement@amazon.in,ORDERS
+Delivery rescheduled,New delivery date: April 18. Original date was April 15.,delivery@flipkart.com,ORDERS
+Order exchange processed,Exchange order #EX123 shipped. Expected delivery 3 days.,ship@amazon.in,ORDERS
+Gift order confirmation,Gift order for your friend delivered successfully.,gifting@amazon.in,ORDERS
+BigBasket order packed,Your order #BB567890 packed. Will be delivered tomorrow.,packing@bigbasket.com,ORDERS
+Order out for pickup,Your order ready for pickup at Flipkart Pickup Point.,pickup@flipkart.com,ORDERS
+International order customs,Your order from USA cleared customs. Out for delivery.,tracking@dtdc.com,ORDERS
+Order refund initiated,Refund Rs.1299 initiated for returned order.,refund@amazon.in,ORDERS
+Order delivery confirmed,Your Flipkart order delivered to your address.,delivery@flipkart.com,ORDERS
+Order confirmation email,Order #9876543 confirmed. Payment successful.,confirm@shopclues.com,ORDERS
+Delivery attempt failed,Delivery attempt failed. Customer not available.,failed@delivery.com,ORDERS
+COD payment collected,Cash on delivery Rs.500 collected for order.,payment@delivery.com,ORDERS
+Order quality check,Quality check completed. Product in good condition.,qc@amazon.in,ORDERS
+Monthly account statement,Your HDFC Bank account statement for March 2024 is ready.,statement@hdfc.com,ACCOUNT
+Balance alert Low balance,Your account balance is Rs.2500. Please maintain minimum Rs.5000.,alerts@icicibank.com,ACCOUNT
+New login detected,New login from Chrome on Windows. Location: Delhi.,security@hdfc.com,ACCOUNT
+Password changed successfully,Your password was changed on April 10. If not you reset now.,security@google.com,ACCOUNT
+Credit card limit increased,Your credit card limit increased to Rs.5 lakh.,limit@axisbank.com,ACCOUNT
+UPI transaction alert,Rs.500 paid to merchant via UPI. Ref: 123456789012.,alert@paytm.com,ACCOUNT
+FD maturity reminder,Your FD of Rs.1 lakh matures on April 20. Renew now.,reminder@sbibnk.com,ACCOUNT
+KYC verification required,Complete your KYC to continue using the account.,kyc@paytm.com,ACCOUNT
+New credit card delivered,Your new HDFC credit card delivered. Activate now.,delivery@hdfc.com,ACCOUNT
+Loan account summary,Home loan summary: Outstanding Rs.45 lakh. EMI: Rs.32000.,account@hdfc.com,ACCOUNT
+Wallet balance low,Your Amazon Pay balance is Rs.150. Recharge to continue.,balance@amazonpay.in,ACCOUNT
+Debit card blocked,Your debit card blocked for security. Apply for new card.,security@sbibnk.com,ACCOUNT
+Standing instruction set,SIP of Rs.5000 set up for mutual fund.,instruction@icicibank.com,ACCOUNT
+Account verification pending,Verify your email to complete account setup.,verify@paypal.com,ACCOUNT
+e-Statement available,Your March 2024 credit card e-statement is available.,statement@hdfc.com,ACCOUNT
+Aadhaar update notification,Aadhaar mobile number updated successfully.,aadhaar@uidai.gov.in,ACCOUNT
+Bank account activated,Your new savings account activated. Welcome to HDFC!,welcome@hdfc.com,ACCOUNT
+Autopay enabled,Auto-pay enabled for your credit card bill.,autopay@hdfc.com,ACCOUNT
+Transaction declined,Transaction of Rs.10000 declined. Insufficient balance.,alert@bank.com,ACCOUNT
+RTGS transfer successful,Rs.50000 transferred to beneficiary successfully.,transfer@icicibank.com,ACCOUNT
+Cheque bounce notification,Cheque bounce: Insufficient funds. Rs.5000 returned.,alert@bank.com,ACCOUNT
+Balance threshold reached,Savings crossed Rs.1 lakh. Free gold vault upgrade.,rewards@sbibnk.com,ACCOUNT
+ReKYC mandatory,Re-KYC mandatory for your account. Complete by May 30.,kyc@bank.com,ACCOUNT
+Nominee details missing,Please update nominee details in your account.,update@bank.com,ACCOUNT
+Credit score updated,Your CIBIL score updated to 780. Excellent!,score@cibil.com,ACCOUNT
+Order shipped notification,Your order #456789 has been shipped. Expected delivery in 2 days.,shipping@amazon.in,ORDERS
+Flipkart order processing,Your order #345678 is being processed. Will ship soon.,processing@flipkart.com,ORDERS
+Delivery address confirmed,Delivery address confirmed for order #234567. Sector 62 Noida.,confirm@amazon.in,ORDERS
+Order payment pending,Payment pending for order #678901. Complete payment to proceed.,payment@flipkart.com,ORDERS
+Package in transit,Your package is in transit to Delhi hub.,tracking@delhivery.com,ORDERS
+Return request approved,Return request approved for order #123456. Refund in 5-7 days.,returns@flipkart.com,ORDERS
+Order delivered to neighbour,Package delivered to neighbour Mr. Sharma. Collect from there.,delivery@amazon.in,ORDERS
+COD order placed,Cash on delivery order #789012 placed. Pay Rs.1500 on delivery.,cod@flipkart.com,ORDERS
+International shipment cleared,Your international shipment cleared customs. Out for delivery.,customs@dtdc.com,ORDERS
+Order quality issue,Quality issue reported for order. Replacement being arranged.,support@myntra.com,ORDERS
+Package damaged in transit,Package damaged during transit. Claim initiated.,claims@delivery.com,ORDERS
+Prepaid order confirmed,Prepaid order #567890 confirmed. Preparing for dispatch.,confirm@amazon.in,ORDERS
+Order failed to deliver,Delivery attempt failed. Will retry tomorrow.,failed@bluedart.com,ORDERS
+Gift wrap option added,Gift wrap added to your order. Extra Rs.50 charged.,gift@amazon.in,ORDERS
+Exchange delivery complete,Exchanged product delivered. Old product picked up.,exchange@flipkart.com,ORDERS
+Bulk order confirmed,Bulk order of 10 items confirmed. Discount applied.,bulk@amazon.in,ORDERS
+Flash sale order,Flash sale order placed. Hurry to complete payment!,flash@flipkart.com,ORDERS
+EMI order confirmation,No-cost EMI order for Rs.25000 confirmed.,emi@amazon.in,ORDERS
+Express delivery ordered,Express delivery option selected. Extra Rs.100 charged.,express@flipkart.com,ORDERS
+Assured delivery,Flipkart Assured delivery completed. Product quality verified.,assured@flipkart.com,ORDERS
+No contact delivery,No contact delivery completed. Left at door step.,delivery@amazon.in,ORDERS
+Urgent priority delivery,Priority delivery requested. Delivery by today.,priority@amazon.in,ORDERS
+Sunday delivery scheduled,Sunday delivery scheduled for order #890123.,sunday@flipkart.com,ORDERS
+Hub pickup arranged,Package arranged at pickup hub. Collect within 3 days.,pickup@amazon.in,ORDERS
+Urgent Document needed,Submit Aadhaar immediately for account verification.,kyc@bank.com,IMPORTANT
+Critical payment overdue,Invoice #5678 Rs.25000 overdue by 10 days.,collections@vendor.com,IMPORTANT
+Immediate attention required,Visit branch tomorrow for account activation.,branch@sbibnk.com,IMPORTANT
+Deadline today Tax payment,Pay advance tax today to avoid penalty.,alert@incometax.gov.in,IMPORTANT
+Security breach detected,Suspicious activity on your account. Reset password now.,security@paytm.com,IMPORTANT
+Emergency loan disbursement,Loan amount being disbursed today. Confirm receipt.,urgent@hdfc.com,IMPORTANT
+Critical medical report,Your lab reports show critical values. Consult doctor immediately.,reports@lalpathlabs.com,IMPORTANT
+Court hearing reminder,Hearing scheduled tomorrow at 10 AM. Attend without fail.,legal@court.gov.in,IMPORTANT
+Passport expiry warning,Passport expires in 30 days. Apply for renewal.,alert@passport.gov.in,IMPORTANT
+Insurance claim urgent,Submit documents within 24 hours for claim processing.,claims@icicilombard.com,IMPORTANT
+Property tax final notice,Final notice: Property tax payment due in 3 days.,tax@mcd.gov.in,IMPORTANT
+Vehicle insurance expiring,Motor insurance expires in 5 days. Renew immediately.,renewal@insurance.com,IMPORTANT
+Bank account dormant,Account dormant for 6 months. Reactivate to avoid closure.,alert@icicibank.com,IMPORTANT
+Credit limit exhausted,Credit limit fully used. Payment due immediately.,alert@hdfc.com,IMPORTANT
+System maintenance critical,Critical system maintenance at midnight. Backup data now.,ops@company.com,IMPORTANT
+Breach of contract notice,Legal notice for breach of contract. Respond within 15 days.,legal@lawyer.com,IMPORTANT
+New article published,New article: Top 10 Tech Trends in 2024.,notifications@medium.com,NEWS
+Podcast episode released,New episode available: AI Revolution in India.,podcast@spotify.com,NEWS
+Stock market update,Nifty up 150 points. Sensex closes at new high.,market@ndtv.com,NEWS
+Weather forecast Monday,Monday forecast: Partly cloudy. Temperature 28-35C.,weather@imd.gov.in,NEWS
+GitHub issue assigned,New issue assigned to you: Bug #1234 in LoginModule.,issues@github.com,NEWS
+Calendar reminder,Meeting with team at 3 PM. Prepare presentation.,calendar@google.com,NEWS
+RSS new content,New post in r/programming: Python Tips 2024.,feed@reddit.com,NEWS
+Newsletter this week,This week: Tech industry wrap up.,newsletter@techcrunch.com,NEWS
+App notification,Your order status has been updated.,app@amazon.in,NEWS
+Breaking news now,Breaking: India wins Asia Cup 2024.,news@sports.com,NEWS
+DevOps deployment,Deployment to production successful.,ci@jenkins.com,NEWS
+StackOverflow answer,Your answer accepted. +25 reputation gained.,answers@stackoverflow.com,NEWS
+YouTube channel update,New video uploaded: React vs Vue Comparison.,channel@youtube.com,NEWS
+HackerNews top story,Top story on HN: New AI Model Released.,news@ycombinator.com,NEWS
+Producthunt launch,New product launched on Product Hunt.,launch@producthunt.com,NEWS
+Tech conference event,TechCon 2024: Registration now open.,events@techcon.com,NEWS
+Newsletter tech,Tech weekly: Cloud computing trends.,newsletter@aws.com,NEWS
+Code review done,Code review completed for PR #789.,review@github.com,NEWS
+Server status green,All services running normally. Uptime 99.9%.,status@datadog.com,NEWS
+Weekly report ready,Weekly analytics report ready for review.,report@analytics.com,NEWS
+New follower on Instagram,New follower: tech_enthusiast started following.,notification@instagram.com,SOCIAL
+Friend request accepted,John Sharma accepted your friend request.,accepted@facebook.com,SOCIAL
+WhatsApp new message,New message in Office Colleagues group.,messages@whatsapp.com,SOCIAL
+Telegram channel update,New post in Python Developers channel.,telegram@telegram.org,SOCIAL
+LinkedIn post liked,Your LinkedIn post received 100 likes.,likes@linkedin.com,SOCIAL
+Twitter retweet,Your tweet retweeted by 50 people.,retweet@twitter.com,SOCIAL
+Instagram comment,New comment on your photo: Amazing shot!,comments@instagram.com,SOCIAL
+Facebook notification,Someone commented on your post.,comment@facebook.com,SOCIAL
+Discord new member,New member joined Gaming Community.,join@discord.com,SOCIAL
+Snapchat snap received,New snap received from bestie.,snap@snapchat.com,SOCIAL
+WhatsApp status viewed,Your status viewed by 20 people.,status@whatsapp.com,SOCIAL
+TikTok video liked,Your video received 500 likes.,likes@tiktok.com,SOCIAL
+YouTube subscriber,New subscriber: CodeWithMe channel.,subscriber@youtube.com,SOCIAL
+Twitter follow back,TechGuru followed you back on Twitter.,follow@twitter.com,SOCIAL
+Instagram direct message,New DM from photographer: Collab proposal.,dm@instagram.com,SOCIAL
+Facebook share,Your article shared by 30 friends.,share@facebook.com,SOCIAL
+LinkedIn article publish,Your article published on LinkedIn.,article@linkedin.com,SOCIAL
+WhatsApp call missed,Missed audio call from sister.,call@whatsapp.com,SOCIAL
+Discord role added,You have been promoted to Moderator.,role@discord.com,SOCIAL
+Reddit post upvoted,Your post upvoted to front page.,upvote@reddit.com,SOCIAL
+Twitter poll result,Poll results: 70% voted Yes.,poll@twitter.com,SOCIAL
+Birthday notification,It's your birthday tomorrow! Send wishes.,birthday@facebook.com,SOCIAL
+Event reminder added,Reminder added for Rahul's wedding.,reminder@google.com,SOCIAL
+Notification preferences,Notification settings updated for email.,settings@google.com,SOCIAL
+Online status update,3 friends are currently online.,online@whatsapp.com,SOCIAL
+Salary increment announced,Salary increased by 15 percent effective next month.,hr@company.com,INCOME
+Interest credited to account,Interest of Rs.3500 credited to savings account.,interest@icicibank.com,INCOME
+Dividend from HDFC AMC,Dividend Rs.1200 credited for mutual fund holding.,mf@hdfcamc.com,INCOME
+Freelance project payment,Project payment Rs.25000 received for web development.,client@freelance.com,INCOME
+Rental income April,Monthly rent Rs.20000 credited to account.,tenant@email.com,INCOME
+Govt scholarship disbursed,National scholarship Rs.10000 credited to account.,scholarship@scholarships.gov.in,INCOME
+Online tutoring earnings,Tutoring session earnings Rs.5000 credited.,earnings@vedantu.com,INCOME
+Affiliate commission,Affiliate commission Rs.3000 credited to wallet.,commission@amazon.in,INCOME
+YouTube ad revenue,YouTube ad revenue Rs.8000 earned this month.,adsense@google.com,INCOME
+Stock intraday profit,Intraday trading profit Rs.4500 credited to account.,trading@zerodha.com,INCOME
+Commission from sales,Sales commission Rs.6000 for this month.,sales@company.com,INCOME
+Diwali bonus,Diwali bonus Rs.20000 credited to account.,bonus@company.com,INCOME
+Leave encashment,Leave encashment Rs.15000 credited.,payroll@company.com,INCOME
+Ex gratia payment,Ex gratia payment Rs.10000 credited.,finance@company.com,INCOME
+Consulting fee received,Consulting fee Rs.30000 received from Corp Client.,client@consulting.com,INCOME
+Maintenance refund,Society maintenance refund Rs.5000 credited.,refund@society.com,INCOME
+Insurance refund,Life insurance premium refund Rs.2000 credited.,refund@licindia.com,INCOME
+Family pension credited,Family pension Rs.8000 credited to account.,pension@governance.gov.in,INCOME
+VRS retirement benefit,VRS settlement Rs.500000 credited to account.,retirement@company.com,INCOME
+Stock purchase confirmation,Bought 25 shares of HINDUNILVR at Rs.2200. Total Rs.55000.,broker@zerodha.com,INVESTMENT
+Mutual fund SIP started,Monthly SIP of Rs.3000 started in Mirae Asset Large Cap.,sip@camsexecute.com,INVESTMENT
+IPO alloted,IPO allotment: 50 shares of ABC Corp at Rs.500 each.,ipo@linkintime.co.in,INVESTMENT
+Gold coin purchased,24K gold coin 10 grams purchased at Rs.62000.,gold@muthoot.com,INVESTMENT
+NPS tier II contribution,Rs.10000 contributed to NPS Tier II account.,nps@pscns.gov.in,INVESTMENT
+ULIP policy started,New ULIP policy with annual premium Rs.50000.,policy@hdfclife.com,INVESTMENT
+SGB bought April,Sovereign Gold Bond 5 grams purchased for Rs.31000.,gbond@sbibnk.com,INVESTMENT
+Debt fund investment,Debt fund investment Rs.100000 in corporate bonds.,investment@fundhouse.com,INVESTMENT
+LIC jeevan anand,LIC Jeevan Anand policy with sum assured Rs.1000000.,policy@licindia.com,INVESTMENT
+Post office savings,Post office savings Rs.50000 deposited.,savings@indiapost.gov.in,INVESTMENT
+Company FDFP,Company Fixed Deposit Rs.200000 invested at 8 percent.,fdf@company.com,INVESTMENT
+NSC certificate purchased,National Savings Certificate Rs.100000 purchased.,nsc@postoffice.gov.in,INVESTMENT
+KVP purchased,Kisan Vikas Patra Rs.50000 purchased.,kvp@postoffice.gov.in,INVESTMENT
+Sukanya Samriddhi,Sukanya Samriddhi account Rs.100000 deposited.,account@postoffice.gov.in,INVESTMENT
+PPF contribution,PPF contribution Rs.120000 for financial year.,ppf@icicibank.com,INVESTMENT
+EPF contribution,EPF contribution Rs.15000 for April.,epf@epfindia.gov.in,INVESTMENT
+Home loan principal paid,Extra home loan payment Rs.50000 made.,loan@hdfc.com,INVESTMENT
+Stock split effect,Stock split: 1 to 5. Your holdings adjusted.,broker@zerodha.com,INVESTMENT
+Bonus shares received,Bonus shares 10 received for existing holding.,allotment@company.com,INVESTMENT
+Rights issue applied,Rights issue 50 shares applied at Rs.100.,rights@linkintime.co.in,INVESTMENT
+Foreign exchange gain,Forex gain Rs.5000 on dollar conversion.,fx@icicibank.com,INVESTMENT
+AIF second tranche,AIF Fund second tranche Rs.500000 invested.,aif@fund.com,INVESTMENT
+March electricity bill,Electricity bill Rs.2200 for March due April 5.,bill@bsesdelhi.com,BILLS
+April water bill,Water bill Rs.380 due April 30.,bill@djb.gov.in,BILLS
+BSES smart bill,BSES smart bill Rs.2600. Pay online.,smartbill@bses.com,BILLS
+Airtel postpaid bill,Airtel bill Rs.650 due April 20.,bill@airtel.com,BILLS
+Jio monthly bill,Jio postpaid bill Rs.449 due.,bill@jio.com,BILLS
+Vi Vodafone bill,Vi bill Rs.599 due for payment.,bill@vodafone.in,BILLS
+Tata Sky DTH,Tata Sky subscription Rs.299 due.,subscription@tatasky.com,BILLS
+Dish TV bill,Dish TV quarterly bill Rs.1530 due.,bill@dishtv.com,BILLS
+ACT broadband,ACT Fibernet bill Rs.999 for April.,billing@actfibernet.com,BILLS
+Hathway cable,Hathway cable bill Rs.450 due.,bill@hathway.com,BILLS
+MTNL landline,MTNL phone bill Rs.380 for April.,bill@mtnl.in,BILLS
+Gas cylinder bill,PNG gas cylinder Rs.850 due. Book now.,bill@mahanagargas.com,BILLS
+Hp gas booking,HP Gas booking: Rs.1450 for cylinder.,booking@hpgas.com,BILLS
+Indane gas bill,Indane gas bill Rs.950 due.,bill@indane.co.in,BILLS
+BPL electricity,Electricity bill BPL Rs.450 for April.,bill@bpscl.gov.in,BILLS
+Torrent power bill,Torrent power bill Rs.3200 due.,bill@torrentpower.com,BILLS
+BEST electricity, Mumbai electricity bill Rs.1800.,bill@bestundertaking.com,BILLS
+KSEB electricity,KSEB Kerala bill Rs.2100 for April.,bill@kseb.in,BILLS
+TPCL power bill,Tata Power bill Rs.2900 due.,bill@tatapower.com,BILLS
+MSEB Maharashtra,MSEB bill Rs.2400 for April.,bill@mahadiscom.in,BILLS
+Society maintenance May,Society maintenance Rs.3500 for May due.,maintenance@society.com,BILLS
+Club monthly charges,Club membership Rs.2000 for May.,charges@club.com,BILLS
+School fee May,School fee Rs.15000 for May.,fees@dps.edu,BILLS
+Coaching fee due,Coaching fee Rs.8000 for April.,fees@coach.com,BILLS
+Tuition fee,Tuition fee Rs.5000 for this month.,fees@tutor.com,BILLS
+Hostel fee,Hostel fee Rs.12000 for semester.,fees@college.edu,BILLS
+College fee,College fee Rs.25000 for semester.,fees@university.edu,BILLS
+Diploma course fee,Diploma course fee Rs.15000 due.,fees@institute.com,BILLS
+Online course fee,Online course fee Rs.9999 for data science.,udemy@payment.com,BILLS
+Certification fee,Certification exam fee Rs.5000.,exam@certification.com,BILLS
+Gym membership fee,Gym monthly fee Rs.1500 due.,membership@fitness.com,BILLS
+Swimming pool fee,Swimming club fee Rs.2000 monthly.,pool@club.com,BILLS
+Yoga class fee,Yoga class Rs.1000 per month.,yoga@studio.com,BILLS
+Sports club fee,Sports club annual fee Rs.10000.,sports@club.com,BILLS
+Library membership,Library membership Rs.500 per year.,library@society.com,BILLS
+Magazine renewal,Magazine subscription Rs.1500 for year.,subscription@mag.com,BILLS
+Newspaper renewal,Times of India renewal Rs.2400 yearly.,toi@timesgroup.com,BILLS
+Digital news subscription,HT digital subscription Rs.1200.,digital@hindtimes.com,BILLS
+OTT subscription due,Disney+ Hotstar Rs.899 renewal due.,renewal@hotstar.com,BILLS
+Amazon Prime due,Amazon Prime Rs.999 renewal due.,prime@amazon.in,BILLS
+Netflix subscription,Netflix Rs.499 monthly due.,netflix@bill.com,BILLS
+Spotify premium due,Spotify premium Rs.119 due.,spotify@payment.com,BILLS
+Zee5 subscription,Zee5 annual Rs.999 due.,zee5@subscription.com,BILLS
+Sony LIV subscription,SonyLIV Rs.299 monthly.,sony@subscription.com,BILLS
+Sun NXT subscription,Sun NXT Rs.600 yearly.,sun@subscription.com,BILLS
+Hoichoi subscription,Hoichoi Rs.399 annual.,hoichoi@subscription.com,BILLS
+ALT Balaji subscription,ALT Balaji Rs.100 monthly.,alt@subscription.com,BILLS
+Voot subscription,Voot Select Rs.199 monthly.,voot@subscription.com,BILLS
+MX Player subscription,MX Player Rs.399 yearly.,mx@subscription.com,BILLS
+JioCinema subscription,Jio Cinema Rs.99 monthly.,jio@cinema.com,BILLS
+Airtel Xstream,Airtel Xstream Rs.499 yearly.,airtel@xstream.com,BILLS
+ACT Fibernet plans,ACT Fibernet plan upgrade to 300 Mbps.,plan@actfibernet.com,BILLS
+Excitel broadband,Excitel broadband Rs.700 monthly.,excitel@broadband.com,BILLS
+BSNL broadband,BSNL broadband Rs.750 monthly.,bsnl@broadband.com,BILLS
+Railway bill,Indian Railway ticket Rs.1250 for booking.,railway@irctc.co.in,BILLS
+Air India ticket,Air India flight Rs.8500 booking.,booking@airindia.com,BILLS
+Indigo ticket,Indigo flight Rs.4500 to Mumbai.,booking@goindigo.in,BILLS
+SpiceJet ticket,SpiceJet domestic Rs.3200 booking.,booking@spicejet.com,BILLS
+GoAir ticket,GoAir flight Rs.2800 booking.,booking@goair.in,BILLS
+Vistara ticket,Vistara premium Rs.6500 booking.,booking@vistara.com,BILLS
+Air Asia ticket,Air Asia Rs.2500 to Bangalore.,booking@airasia.com,BILLS
+Hotel booking,Hotel booking Rs.5000 for 2 nights.,booking@oyorooms.com,BILLS
+OYO room booked,OYO room Rs.2500 for stay.,booking@oyo.com,BILLS
+FabHotels booking,FabHotels Rs.1800 for night.,booking@fabhotels.com,BILLS
+Treebo booking,Treebo hotel Rs.2200 booked.,booking@treebo.com,BILLS
+oyo corporate booking,OYO corporate booking Rs.3500.,corporate@oyo.com,BILLS
+Car rental booked,Zoomcar rental Rs.2500 for 2 days.,booking@zoomcar.com,BILLS
+Bike rental rental,Bike rental Rs.500 per day.,booking@bike rental.com,BILLS
+Uber taxi booked,Uber ride Rs.450 to airport.,uber@ride.com,BILLS
+Ola taxi booked,Ola ride Rs.380 for trip.,ola@ride.com,BILLS
+Auto rickshaw fare,Auto rickshaw fare Rs.150 for distance.,auto@rickshaw.com,BILLS
+Metro card recharge,Delhi Metro card Rs.500 recharged.,metro@delhimetrorail.com,BILLS
+Parking fee monthly,Monthly parking Rs.1500 at office.,parking@company.com,BILLS
+Toll charges,Toll charges Rs.200 for highway.,toll@nhai.gov.in,BILLS
+FastTag recharge,FastTag recharge Rs.1000.,fasttag@bank.com,BILLS
+Fuel expense,Petrol Rs.1200 for tank.,fuel@petrolpump.com,BILLS
+CNG filling,CNG Rs.500 for car.,cng@company.com,BILLS
+EV charging,Electric charging Rs.300 at station.,ev@charging.com,BILLS
+Car wash,Car wash Rs.300 at service center.,wash@car.com,BILLS
+Vehicle service,Vehicle service Rs.2500 at workshop.,service@garage.com,BILLS
+Insurance renewal,Car insurance Rs.8000 renewal due.,insurance@policy.com,BILLS
+Health insurance premium,Health insurance Rs.12000 annual premium.,premium@insurance.com,BILLS
+Life insurance premium,Term insurance Rs.5500 premium due.,term@licindia.com,BILLS
+Bike insurance renewal,Bike insurance Rs.1500 renewal.,insurance@bike.com,BILLS
+Travel insurance,Travel insurance Rs.500 for trip.,travel@insurance.com,BILLS
+Home insurance,Home insurance Rs.5000 annual.,home@insurance.com,BILLS
+Pet insurance,Pet insurance Rs.2000 yearly.,pet@insurance.com,BILLS
+Mobile insurance,Mobile screen insurance Rs.500.,mobile@insurance.com,BILLS
+Device protection,Device protection plan Rs.2000.,device@protection.com,BILLS
+Extended warranty,Laptop extended warranty Rs.3000.,warranty@company.com,BILLS
+Appliance warranty,AC warranty extension Rs.2500.,warranty@lg.com,BILLS
+Annual maintenance contract,AMC for AC Rs.2000 yearly.,amc@service.com,BILLS
+Pest control service,Pest control Rs.1500 for home.,service@pestcontrol.com,BILLS
+Home cleaning service,Home cleaning Rs.2000 for deep clean.,cleaning@services.com,BILLS
+Plumbing service,Plumbing repair Rs.800 at home.,service@plumber.com,BILLS
+Electrical service,Electrical repair Rs.1000.,service@electrician.com,BILLS
+AC repair service,AC repair Rs.1500 at home.,repair@acservice.com,BILLS
+Internet repair,Internet issue resolution Rs.500.,repair@isp.com,BILLS
+Appliance repair,Water purifier repair Rs.1200.,repair@service.com,BILLS
+Device repair,Phone screen repair Rs.1500.,repair@mobilerepair.com,BILLS
+Data recovery service,Hard disk recovery Rs.3000.,recovery@data.com,BILLS
+Pest control AMC,Pest control annual contract Rs.6000.,amc@pest.com,BILLS
+Security service,Security guard service Rs.5000 monthly.,security@service.com,BILLS
+CCTV maintenance,CCTV maintenance Rs.2000 yearly.,maintenance@security.com,BILLS
+Salary account statement,Your salary account statement for April available.,statement@hdfc.com,ACCOUNT
+Transaction history,View your transaction history online.,history@icicibank.com,ACCOUNT
+Account balance update,Current balance Rs.75000 in your account.,balance@bank.com,ACCOUNT
+Credit card summary,Your credit card summary for April is ready.,summary@hdfc.com,ACCOUNT
+Loan amortization schedule,Amortization schedule for your loan available.,schedule@hdfc.com,ACCOUNT
+Interest rate updated,Your FD interest rate is now 7.5 percent.,rate@sbibnk.com,ACCOUNT
+Rate change alert,Savings account rate changed to 4 percent.,alert@icicibank.com,ACCOUNT
+ATM withdrawal alert,ATM withdrawal Rs.5000 at Delhi.,alert@hdfc.com,ACCOUNT
+NEFT transfer alert,NEFT transfer Rs.10000 successful.,alert@icicibank.com,ACCOUNT
+IMPS transfer done,IMPS transfer Rs.5000 to contact.,transfer@paytm.com,ACCOUNT
+UPI payment done,Google Pay Rs.200 to merchant.,payment@gpay.com,ACCOUNT
+Bill payment done,Electricity bill Rs.2000 paid via app.,billpay@paytm.com,ACCOUNT
+Recharge done,Mobile recharge Rs.399 successful.,recharge@airtel.com,ACCOUNT
+Amazon Pay transaction,Amazon Pay Rs.500 spent at store.,amazonpay@amazon.in,ACCOUNT
+PhonePe transaction,PhonePe Rs.300 paid to merchant.,phonepe@transaction.com,ACCOUNT
+Paytm wallet transaction,Paytm wallet Rs.200 used online.,paytm@wallet.com,ACCOUNT
+Bank statement password,Your bank statement password is set.,security@bank.com,ACCOUNT
+ATM card renewed,Your ATM card renewed. New card dispatched.,card@sbibnk.com,ACCOUNT
+Cheque book requested,Cheque book of 20 leaves requested.,cheque@icicibank.com,ACCOUNT
+Net banking enabled,Net banking enabled for your account.,banking@bank.com,ACCOUNT
+Mobile banking updated,Mobile app updated to latest version.,update@bank.com,ACCOUNT
+Passbook updated,Passbook updated with recent transactions.,passbook@bank.com,ACCOUNT
+Debit card transaction,Debit card used at Amazon Rs.2500.,alert@icicibank.com,ACCOUNT
+Credit card payment,Credit card bill paid Rs.10000.,payment@hdfc.com,ACCOUNT
+Auto debit setup,Auto debit setup for SIP Rs.5000.,autodebit@icicibank.com,ACCOUNT
+ECS mandate registered,ECS mandate registered for loan.,mandate@bank.com,ACCOUNT
+Standing instruction modified,SI modified for bill payment.,instruction@bank.com,ACCOUNT
+Balance certificate,Balance certificate issued for account.,certificate@bank.com,ACCOUNT
+Interest certificate,Interest certificate for tax purposes available.,interest@bank.com,ACCOUNT
+Form 16 available,Form 16 for FY 2023-24 available.,form16@company.com,ACCOUNT
+TDS certificate,TDS certificate for salary available.,tds@company.com,ACCOUNT
+Tax deduction details,Tax deduction details for FY 2024.,tax@company.com,ACCOUNT
+Bonus from company,Performance bonus Rs.25000 credited.,bonus@company.com,INCOME
+Overtime pay,Overtime payment Rs.3000 for extra hours.,payroll@company.com,INCOME
+PF withdrawal,PF partial withdrawal Rs.50000 credited.,pf@epfindia.gov.in,INCOME
+Arrears paid,Salary arrears Rs.10000 paid.,payroll@company.com,INCOME
+Incentive payout,Monthly incentive Rs.8000 credited.,incentive@company.com,INCOME
+Referral bonus,Referral bonus Rs.5000 for new client.,bonus@company.com,INCOME
+Festival advance,Festival advance Rs.25000 credited.,advance@company.com,INCOME
+Travel allowance,Travel allowance Rs.5000 credited.,allowance@company.com,INCOME
+House rent allowance,HRA Rs.15000 credited to account.,hra@company.com,INCOME
+Conveyance allowance,Conveyance Rs.2000 credited.,allowance@company.com,INCOME
+Medical allowance,Medical allowance Rs.2500 credited.,medical@company.com,INCOME
+Special allowance,Special allowance Rs.5000 credited.,allowance@company.com,INCOME
+Child education allowance,Child education Rs.2000 per child.,education@company.com,INCOME
+Laptop allowance,Laptop allowance Rs.5000 credited.,allowance@company.com,INCOME
+Phone bill reimbursement,Phone bill Rs.1000 reimbursed.,reimbursement@company.com,INCOME
+Fuel reimbursement,Fuel bill Rs.2000 reimbursed.,reimburse@company.com,INCOME
+Meal coupon value,Meal coupons Rs.2500 credited.,coupon@company.com,INCOME
+Gift voucher received,Gift voucher Rs.2000 for anniversary.,gift@company.com,INCOME
+Leave salary,Leave salary Rs.15000 for leave days.,salary@company.com,INCOME
+Retirement benefit,Retirement benefit Rs.200000 credited.,retire@company.com,INCOME
+Notice period salary,Notice period salary Rs.25000.,payroll@company.com,INCOME
+Full and final settlement,F and F settlement Rs.100000 credited.,settlement@company.com,INCOME
+Gratuity received,Gratuity Rs.150000 credited on exit.,gratuity@company.com,INCOME
+Pension fund contribution,Company contribution to pension Rs.5000.,pension@company.com,INCOME
+ESIC benefit credited,Medical benefit Rs.2000 credited.,esic@esic.gov.in,INCOME
+Maternity benefit,Maternity benefit Rs.25000 credited.,benefit@gov.in,INCOME
+Janani suraksha,Yojana benefit Rs.2000 credited.,benefit@jssy.gov.in,INCOME
+PM Kisan amount,PM Kisan Rs.6000 credited to account.,pmkisan@gov.in,INCOME
+PM Jeevan Jyoti,PM Jeevan Jyoti Rs.200000 credited.,pmjjby@gov.in,INCOME
+PM Suraksha,PM Suraksha Rs.50000 claim credited.,pmsby@gov.in,INCOME
+Madhya Pradesh scholarship,Madhya Pradesh scholarship Rs.10000 credited.,scholarship@mp.gov.in,INCOME
+Karnataka egrant, Karnataka egrant scholarship Rs.5000.,scholarship@egrant.kar.gov.in,INCOME
+Tamil Nadu scholarship,Tamil Nadu scholarship Rs.8000 credited.,scholarship@tn.gov.in,INCOME
+Maharashtra scholarship,Maharashtra scholarship Rs.10000 credited.,scholarship@maharashtra.gov.in,INCOME
+Gujarat scholarship,Gujarat scholarship Rs.7000 credited.,scholarship@gujarat.gov.in,INCOME
+Rajasthan scholarship,Rajasthan scholarship Rs.5000 credited.,scholarship@rajasthan.gov.in,INCOME
+UP scholarship,UP scholarship Rs.8000 credited.,scholarship@up.gov.in,INCOME
+Bihar scholarship,Bihar scholarship Rs.10000 credited.,scholarship@bihar.gov.in,INCOME
+Odisha scholarship,Odisha scholarship Rs.6000 credited.,scholarship@odisha.gov.in,INCOME
+ Jharkhand scholarship,Jharkhand scholarship Rs.5000 credited.,scholarship@jharkhand.gov.in,INCOME
+Chhattisgarh scholarship,Chhattisgarh scholarship Rs.7000 credited.,scholarship@cg.gov.in,INCOME
+Maharashtra direct benefit,DBT credit Rs.10000 to account.,dbt@maharashtra.gov.in,INCOME
+Karnataka DBT,Direct benefit transfer Rs.5000.,dbt@karnataka.gov.in,INCOME
+Telangana DBT,Telangana DBT Rs.8000 credited.,dbt@telangana.gov.in,INCOME
+AP DBT,Andhra Pradesh DBT Rs.6000.,dbt@ap.gov.in,INCOME
+Punjab DBT,Punjab DBT Rs.7000 credited.,dbt@punjab.gov.in,INCOME
+Haryana DBT,Haryana DBT Rs.5000 credited.,dbt@haryana.gov.in,INCOME
+Delhi DBT,Delhi government DBT Rs.10000.,dbt@delhi.gov.in,INCOME
+West Bengal DBT,West Bengal DBT Rs.8000.,dbt@wb.gov.in,INCOME
+MGNREGA wages,MGNREGA wages Rs.5000 credited.,wages@mgnrega.gov.in,INCOME
+NREGA job card,NREGA job card wages Rs.3000.,nrega@gov.in,INCOME
+Farmer pension,Farmer pension Rs.2000 credited.,pension@farmer.gov.in,INCOME
+SMAM benefit,SMAM scheme benefit Rs.25000 credited.,scheme@agriculture.gov.in,INCOME
+Kisan credit card,Kisan Credit Card Rs.50000 credited.,kcc@bank.com,INCOME
+PMSBY claim,PM Suraksha claim Rs.100000 credited.,claim@pmjay.gov.in,INCOME
+PMjay claim,Ayushman Bharat claim Rs.50000 credited.,claim@pmjay.gov.in,INCOME
+ESIC settlement,ESIC final settlement Rs.25000.,settlement@esic.gov.in,INCOME
+EPF final settlement,EPF final settlement Rs.150000 credited.,epf@epfindia.gov.in,INCOME
+Pension monthly,Pension Rs.10000 for April credited.,pension@pension.gov.in,INCOME
+Family pension,Family pension Rs.8000 credited.,pension@governance.in,INCOME
+War widow pension,War widow pension Rs.15000 credited.,pension@defence.gov.in,INCOME
+Gallantry award,Gallantry award Rs.100000 credited.,award@defence.gov.in,INCOME
+Ex serviceman pension,Ex serviceman pension Rs.20000.,pension@exserviceman.gov.in,INCOME
+Software engineer position,We are looking for software engineer. 3 years exp required.,jobs@startup.com,JOB
+Data scientist role opening,Data scientist job with Python and ML skills needed.,jobs@flipkart.com,JOB
+DevOps engineer wanted,DevOps engineer with AWS experience. Apply now.,jobs@amazon.com,JOB
+Full stack developer job,Full stack developer position in Bangalore.,jobs@paytm.com,JOB
+Backend developer required,Backend developer with Java or Python.,jobs@cred.com,JOB
+Frontend developer opening,React developer with 2+ years experience.,jobs@swiggy.com,JOB
+QA engineer position,Manual and automation testing role.,jobs@oyo.com,JOB
+Product manager job,Product manager for fintech product.,jobs@razorpay.com,JOB
+Business analyst role,Business analyst with SQL skills needed.,jobs@uber.com,JOB
+Tech lead position,Tech lead for mobile development team.,jobs@google.com,JOB
+Engineering manager,Engineering manager for product team.,jobs@microsoft.com,JOB
+Cloud architect job,Cloud architect with Azure experience.,jobs@accenture.com,JOB
+Machine learning engineer,ML engineer for AI team.,jobs@meta.com,JOB
+Data engineer role,Data engineer with Spark and SQL.,jobs@netflix.com,JOB
+AI researcher position,AI researcher for deep learning.,jobs@openai.com,JOB
+Blockchain developer,Blockchain developer for Web3 project.,jobs@coinbase.com,JOB
+Cybersecurity analyst,Cybersecurity analyst job in Mumbai.,jobs@bank.com,JOB
+Network engineer role,Network engineer with Cisco certs.,jobs@itcompany.com,JOB
+System admin position,System administrator for cloud infra.,jobs@cloud.com,JOB
+Database administrator,Database administrator for MySQL and Postgres.,jobs@tech.com,JOB
+Scrum master role,Scrum master for agile team.,jobs@agile.com,JOB
+Tech intern position,Summer intern for engineering students.,jobs@internship.com,JOB
+Campus hiring,On campus placement for final year students.,placements@company.com,JOB
+Lateral hiring,Lateral hiring for senior positions.,hiring@company.com,JOB
+HR recruitment drive,Recruitment drive on Saturday.,hr@company.com,JOB
+LinkedIn premium upgrade,Upgrade to LinkedIn Premium for job search.,premium@linkedin.com,JOB
+Resume boost service,Resume optimization service available.,service@resume.com,JOB
+Interview prep material,Interview preparation materials attached.,prep@company.com,JOB
+Assessment test link,Online assessment test link sent.,test@company.com,JOB
+Coding challenge invite,Coding challenge on HackerRank.,challenge@hackerank.com,JOB
+Technical round scheduled,Technical round on Monday 10 AM.,round@company.com,JOB
+HR round scheduled,HR round on Wednesday.,hr@company.com,JOB
+Final round scheduled,Final round with director.,round@company.com,JOB
+Salary negotiation,Salary negotiation discussion scheduled.,hr@company.com,JOB
+Relocation package,Relocation package details attached.,package@company.com,JOB
+Joining date confirmation,Confirm your joining date.,hr@company.com,JOB
+Background check initiated,Background verification started.,verify@company.com,JOB
+Offer letter download,Download your offer letter here.,download@company.com,JOB
+WhatsApp new message,New message in Office group.,messages@whatsapp.com,SOCIAL
+Stock market crash news,Stock market crashes 500 points today.,news@moneycontrol.com,NEWS
+New smartphone launch,New iPhone 15 launch event today.,launch@apple.com,NEWS
+IPL match result,MI wins against CSK by 5 wickets.,cricket@espn.com,NEWS
+Weather update today,Rain expected in Mumbai tomorrow.,weather@imd.gov.in,NEWS
+New app update,WhatsApp new feature: Channels.,update@whatsapp.com,NEWS
+Crypto price update,Bitcoin drops below 30000.,crypto@coinbase.com,NEWS
+Real estate news,Real estate prices up 10 percent in 2024.,news@magicbricks.com,NEWS
+Education news,CBSE declares class 10 results.,news@cbse.gov.in,NEWS
+Health news,New health guidelines released by government.,health@gov.in,NEWS
+Travel news,Air India adds new international routes.,travel@airindia.com,NEWS
+Auto news,Maruti launches new SUV in India.,auto@carandbike.com,NEWS
+Finance news,Rupee falls against dollar.,news@livemint.com,NEWS
+Startup funding news,Startup raises 100 million in Series B.,news@vccircle.com,NEWS
+Job market news,IT hiring to increase in 2024.,news@timesjobs.com,NEWS
+Amazon order shipped,Your Amazon order shipped.,ship@amazon.in,ORDERS
+Flipkart order placed,Order #123456 placed on Flipkart.,order@flipkart.com,ORDERS
+Myntra order confirmed,Order confirmed on Myntra.,confirm@myntra.com,ORDERS
+From Mom,Call me when free.,mom@gmail.com,PERSONAL
+From Dad,Dad called. Call back.,dad@gmail.com,PERSONAL
+Brother message,Got the documents you asked for.,brother@gmail.com,PERSONAL
+Sister message,Sent the recipe link.,sister@gmail.com,PERSONAL
+Friend message,Lets meet this weekend.,friend@gmail.com,PERSONAL
+Colleague message,Project deadline extended.,colleague@company.com,PERSONAL
+Neighbor message,Parcel kept at your door.,neighbor@example.com,PERSONAL
+Teacher message,Assignment submission date extended.,teacher@school.edu,PERSONAL
+Doctor appointment,Appointment on Friday at 4 PM.,doctor@hospital.com,PERSONAL
+Book club update,Next book: The Alchemist.,bookclub@email.com,PERSONAL
+Photography club,Photo walk on Sunday.,photo@club.com,PERSONAL
+Trekking club invite,Weekend trek to Himalayas.,trek@club.com,PERSONAL
+Cooking class info,Italian cooking class next Saturday.,cooking@studio.com,PERSONAL
+Yoga class schedule,Yoga at 6 AM tomorrow.,yoga@studio.com,PERSONAL
+Gym schedule,Gym session at 7 PM.,gym@fit.com,PERSONAL
+Dance class timing,Dance class at 5 PM.,dance@studio.com,PERSONAL
+Music class reminder,Piano lesson at 4 PM.,music@academy.com,PERSONAL
+Art class update,Watercolor class next week.,art@studio.com,PERSONAL
+Tuition class schedule,Math tuition at 6 PM.,tuition@tutor.com,PERSONAL
+Coaching class info,Physics coaching at 5 PM.,coaching@center.com,PERSONAL
+Library book due,Book due next week. Return on time.,library@society.com,PERSONAL
+Movie plan,Lets watch movie on Saturday.,friend@gmail.com,PERSONAL
+Restaurant plan,New restaurant opened. Lets try!,friend@gmail.com,PERSONAL
+Trip plan,Plan a trip to Goa next month.,friend@gmail.com,PERSONAL
+Shopping plan,Mall trip on weekend.,friend@gmail.com,PERSONAL
+Coffee plan,Coffee at CCD tomorrow.,friend@gmail.com,PERSONAL
+Lunch plan,Lunch at 1 PM at office.,colleague@company.com,PERSONAL
+Dinner invitation,Dinner at my place on Saturday.,friend@gmail.com,PERSONAL
+Birthday plan,Plan birthday party for next week.,friend@gmail.com,PERSONAL
+Anniversary plan,Anniversary dinner at 7 PM.,spouse@gmail.com,PERSONAL
+Festival plan,Diwali party at office.,colleague@company.com,PERSONAL
+Picnic plan,School picnic to zoo next week.,classmate@gmail.com,PERSONAL
+Family function,Wedding on 15th. Attend without fail.,family@example.com,PERSONAL
+Reunion plan,College reunion on 20th.,classmate@gmail.com,PERSONAL
+Get together plan,Get together this Sunday.,friend@gmail.com,PERSONAL
+Weekend plan,Plan for weekend outing.,friend@gmail.com,PERSONAL
+Holiday plan,Plan for long weekend trip.,family@example.com,PERSONAL
+Vacation plan,Plan vacation to Ladakh.,friend@gmail.com,PERSONAL
+Staycation plan,Staycation at home this weekend.,family@example.com,PERSONAL
+Road trip plan,Road trip to hill station.,friend@gmail.com,PERSONAL
+Flight booking plan,Book flights for trip.,travel@email.com,PERSONAL
+Hotel booking plan,Hotel booking for trip.,booking@hotel.com,PERSONAL
+Train booking plan,Book train tickets.,booking@irctc.co.in,PERSONAL
+Bus booking plan,Book bus for trip.,booking@bus.com,PERSONAL
+Cab booking plan,Book cab for pickup.,booking@uber.com,PERSONAL
+50 percent off on shoes,Shoes at 50 percent off at Foot Locker.,offers@footlocker.com,PROMOTIONS
+Buy 2 get 1 free,Buy 2 Get 1 Free on all T-shirts.,promo@shop.com,PROMOTIONS
+Flat 30 percent discount,Flat 30 percent on all items.,offer@store.com,PROMOTIONS
+Free shipping worldwide,Free shipping on orders above Rs.500.,shipping@amazon.in,PROMOTIONS
+Bank offer on EMI,No cost EMI on electronics.,offers@flipkart.com,PROMOTIONS
+Holiday sale,Huge holiday sale this week.,sale@shop.com,PROMOTIONS
+Flash sale today,Flash sale starts at midnight.,flash@amazon.in,PROMOTIONS
+Clearance sale,Clearance sale upto 70 percent.,clearance@shop.com,PROMOTIONS
+Student discount,Student discount 20 percent off.,discount@shop.com,PROMOTIONS
+Senior citizen discount,Senior citizen discount 30 percent.,offer@store.com,PROMOTIONS
+First order discount,First order 25 percent off.,newuser@shop.com,PROMOTIONS
+Referral discount,Refer and get Rs.500.,refer@shop.com,PROMOTIONS
+Loyalty points,500 loyalty points added.,loyalty@store.com,PROMOTIONS
+Cashback weekend,Cashback up to 10 percent.,cashback@paytm.com,PROMOTIONS
+Reward points,500 reward points credited.,rewards@creditcard.com,PROMOTIONS
+Credit card offer,Credit card 20 percent off.,offer@creditcard.com,PROMOTIONS
+Debit card offer,Debit card cashback 5 percent.,cashback@bank.com,PROMOTIONS
+UPI offer,UPI payment 10 percent off.,offer@upi.com,PROMOTIONS
+Wallet offer,Wallet payment cashback.,wallet@paytm.com,PROMOTIONS
+Bank offer,Special bank offer today.,bank@shop.com,PROMOTIONS
+Festival offer,Diwali special offer.,festival@shop.com,PROMOTIONS
+New year offer,New Year sale started.,newyear@shop.com,PROMOTIONS
+Summer sale,Summer sale 40 percent off.,summer@shop.com,PROMOTIONS
+Winter sale,Winter collection sale.,winter@shop.com,PROMOTIONS
+Monsoon sale,Monsoon sale started.,monsoon@shop.com,PROMOTIONS
+Independence day sale,Independence day sale.,independence@shop.com,PROMOTIONS
+Republic day sale,Republic day offer.,republic@shop.com,PROMOTIONS
+Valentine offer,Valentine day discount.,valentine@shop.com,PROMOTIONS
+Friendship day sale,Friendship day offer.,friendship@shop.com,PROMOTIONS
+Mother day offer,Mothers day discount.,mothersday@shop.com,PROMOTIONS
+Father day offer,Fathers day sale.,fathersday@shop.com,PROMOTIONS
+Kids day offer,Kids clothing sale.,kids@shop.com,PROMOTIONS
+Pet supplies offer,Pet supplies discount.,pets@shop.com,PROMOTIONS
+Furniture sale,Furniture upto 30 percent off.,furniture@shop.com,PROMOTIONS
+Home decor sale,Home decor sale.,homedecor@shop.com,PROMOTIONS
+Kitchen sale,Kitchen items sale.,kitchen@shop.com,PROMOTIONS
+Electronics sale,Electronics big sale.,electronics@shop.com,PROMOTIONS
+Fashion sale,Fashion week sale.,fashion@shop.com,PROMOTIONS
+Beauty sale,Beauty products sale.,beauty@shop.com,PROMOTIONS
+Book sale,Books at 50 percent off.,books@shop.com,PROMOTIONS
+Gaming sale,Gaming accessories sale.,gaming@shop.com,PROMOTIONS
+Sports sale,Sports items sale.,sports@shop.com,PROMOTIONS
+Toys sale,Toys sale started.,toys@shop.com,PROMOTIONS
+Jewelry sale,Jewelry collection sale.,jewelry@shop.com,PROMOTIONS
+Watch sale,Watches at discount.,watches@shop.com,PROMOTIONS
+Bag sale,Bags sale started.,bags@shop.com,PROMOTIONS
+Sunglasses sale,Sunglasses sale.,sunglasses@shop.com,PROMOTIONS
+Watch sale 50 percent,50 percent off on all watches.,sale@watch.com,PROMOTIONS
+Immediate action required,Submit documents by tomorrow morning.,urgent@company.com,IMPORTANT
+Power outage emergency,Electricity supply disrupted in your area. Expected restore in 2 hours.,emergency@bses.com,IMPORTANT
+Critical vaccine reminder,Second dose of vaccine due tomorrow.,reminder@Cowin.gov.in,IMPORTANT
+RTO vehicle penalty,Vehicle penalty due. Pay within 5 days.,penalty@rto.gov.in,IMPORTANT
+Bank fraud alert,Suspicious transaction of Rs.50000 detected.,security@bank.com,IMPORTANT
+Court order received,Legal court order received. Appear on scheduled date.,legal@court.gov.in,IMPORTANT
+Passport application status,Passport application under review. Submit documents.,passport@passport.gov.in,IMPORTANT
+Aadhaar verification failed,Aadhaar verification failed. Update details immediately.,aadhaar@uidai.gov.in,IMPORTANT
+Voter ID correction,Voter ID correction request pending.,election@ec.gov.in,IMPORTANT
+GST notice received,GST notice for mismatch in returns.,gst@gst.gov.in,IMPORTANT
+IT notice from CBDT,Income tax notice received. Respond within 15 days.,it@income tax.gov.in,IMPORTANT
+SEBI alert received,SEBI alert for suspicious investment scheme.,sebi@sebi.gov.in,IMPORTANT
+RBI circular received,RBI circular for new banking regulations.,rbi@rbi.gov.in,IMPORTANT
+PMO communication,Communication from Prime Ministers Office.,pmo@pmo.gov.in,IMPORTANT
+President award notification,Presidential award nomination received.,president@rah.gov.in,IMPORTANT
+CM letter received,Letter from Chief Minister received.,cm@cmog.gov.in,IMPORTANT
+Governor notification,Notification from State Governor.,governor@governor.gov.in,IMPORTANT
+High court notice,High court notice received. Hire lawyer immediately.,court@highcourt.gov.in,IMPORTANT
+Supreme court notice,Supreme court notice received.,supreme@sc.gov.in,IMPORTANT
+Hedge fund investment,Hedge fund investment Rs.1000000 invested.,hedge@fund.com,INVESTMENT
+Angel investment,Angel investment in startup Rs.500000.,angel@startup.com,INVESTMENT

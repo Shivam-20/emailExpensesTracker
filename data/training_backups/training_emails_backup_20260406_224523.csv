@@ -1,0 +1,3 @@
+subject,body,sender,label
+Subject 1,Body 1,sender1@test.com,EXPENSE
+Subject 2,Body 2,sender2@test.com,NOT_EXPENSE

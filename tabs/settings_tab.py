@@ -19,6 +19,21 @@ from PyQt6.QtWidgets import (
 from config.category_map import ALL_CATEGORIES
 from classifier import config, lightweight_models, pipeline
 from classifier.config import check_for_model_updates, get_local_model_version, MODEL_VERSION_FILE
+
+CATEGORY_DESCRIPTIONS: dict[str, str] = {
+    "EXPENSE": "Expense-related emails (purchases, payments)",
+    "INCOME": "Income-related emails (salary, deposits)",
+    "INVESTMENT": "Investment and stock market emails",
+    "BILLS": "Bill and invoice emails",
+    "JOB": "Job-related emails (offers, approvals)",
+    "NEWS": "Newsletter and news emails",
+    "SOCIAL": "Social media and communication emails",
+    "IMPORTANT": "Important personal emails",
+    "PROMOTIONS": "Promotional and marketing emails",
+    "PERSONAL": "Personal emails",
+    "ORDERS": "Order confirmation and shipping emails",
+    "ACCOUNT": "Account-related emails (statements, alerts)",
+}
 from styles import (
     ACCENT, BORDER, ERROR, SUCCESS, SURFACE, SURFACE2, SURFACE3,
     TEXT, TEXT_DIM, WARNING,
@@ -63,6 +78,7 @@ class SettingsTab(QWidget):
         layout.setSpacing(14)
 
         layout.addWidget(self._build_budgets_section())
+        layout.addWidget(self._build_categories_section())
         layout.addWidget(self._build_ignore_section())
         layout.addWidget(self._build_rules_section())
         layout.addWidget(self._build_pipeline_section())
@@ -99,72 +115,106 @@ class SettingsTab(QWidget):
 
         return box
 
-    def _load_budgets(self) -> None:
-        if not self._db:
+    # ── Categories section ─────────────────────────────────────────────────────
+
+    def _build_categories_section(self) -> QGroupBox:
+        box = QGroupBox("🏷️ Categories")
+        layout = QVBoxLayout(box)
+
+        desc = QLabel(
+            "Manage email categories. Disable categories to ignore related emails."
+        )
+        desc.setObjectName("statusLabel")
+        layout.addWidget(desc)
+
+        self._categories_table = QTableWidget()
+        self._categories_table.setColumnCount(4)
+        self._categories_table.setHorizontalHeaderLabels(
+            ["Category", "Description", "Enabled", "Actions"]
+        )
+        self._categories_table.verticalHeader().setVisible(False)
+        hdr = self._categories_table.horizontalHeader()
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self._categories_table.setMaximumHeight(250)
+        layout.addWidget(self._categories_table)
+
+        btn_row = QWidget()
+        btn_l = QHBoxLayout(btn_row)
+        btn_l.setContentsMargins(0, 0, 0, 0)
+
+        add_btn = QPushButton("+ Add Custom Category")
+        add_btn.setObjectName("ghostBtn")
+        add_btn.clicked.connect(self._add_custom_category)
+        btn_l.addWidget(add_btn)
+
+        btn_l.addStretch()
+        layout.addWidget(btn_row)
+
+        return box
+
+    def _load_categories(self) -> None:
+        enabled_cats = self._config.get("enabled_categories", {})
+        if not enabled_cats:
+            enabled_cats = {cat: True for cat in CATEGORY_DESCRIPTIONS}
+
+        rows = list(CATEGORY_DESCRIPTIONS.items())
+        self._categories_table.setRowCount(len(rows))
+
+        for r_i, (cat, desc) in enumerate(rows):
+            self._categories_table.setItem(r_i, 0, _item(cat))
+            self._categories_table.setItem(r_i, 1, _item(desc))
+
+            is_enabled = enabled_cats.get(cat, True)
+            checkbox = QTableWidgetItem()
+            checkbox.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+            checkbox.setCheckState(Qt.CheckState.Checked if is_enabled else Qt.CheckState.Unchecked)
+            checkbox.setData(Qt.ItemDataRole.UserRole, cat)
+            self._categories_table.setItem(r_i, 2, checkbox)
+
+            del_btn = QPushButton("Delete")
+            del_btn.setObjectName("ghostBtn")
+            del_btn.setEnabled(cat not in CATEGORY_DESCRIPTIONS)
+            del_btn.clicked.connect(lambda _, c=cat: self._delete_custom_category(c))
+            self._categories_table.setCellWidget(r_i, 3, del_btn)
+
+        self._categories_table.itemChanged.connect(self._on_category_enabled_changed)
+
+    def _on_category_enabled_changed(self, item: QTableWidgetItem) -> None:
+        if item.column() != 2:
             return
-        budgets   = self._db.get_budgets()
-        categories = ALL_CATEGORIES
-        self._budget_table.setRowCount(len(categories))
-
-        # Compute actual spend for current displayed month from cached data
-        spent_map: dict[str, float] = {}
-        if self._db:
-            try:
-                months = self._db.get_available_months()
-                if months:
-                    latest = months[-1]
-                    rows = self._db.get_month_expenses(latest)
-                    for r in rows:
-                        if r["status"] == "excluded":
-                            continue
-                        cat   = r["category_edited"] or r["category"] or "Other"
-                        amt   = r["amount_edited"] or r["amount"] or 0
-                        spent_map[cat] = spent_map.get(cat, 0) + amt
-            except Exception:
-                pass
-
-        for row_i, cat in enumerate(categories):
-            budget = budgets.get(cat, 0.0)
-            spent  = spent_map.get(cat, 0.0)
-            pct    = (spent / budget * 100) if budget > 0 else 0
-            over   = budget > 0 and spent > budget
-            status = "⚠ Over" if over else ("OK" if budget > 0 else "—")
-
-            self._budget_table.setItem(row_i, 0, _item(cat))
-            self._budget_table.setItem(row_i, 1, _item(f"₹{budget:,.0f}"))
-            self._budget_table.setItem(row_i, 2, _item(f"₹{spent:,.0f}"))
-
-            # Progress bar cell
-            bar = QProgressBar()
-            bar.setRange(0, 100)
-            bar.setValue(min(int(pct), 100))
-            bar.setFormat(f"{pct:.0f}%")
-            bar.setTextVisible(True)
-            if over:
-                bar.setStyleSheet(f"QProgressBar::chunk {{ background: {ERROR}; }}")
-            else:
-                bar.setStyleSheet(f"QProgressBar::chunk {{ background: {ACCENT}; }}")
-            self._budget_table.setCellWidget(row_i, 3, bar)
-
-            status_item = _item(status, center=True)
-            if over:
-                status_item.setForeground(Qt.GlobalColor.red)
-            self._budget_table.setItem(row_i, 4, status_item)
-
-    def _on_budget_double_click(self, row: int, col: int) -> None:
-        if col != 1:  # Only budget column is editable
+        cat = item.data(Qt.ItemDataRole.UserRole)
+        if not cat:
             return
-        cat_item = self._budget_table.item(row, 0)
-        if not cat_item:
-            return
-        cat = cat_item.text()
+        enabled_cats = self._config.setdefault("enabled_categories", {})
+        enabled_cats[cat] = item.checkState() == Qt.CheckState.Checked
+        self._save_config()
 
-        dlg = _BudgetEditDialog(cat, self)
+    def _add_custom_category(self) -> None:
+        dlg = _AddCategoryDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
-            new_val = dlg.get_value()
-            if self._db:
-                self._db.set_budget(cat, new_val)
-            self._load_budgets()
+            new_cat, new_desc = dlg.get_category()
+            if new_cat in CATEGORY_DESCRIPTIONS:
+                QMessageBox.warning(self, "Exists", "Category already exists.")
+                return
+            CATEGORY_DESCRIPTIONS[new_cat] = new_desc
+            enabled_cats = self._config.setdefault("enabled_categories", {})
+            enabled_cats[new_cat] = True
+            self._save_config()
+            self._load_categories()
+
+    def _delete_custom_category(self, category: str) -> None:
+        if category in CATEGORY_DESCRIPTIONS:
+            QMessageBox.warning(self, "Cannot Delete", "Cannot delete built-in categories.")
+            return
+        if category in CATEGORY_DESCRIPTIONS:
+            del CATEGORY_DESCRIPTIONS[category]
+        enabled_cats = self._config.get("enabled_categories", {})
+        enabled_cats.pop(category, None)
+        self._save_config()
+        self._load_categories()
 
     # ── Ignore list section ───────────────────────────────────────────────────
 
@@ -665,6 +715,7 @@ class SettingsTab(QWidget):
         if self._data_dir:
             self._data_dir_label.setText(str(self._data_dir))
         self._load_budgets()
+        self._load_categories()
         self._load_ignore_list()
         self._load_rules()
         self._load_pipeline_config()
@@ -713,6 +764,33 @@ class _BudgetEditDialog(QDialog):
 
     def get_value(self) -> float:
         return self._spin.value()
+
+
+class _AddCategoryDialog(QDialog):
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Add Custom Category")
+        layout = QVBoxLayout(self)
+
+        layout.addWidget(QLabel("Category Name:"))
+        self._name = QLineEdit()
+        self._name.setPlaceholderText("e.g. RENT, GIFTS")
+        layout.addWidget(self._name)
+
+        layout.addWidget(QLabel("Description:"))
+        self._desc = QLineEdit()
+        self._desc.setPlaceholderText("e.g. Rent and housing related emails")
+        layout.addWidget(self._desc)
+
+        btns = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
+        btns.accepted.connect(self.accept)
+        btns.rejected.connect(self.reject)
+        layout.addWidget(btns)
+
+    def get_category(self) -> tuple[str, str]:
+        return self._name.text().strip().upper(), self._desc.text().strip()
 
 
 class _AddRuleDialog(QDialog):

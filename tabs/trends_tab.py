@@ -16,13 +16,16 @@ from matplotlib.figure import Figure
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QHBoxLayout, QHeaderView, QLabel, QPushButton,
+    QComboBox, QHBoxLayout, QHeaderView, QLabel, QPushButton,
     QSizePolicy, QSpinBox, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget,
 )
 
 from config.category_map import ALL_CATEGORIES
-from styles import BG, SURFACE, SURFACE2, TEXT, TEXT_DIM, BORDER, ACCENT, CATEGORY_COLORS
+from styles import (
+    BG, SURFACE, SURFACE2, TEXT, TEXT_DIM, BORDER, ACCENT,
+    CATEGORY_COLORS, EMAIL_CATEGORY_COLORS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,7 @@ class TrendsTab(QWidget):
         self._db         = None
         self._data_dir:  Optional[Path] = None
         self._trend_data: dict = {}   # month_str → list[dict]
+        self._selected_email_cat: Optional[str] = None
         self._setup_ui()
 
     def set_db(self, db, data_dir: Path) -> None:
@@ -60,10 +64,18 @@ class TrendsTab(QWidget):
         ctrl_layout.addWidget(self._n_spin)
         ctrl_layout.addWidget(QLabel("months"))
 
+        ctrl_layout.addWidget(QLabel("Email Category:"))
+        self._cat_filter = QComboBox()
+        self._cat_filter.addItems(["All"] + list(EMAIL_CATEGORY_COLORS.keys()))
+        self._cat_filter.setFixedWidth(120)
+        ctrl_layout.addWidget(self._cat_filter)
+
         load_btn = QPushButton("📈 Load Trend")
         load_btn.setObjectName("primaryBtn")
         load_btn.clicked.connect(self._load_trend)
         ctrl_layout.addWidget(load_btn)
+
+        self._cat_filter.currentTextChanged.connect(self._on_filter_changed)
         ctrl_layout.addStretch()
 
         self._status_lbl = QLabel("")
@@ -124,6 +136,14 @@ class TrendsTab(QWidget):
         self._render_table(months, month_data)
         self._status_lbl.setText(f"Showing {n} months of data")
 
+    def _on_filter_changed(self, text: str) -> None:
+        self._selected_email_cat = None if text == "All" else text
+        if self._trend_data:
+            now = datetime.now()
+            months = list(self._trend_data.keys())
+            self._render_trend(months, self._trend_data, now)
+            self._render_table(months, self._trend_data)
+
     # ── Chart renderer ────────────────────────────────────────────────────────
 
     def _render_trend(
@@ -138,10 +158,15 @@ class TrendsTab(QWidget):
         ax.set_facecolor(SURFACE)
         fig.patch.set_facecolor(BG)
 
+        def _filter_by_email_cat(rows: list[dict]) -> list[dict]:
+            if not self._selected_email_cat:
+                return rows
+            return [r for r in rows if r.get("email_category") == self._selected_email_cat]
+
         # Top 5 categories by total spend
         cat_totals: dict[str, float] = defaultdict(float)
         for rows in month_data.values():
-            for r in rows:
+            for r in _filter_by_email_cat(rows):
                 cat = r.get("category_edited") or r.get("category","Other")
                 cat_totals[cat] += r.get("amount_edited") or r.get("amount") or 0
         top_cats = sorted(cat_totals, key=lambda c: cat_totals[c], reverse=True)[:5]
@@ -158,7 +183,7 @@ class TrendsTab(QWidget):
             for m in months:
                 total = sum(
                     (r.get("amount_edited") or r.get("amount") or 0)
-                    for r in month_data[m]
+                    for r in _filter_by_email_cat(month_data[m])
                     if (r.get("category_edited") or r.get("category","Other")) == cat
                 )
                 y_vals.append(total)
@@ -166,7 +191,7 @@ class TrendsTab(QWidget):
 
         # Total line
         totals = [
-            sum(r.get("amount_edited") or r.get("amount") or 0 for r in month_data[m])
+            sum(r.get("amount_edited") or r.get("amount") or 0 for r in _filter_by_email_cat(month_data[m]))
             for m in months
         ]
         ax.plot(x, totals, marker="o", label="Total", color=TEXT,
@@ -201,6 +226,11 @@ class TrendsTab(QWidget):
         months: list[str],
         month_data: dict,
     ) -> None:
+        def _filter_by_email_cat(rows: list[dict]) -> list[dict]:
+            if not self._selected_email_cat:
+                return rows
+            return [r for r in rows if r.get("email_category") == self._selected_email_cat]
+
         top_cats = ["Shopping", "Food", "Transport", "Subscriptions"]
         col_names = ["Month", "Total"] + top_cats + ["Others", "vs Prev"]
         self._table.setColumnCount(len(col_names))
@@ -216,7 +246,7 @@ class TrendsTab(QWidget):
         prev_total: float = 0
 
         for row_i, m in enumerate(months):
-            rows = month_data[m]
+            rows = _filter_by_email_cat(month_data[m])
             total = sum(r.get("amount_edited") or r.get("amount") or 0 for r in rows)
             cat_totals: dict[str, float] = defaultdict(float)
             for r in rows:

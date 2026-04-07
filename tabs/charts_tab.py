@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import (
 
 from styles import (
     BG, SURFACE, SURFACE2, SURFACE3, ACCENT, TEXT, TEXT_DIM,
-    BORDER, SUCCESS, WARNING, CATEGORY_COLORS,
+    BORDER, SUCCESS, WARNING, CATEGORY_COLORS, EMAIL_CATEGORY_COLORS,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,16 +82,21 @@ class ChartsTab(QWidget):
         self._bar_fig, self._bar_ax, self._bar_canvas = _make_canvas()
         self._don_fig, self._don_ax, self._don_canvas = _make_canvas()
         self._heat_fig, self._heat_ax, self._heat_canvas = _make_canvas()
+        self._email_cat_fig, self._email_cat_ax, self._email_cat_canvas = _make_canvas(w=6, h=3)
 
-        grid_layout.addWidget(self._pie_canvas,  0, 0)
-        grid_layout.addWidget(self._bar_canvas,  0, 1)
-        grid_layout.addWidget(self._don_canvas,  1, 0)
-        grid_layout.addWidget(self._heat_canvas, 1, 1)
+        grid_layout.addWidget(self._pie_canvas,        0, 0)
+        grid_layout.addWidget(self._bar_canvas,        0, 1)
+        grid_layout.addWidget(self._don_canvas,        1, 0)
+        grid_layout.addWidget(self._email_cat_canvas,  1, 1)
         grid_layout.setRowStretch(0, 1)
         grid_layout.setRowStretch(1, 1)
 
-        # Connect heatmap hover
-        self._heat_canvas.mpl_connect("motion_notify_event", self._on_heat_hover)
+        # Heatmap as separate row below
+        heat_row = QWidget()
+        heat_layout = QHBoxLayout(heat_row)
+        heat_layout.setContentsMargins(0, 0, 0, 0)
+        heat_layout.addWidget(self._heat_canvas)
+        outer.addWidget(heat_row)
 
         outer.addWidget(grid, stretch=1)
 
@@ -116,6 +121,7 @@ class ChartsTab(QWidget):
 
     def _render_all(self) -> None:
         self._render_pie()
+        self._render_email_cat_pie()
         self._render_bar()
         self._render_donut()
         self._render_heatmap()
@@ -158,6 +164,51 @@ class ChartsTab(QWidget):
         )
         ax.set_title("Spending by Category", color=_FG, fontsize=12, pad=10)
         self._pie_canvas.draw()
+
+    def _render_email_cat_pie(self) -> None:
+        ax = self._email_cat_ax
+        ax.clear()
+        ax.set_facecolor(_BG)
+        self._email_cat_fig.patch.set_facecolor(_BG)
+
+        if not self._rows:
+            _no_data(ax, "Emails by Category")
+            self._email_cat_canvas.draw()
+            return
+
+        cat_counts: dict[str, int] = defaultdict(int)
+        for r in self._rows:
+            cat = r.get("email_category", "Other")
+            if cat:
+                cat_counts[cat] += 1
+
+        if not cat_counts:
+            _no_data(ax, "Emails by Category")
+            self._email_cat_canvas.draw()
+            return
+
+        total = sum(cat_counts.values())
+        labels = list(cat_counts.keys())
+        values = [cat_counts[l] for l in labels]
+        colors = [EMAIL_CATEGORY_COLORS.get(l, "#6c7086") for l in labels]
+
+        wedges, _, autotexts = ax.pie(
+            values, colors=colors, autopct="%1.1f%%",
+            startangle=90, pctdistance=0.80,
+            wedgeprops={"linewidth": 1.2, "edgecolor": _BG},
+        )
+        for at in autotexts:
+            at.set_color(_BG); at.set_fontsize(8); at.set_fontweight("bold")
+
+        legend_labels = [f"{l}  ({v})" for l, v in zip(labels, values)]
+        ax.legend(
+            wedges, legend_labels,
+            loc="lower center", bbox_to_anchor=(0.5, -0.30), ncol=3,
+            fontsize=7, facecolor=SURFACE, edgecolor=_GRID,
+            labelcolor=_FG, framealpha=0.9,
+        )
+        ax.set_title(f"Emails by Category ({total} total)", color=_FG, fontsize=12, pad=10)
+        self._email_cat_canvas.draw()
 
     def _render_bar(self) -> None:
         ax = self._bar_ax
