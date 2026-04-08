@@ -86,9 +86,11 @@ def train_category_model(csv_path: Path, model_dir: Path) -> None:
     )
 
     clf = LogisticRegression(
-        max_iter=1000,
+        max_iter=2000,
+        C=1.0,
         class_weight="balanced",
         random_state=42,
+        solver="lbfgs",
     )
     clf.fit(X_train, y_train)
 
