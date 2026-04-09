@@ -1,6 +1,6 @@
 {
-  "version": "v1.1",
-  "release_date": "2026-04-06",
-  "models": ["minilm", "tinybert", "tfidf-nb"],
-  "description": "Model pack with MiniLM-L6-V2, TinyBERT, and TF-IDF/NB classifier"
+  "version": "v1.2",
+  "release_date": "2026-04-07",
+  "models": ["minilm", "tinybert", "tfidf-nb", "category-classifier"],
+  "description": "Model pack with MiniLM-L6-V2, TinyBERT, TF-IDF/NB, and 12-category email classifier"
 }
